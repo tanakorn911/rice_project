@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800"><i class="fa-solid fa-chart-pie mr-2 text-green-600"></i>ข้อมูลข้าวระดับจังหวัดพะเยา</h1>
+    <span class="text-xs bg-gray-200 px-2 py-1 rounded">อัปเดตล่าสุด: <span id="lastUpdate">-</span></span>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+        <h3 class="font-bold text-center mb-4 text-gray-700">สัดส่วนพันธุ์ข้าว</h3>
+        <div class="relative h-[300px]">
+            <canvas id="varietyChart"></canvas>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+        <h3 class="font-bold text-center mb-4 text-gray-700">สุขภาพต้นข้าว (NDVI)</h3>
+        <div class="relative h-[300px]">
+            <canvas id="healthChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const vCtx = document.getElementById('varietyChart').getContext('2d');
+    const hCtx = document.getElementById('healthChart').getContext('2d');
+
+    // ตั้งค่าเริ่มต้นของกราฟ
+    const vChart = new Chart(vCtx, {
+        type: 'doughnut', 
+        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#fbbf24','#ef4444','#3b82f6','#10b981'] }] },
+        options: { maintainAspectRatio: false }
+    });
+    
+    const hChart = new Chart(hCtx, {
+        type: 'pie', 
+        data: { labels: ['ดี (Healthy)', 'ปานกลาง (Normal)', 'แย่ (Poor)'], datasets: [{ data: [0,0,0], backgroundColor: ['#22c55e','#f59e0b','#ef4444'] }] },
+        options: { maintainAspectRatio: false }
+    });
+
+    async function updateCharts() {
+        try {
+            const res = await fetch('/api/stats/');
+            const data = await res.json();
+            
+            // อัปเดตข้อมูลพันธุ์ข้าว
+            if(data.charts.variety.labels.length > 0) {
+                vChart.data.labels = data.charts.variety.labels;
+                vChart.data.datasets[0].data = data.charts.variety.data;
+                vChart.update();
+            }
+
+            // อัปเดตข้อมูลสุขภาพ (NDVI)
+            hChart.data.datasets[0].data = data.charts.health.data;
+            hChart.update();
+            
+            document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString();
+        } catch (error) {
+            console.error("Error fetching stats:", error);
+        }
+    }
+
+    // เรียกทำงานทันทีและอัปเดตทุก 30 วินาที
+    updateCharts();
+    setInterval(updateCharts, 30000);
+</script>
+{% endblock %}

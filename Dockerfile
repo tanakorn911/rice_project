@@ -18,7 +18,6 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./backend /app/backend
-# Copy Key file เข้าไปใน Container
 COPY gee-key.json /app/backend/gee-key.json
 
 WORKDIR /app/backend

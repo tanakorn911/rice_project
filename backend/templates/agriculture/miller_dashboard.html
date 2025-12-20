@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="mb-6"><h1 class="text-2xl font-bold">แผงควบคุมโรงสี (รับซื้อข้าว)</h1></div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1 bg-white p-4 rounded shadow h-[600px] flex flex-col">
+        <h3 class="font-bold mb-4 text-green-700">📢 รายการแจ้งขายล่าสุด</h3>
+        <div class="overflow-y-auto flex-grow space-y-3" id="saleList">
+            <p class="text-center text-gray-400 mt-10">รอข้อมูล...</p>
+        </div>
+    </div>
+
+    <div class="lg:col-span-2 bg-white p-4 rounded shadow">
+        <h3 class="font-bold mb-2">พิกัดแปลงนาที่แจ้งขาย</h3>
+        <div id="map" class="h-[530px] w-full rounded border"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var map = L.map('map', {center:[19.0289, 99.8953], zoom:11, layers:[L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']})]});
+    var markers = L.featureGroup().addTo(map);
+
+    async function loadData() {
+        // ✅ ดึง API Sales
+        const res = await fetch('/api/sales/');
+        const sales = await res.json();
+        
+        const listDiv = document.getElementById('saleList');
+        listDiv.innerHTML = '';
+        markers.clearLayers();
+
+        if (sales.length === 0) {
+            listDiv.innerHTML = '<p class="text-center text-gray-400 mt-10">ยังไม่มีรายการขาย</p>';
+            return;
+        }
+
+        sales.forEach(s => {
+            listDiv.innerHTML += `
+                <div class="border p-3 rounded hover:bg-yellow-50 transition cursor-pointer bg-gray-50" onclick="focusMap(${s.id})">
+                    <div class="flex justify-between font-bold text-gray-800">
+                        <span>${s.farmer_name}</span>
+                        <span class="text-green-600 font-bold text-lg">${s.quantity_ton} ตัน</span>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1">
+                        พันธุ์: <span class="text-blue-600">${s.variety_display}</span><br>
+                        ราคาเสนอ: <b>${s.price_per_ton}</b> บ./ตัน<br>
+                        <i class="fa-solid fa-phone"></i> ${s.phone}
+                    </div>
+                    <div class="text-xs text-gray-400 mt-2 text-right">แปลง: ${s.field_name}</div>
+                </div>
+            `;
+
+            if(s.field_location) {
+                const geoJson = JSON.parse(s.field_location);
+                const layer = L.geoJSON(geoJson, {style:{color:"#ef4444", fillOpacity:0.5, weight: 2}})
+                    .bindPopup(`<b>${s.farmer_name}</b><br>ขาย: ${s.quantity_ton} ตัน<br>ราคา: ${s.price_per_ton}`);
+                layer.saleId = s.id;
+                markers.addLayer(layer);
+            }
+        });
+    }
+
+    window.focusMap = function(saleId) {
+        markers.eachLayer(function(layer) {
+            if(layer.saleId === saleId) {
+                map.flyToBounds(layer.getBounds(), {padding:[50,50], maxZoom:15});
+                layer.openPopup();
+            }
+        });
+    }
+
+    loadData();
+    setInterval(loadData, 10000);
+</script>
+{% endblock %}

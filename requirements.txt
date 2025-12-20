@@ -1,6 +1,10 @@
-Django>=4.2,<5.0
+django
 djangorestframework
+djangorestframework-gis
 psycopg2-binary
+Pillow
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
 earthengine-api
-google-auth
 django-cors-headers

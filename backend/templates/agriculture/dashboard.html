@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white p-4 rounded-xl shadow-lg col-span-1 border border-gray-100">
+        <h2 class="text-xl font-bold text-green-800 mb-4 flex items-center">
+            <i class="fa-solid fa-seedling mr-2"></i> รายการแปลงนา (พะเยา)
+        </h2>
+        <div id="fieldList" class="space-y-4 overflow-y-auto max-h-[650px] pr-2">
+            <p class="text-gray-500 text-center py-10">กำลังโหลดข้อมูล...</p>
+        </div>
+    </div>
+
+    <div class="col-span-1 md:col-span-2 bg-white p-4 rounded-xl shadow-lg border border-gray-100">
+        <div class="flex justify-between items-center mb-3">
+            <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                <i class="fa-solid fa-map-location-dot mr-2"></i> จัดการพื้นที่เกษตร
+            </h2>
+            <div class="flex items-center space-x-2">
+                <span class="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">ONLINE</span>
+                <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold">📍 อ.เมืองพะเยา</span>
+            </div>
+        </div>
+        <div id="map" class="map-container border border-gray-200 h-[550px] rounded-xl overflow-hidden shadow-inner"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 1. ตั้งค่าแผนที่และเลเยอร์พื้นหลัง
+    var googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: 'Google Hybrid'
+    });
+    var googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: 'Google Satellite'
+    });
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19, attribution: 'OpenStreetMap'
+    });
+
+    var map = L.map('map', { center: [19.1667, 99.9000], zoom: 12, layers: [googleHybrid] });
+    L.control.layers({ "ดาวเทียม + ชื่อ": googleHybrid, "ดาวเทียมล้วน": googleSat, "แผนที่ถนน": osm }).addTo(map);
+
+    var drawnItems = new L.FeatureGroup().addTo(map);
+    map.addControl(new L.Control.Draw({
+        draw: { polygon: true, rectangle: true, marker: false, circle: false, polyline: false }
+    }));
+
+    // --- ส่วนที่เพิ่ม: ปุ่มหาตำแหน่งตัวเอง (Locate Me) ---
+    var LocateControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function (map) {
+            var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+            container.style.backgroundColor = 'white';
+            container.style.width = '34px';
+            container.style.height = '34px';
+            container.style.display = 'flex';
+            container.style.alignItems = 'center';
+            container.style.justifyContent = 'center';
+            container.style.cursor = 'pointer';
+            container.innerHTML = '<i class="fa-solid fa-location-crosshairs text-blue-600 text-lg"></i>';
+            container.title = "หาตำแหน่งของฉัน";
+            container.onclick = function() { map.locate({setView: true, maxZoom: 16}); };
+            return container;
+        }
+    });
+    map.addControl(new LocateControl());
+
+    map.on('locationfound', function(e) {
+        if (window.currentPosMarker) map.removeLayer(window.currentPosMarker);
+        window.currentPosMarker = L.marker(e.latlng).addTo(map).bindPopup("คุณอยู่ที่นี่").openPopup();
+    });
+
+    map.on('locationerror', function(e) {
+        Swal.fire('ไม่พบตำแหน่ง', 'โปรดเปิด GPS หรืออนุญาตการเข้าถึงตำแหน่ง', 'error');
+    });
+
+    // 2. การจัดการวาดพื้นที่ใหม่และ Pop-up บันทึกข้อมูล
+    map.on(L.Draw.Event.CREATED, function (e) {
+        var layer = e.layer;
+        var center = layer.getBounds().getCenter();
+        
+        // ตรวจสอบขอบเขต อ.เมืองพะเยา
+        if (center.lng < 99.80 || center.lng > 100.10 || center.lat < 19.00 || center.lat > 19.35) {
+            Swal.fire({ icon: 'error', title: 'นอกเขตพื้นที่!', text: 'กรุณาวาดแปลงนาภายในอำเภอเมืองพะเยาเท่านั้น' });
+            return;
+        }
+
+        Swal.fire({
+            title: 'ข้อมูลแปลงนาใหม่',
+            icon: 'question',
+            html: `
+                <div class="text-left space-y-3 p-2">
+                    <div>
+                        <label class="text-xs font-bold text-gray-600">ชื่อแปลงนา / เจ้าของ</label>
+                        <input id="swal-name" class="swal2-input !m-0 !w-full" placeholder="เช่น แปลงนาลุงแดง 1">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600">พันธุ์ข้าวที่ปลูก</label>
+                        <select id="swal-variety" class="swal2-input !m-0 !w-full">
+                            <option value="KDML105">ข้าวหอมมะลิ 105</option>
+                            <option value="RD6">ข้าวเหนียว กข 6</option>
+                            <option value="RD15">ข้าวหอมมะลิ กข 15</option>
+                        </select>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-save mr-1"></i> บันทึกข้อมูล',
+            confirmButtonColor: '#16a34a',
+            cancelButtonText: 'ยกเลิก',
+            preConfirm: () => {
+                const name = document.getElementById('swal-name').value;
+                if (!name) return Swal.showValidationMessage('กรุณาตั้งชื่อแปลงนา');
+                return { name: name, variety: document.getElementById('swal-variety').value };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                saveField(result.value.name, layer.toGeoJSON().geometry, result.value.variety);
+                drawnItems.addLayer(layer);
+            } else { map.removeLayer(layer); }
+        });
+    });
+
+    async function saveField(name, geom, variety) {
+        const response = await fetch('/api/rice-fields/', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrftoken},
+            body: JSON.stringify({name, geometry: geom, variety})
+        });
+        if(response.ok) {
+            Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', showConfirmButton: false, timer: 1500 });
+            loadFields();
+        }
+    }
+
+    // 3. ฟังก์ชันดึงรายการแปลงนาและปุ่มลบ
+    async function loadFields() {
+        const res = await fetch('/api/rice-fields/');
+        const data = await res.json();
+        const div = document.getElementById('fieldList');
+        div.innerHTML = '';
+        drawnItems.clearLayers();
+        
+        data.forEach(f => {
+            div.innerHTML += `
+                <div class="relative group bg-white border border-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
+                    <button onclick="deleteField(${f.id}, '${f.name}')" class="absolute top-3 right-3 text-gray-300 hover:text-red-500 transition-colors">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+
+                    <div class="flex flex-col">
+                        <span class="text-lg font-bold text-gray-800">${f.name}</span>
+                        <div class="flex items-center space-x-2 mt-1">
+                            <span class="text-[11px] bg-green-50 text-green-700 px-2 py-0.5 rounded border border-green-100">${f.variety_display}</span>
+                            <span class="text-[11px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">${f.area_rai} ไร่</span>
+                        </div>
+                    </div>
+                    
+                    <div id="yield-info-${f.id}" class="my-3 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                        <p class="text-[11px] text-gray-400 italic text-center">ยังไม่ได้วิเคราะห์ NDVI</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mt-1">
+                        <button onclick="calcYield(${f.id})" class="flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-2 rounded-lg transition-all">
+                            <i class="fa-solid fa-satellite mr-1"></i> วิเคราะห์
+                        </button>
+                        <button onclick="notifySale(${f.id}, '${f.name}')" class="flex items-center justify-center bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 rounded-lg transition-all">
+                            <i class="fa-solid fa-comment-dollar mr-1"></i> แจ้งขาย
+                        </button>
+                    </div>
+                </div>
+            `;
+            if(f.boundary) {
+                L.geoJSON(JSON.parse(f.boundary), {
+                    style: { color: "#16a34a", weight: 2, fillOpacity: 0.1 }
+                }).bindPopup(`<b>${f.name}</b>`).addTo(map).addTo(drawnItems);
+            }
+        });
+    }
+
+    // 4. ฟังก์ชันลบแปลงนา
+    window.deleteField = function(id, name) {
+        Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: `คุณต้องการลบแปลงนา "${name}" ใช่หรือไม่?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const res = await fetch(`/api/rice-fields/${id}/`, {
+                    method: 'DELETE',
+                    headers: {'X-CSRFToken': csrftoken}
+                });
+                if (res.ok) {
+                    Swal.fire('ลบแล้ว!', 'ข้อมูลแปลงนาถูกลบออกจากระบบ', 'success');
+                    loadFields();
+                }
+            }
+        });
+    }
+
+    // 5. Pop-up แจ้งขายโฉมใหม่
+    window.notifySale = function(fieldId, fieldName) {
+        Swal.fire({
+            title: '📢 แจ้งขายผลผลิต',
+            text: fieldName,
+            html: `
+                <div class="text-left space-y-4 p-2">
+                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4 text-blue-800 text-xs">
+                        <i class="fa-solid fa-circle-info mr-1"></i> ข้อมูลจะถูกส่งไปยังระบบโรงสีใน อ.เมืองพะเยา
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600">ปริมาณข้าว (ตัน)</label>
+                        <input id="sale-qty" type="number" class="swal2-input !m-0 !w-full" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600">ราคาเสนอขาย (บาท/ตัน)</label>
+                        <input id="sale-price" type="number" class="swal2-input !m-0 !w-full" placeholder="เช่น 12000">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-600">เบอร์โทรติดต่อ</label>
+                        <input id="sale-phone" type="text" class="swal2-input !m-0 !w-full" placeholder="08x-xxxxxxx">
+                    </div>
+                </div>
+            `,
+            confirmButtonText: 'ยืนยันการส่งข้อมูล',
+            confirmButtonColor: '#16a34a',
+            showCancelButton: true,
+            preConfirm: () => {
+                const qty = document.getElementById('sale-qty').value;
+                const price = document.getElementById('sale-price').value;
+                const phone = document.getElementById('sale-phone').value;
+                if (!qty || !price || !phone) return Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                return { rice_field: fieldId, quantity_ton: qty, price_per_ton: price, phone: phone }
+            }
+        }).then(async (result) => {
+            if(result.isConfirmed) {
+                const res = await fetch('/api/sales/', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrftoken},
+                    body: JSON.stringify(result.value)
+                });
+                if(res.ok) Swal.fire('สำเร็จ', 'ส่งข้อมูลแจ้งขายแล้ว', 'success');
+            }
+        });
+    }
+
+    // 6. การวิเคราะห์ NDVI
+    window.calcYield = async function(id) {
+        Swal.fire({ title: 'กำลังวิเคราะห์ดาวเทียม...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        const res = await fetch(`/api/rice-fields/${id}/calculate_yield/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrftoken}
+        });
+        const data = await res.json();
+        if(res.ok) {
+            Swal.fire({
+                title: 'วิเคราะห์สำเร็จ',
+                icon: 'success',
+                html: `<div class="p-3 bg-green-50 rounded text-left">ความสมบูรณ์ NDVI: <b>${data.ndvi.toFixed(3)}</b><br>คาดการณ์ผลผลิต: <b class="text-lg text-green-700">${data.yield_ton.toFixed(2)} ตัน</b></div>`
+            });
+            document.getElementById(`yield-info-${id}`).innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-green-700"><i class="fa-solid fa-leaf mr-1"></i> NDVI: ${data.ndvi.toFixed(3)}</span>
+                    <span class="text-[11px] font-bold text-orange-700"><i class="fa-solid fa-weight-hanging mr-1"></i> ${data.yield_ton.toFixed(2)} ตัน</span>
+                </div>
+            `;
+        } else { Swal.fire('Error', data.error, 'error'); }
+    }
+
+    loadFields();
+</script>
+
+<style>
+    .swal2-input { box-shadow: none !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; font-size: 14px !important; height: 42px !important; }
+    .swal2-input:focus { border-color: #16a34a !important; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.1) !important; }
+    .swal2-popup { border-radius: 15px !important; padding: 1.5rem !important; }
+    .leaflet-control-custom { border: none !important; box-shadow: 0 1px 5px rgba(0,0,0,0.4) !important; border-radius: 4px !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,10 @@
+# Secrets
+gee-key.json
+*.json
+
+# Python
+__pycache__/
+*.pyc
+
+# Env
+.env

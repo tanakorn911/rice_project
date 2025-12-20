@@ -62,6 +62,13 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = 'users.User' # ใช้ Custom User
+AUTH_USER_MODEL = 'users.User'
 STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# เมื่อ Login สำเร็จ ให้เด้งไปที่ URL name ที่ชื่อว่า 'dashboard'
+LOGIN_REDIRECT_URL = 'dashboard_router'
+
+# (แนะนำ) เมื่อ Logout สำเร็จ ให้กลับมาหน้า Login
+LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_ON_GET = True

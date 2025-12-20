@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   db:
-    image: postgis/postgis:13-3.1
+    image: postgis/postgis:15-3.3 
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -11,15 +11,16 @@ services:
       - POSTGRES_PASSWORD=password
     ports:
       - "5432:5432"
+    restart: always
 
   web:
     build: .
     command: >
-      sh -c "python manage.py migrate &&
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/app/backend
-      # Mount ไฟล์ Key เข้าไปเพื่อให้แก้แล้วไม่ต้อง Rebuild
       - ./gee-key.json:/app/backend/gee-key.json
     ports:
       - "8000:8000"
@@ -27,6 +28,7 @@ services:
       - db
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/backend/gee-key.json
+      - PYTHONUNBUFFERED=1
 
 volumes:
   postgres_data:
