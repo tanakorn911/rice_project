@@ -9,7 +9,7 @@ import json
 from .models import RiceField, YieldEstimation
 from .services.gee_service import get_ndvi_yield
 
-# View สำหรับหน้าเว็บ HTML
+
 @login_required
 def farmer_dashboard(request):
     return render(request, 'farmer_dashboard.html')
