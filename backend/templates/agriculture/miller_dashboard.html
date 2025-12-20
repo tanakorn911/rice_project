@@ -1,77 +1,280 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="mb-6"><h1 class="text-2xl font-bold">แผงควบคุมโรงสี (รับซื้อข้าว)</h1></div>
+<div class="h-[calc(100vh-100px)] flex flex-col gap-6">
+    
+    <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative z-20">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-industry text-blue-600"></i> แผงควบคุมโรงสี (รับซื้อข้าว)
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">จัดการการรับซื้อและดูพิกัดแปลงนาเกษตรกร</p>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <div class="relative">
+                <button onclick="toggleNotif()" class="p-2.5 rounded-full hover:bg-gray-100 transition relative focus:outline-none group">
+                    <i class="fa-solid fa-bell text-gray-500 text-xl group-hover:text-blue-600 transition-colors"></i>
+                    <span id="notif-badge" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden border-2 border-white transform translate-x-1 -translate-y-1 shadow-sm animate-pulse">0</span>
+                </button>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-1 bg-white p-4 rounded shadow h-[600px] flex flex-col">
-        <h3 class="font-bold mb-4 text-green-700">📢 รายการแจ้งขายล่าสุด</h3>
-        <div class="overflow-y-auto flex-grow space-y-3" id="saleList">
-            <p class="text-center text-gray-400 mt-10">รอข้อมูล...</p>
+                <div id="notif-dropdown" class="hidden absolute right-0 mt-4 w-96 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-in-up origin-top-right">
+                    <div class="bg-gradient-to-r from-blue-50 to-white px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                        <span class="text-sm font-bold text-gray-700">การแจ้งเตือน</span>
+                        <span class="text-xs text-blue-500 cursor-pointer hover:text-blue-700" onclick="markAllRead()">อ่านทั้งหมด</span>
+                    </div>
+                    <div id="notif-list-container" class="max-h-80 overflow-y-auto custom-scrollbar bg-white p-0">
+                        </div>
+                </div>
+            </div>
+
+            <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 shadow-sm flex items-center">
+                <span class="text-sm font-bold mr-2">🛒 รอรับซื้อ:</span>
+                <span id="sale-count" class="text-xl font-bold">0</span> 
+                <span class="text-xs ml-1">รายการ</span>
+            </div>
         </div>
     </div>
 
-    <div class="lg:col-span-2 bg-white p-4 rounded shadow">
-        <h3 class="font-bold mb-2">พิกัดแปลงนาที่แจ้งขาย</h3>
-        <div id="map" class="h-[530px] w-full rounded border"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow overflow-hidden">
+        <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden relative z-10">
+            <div class="p-4 border-b border-gray-100 bg-gray-50/50 backdrop-blur flex justify-between items-center">
+                <h3 class="font-bold text-gray-700 flex items-center">
+                    <i class="fa-solid fa-bullhorn text-orange-500 mr-2"></i> ตลาดซื้อขายข้าว
+                </h3>
+                <div class="flex gap-2 text-[10px]">
+                    <span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">รอซื้อ</span>
+                    <span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">ขายแล้ว</span>
+                </div>
+            </div>
+            
+            <div class="overflow-y-auto flex-grow p-4 space-y-3 custom-scrollbar relative" id="saleList">
+                <div class="flex flex-col items-center justify-center h-40 text-gray-400 space-y-2">
+                    <i class="fa-solid fa-circle-notch fa-spin text-2xl text-blue-200"></i>
+                    <p class="text-sm">กำลังโหลดข้อมูล...</p>
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+        </div>
+
+        <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-gray-100 h-full relative flex flex-col group overflow-hidden">
+            <div class="absolute top-4 left-4 z-[400] bg-white/95 backdrop-blur px-4 py-2 rounded-xl shadow-md border border-gray-200 pointer-events-none">
+                <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-map-location-dot text-blue-600"></i> พิกัดแปลงนา
+                </h2>
+            </div>
+            <div id="map" class="w-full h-full rounded-2xl z-0 bg-slate-100"></div>
+        </div>
     </div>
 </div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .animate-fade-in-up { animation: fadeInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    var map = L.map('map', {center:[19.0289, 99.8953], zoom:11, layers:[L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']})]});
+    // ==========================================
+    // 1. Map Setup
+    // ==========================================
+    var map = L.map('map', { center:[19.1667, 99.9000], zoom:11, zoomControl: false });
+    L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']}).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
     var markers = L.featureGroup().addTo(map);
+    let lastReadTime = new Date(localStorage.getItem('millerLastRead') || 0);
 
+    // ==========================================
+    // 2. Main Data Loop
+    // ==========================================
     async function loadData() {
-        // ✅ ดึง API Sales
-        const res = await fetch('/api/sales/');
-        const sales = await res.json();
-        
-        const listDiv = document.getElementById('saleList');
-        listDiv.innerHTML = '';
-        markers.clearLayers();
+        try {
+            const res = await fetch('/api/sales/');
+            const sales = await res.json();
+            
+            const listDiv = document.getElementById('saleList');
+            const countSpan = document.getElementById('sale-count');
+            
+            // --- 2.1 แยกและเรียงลำดับข้อมูล (Sorting Logic) ---
+            const openSales = sales.filter(s => s.status === 'OPEN').sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+            const closedSales = sales.filter(s => s.status === 'CLOSED').sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
-        if (sales.length === 0) {
-            listDiv.innerHTML = '<p class="text-center text-gray-400 mt-10">ยังไม่มีรายการขาย</p>';
-            return;
-        }
+            // รวมกลับ โดยเอา OPEN ไว้บนสุด
+            const sortedSales = [...openSales, ...closedSales];
 
-        sales.forEach(s => {
-            listDiv.innerHTML += `
-                <div class="border p-3 rounded hover:bg-yellow-50 transition cursor-pointer bg-gray-50" onclick="focusMap(${s.id})">
-                    <div class="flex justify-between font-bold text-gray-800">
-                        <span>${s.farmer_name}</span>
-                        <span class="text-green-600 font-bold text-lg">${s.quantity_ton} ตัน</span>
-                    </div>
-                    <div class="text-sm text-gray-600 mt-1">
-                        พันธุ์: <span class="text-blue-600">${s.variety_display}</span><br>
-                        ราคาเสนอ: <b>${s.price_per_ton}</b> บ./ตัน<br>
-                        <i class="fa-solid fa-phone"></i> ${s.phone}
-                    </div>
-                    <div class="text-xs text-gray-400 mt-2 text-right">แปลง: ${s.field_name}</div>
-                </div>
-            `;
+            // --- 2.2 อัปเดต Notification ---
+            const newOffers = openSales.filter(s => new Date(s.created_at) > lastReadTime);
+            updateNotificationUI(newOffers);
 
-            if(s.field_location) {
-                const geoJson = JSON.parse(s.field_location);
-                const layer = L.geoJSON(geoJson, {style:{color:"#ef4444", fillOpacity:0.5, weight: 2}})
-                    .bindPopup(`<b>${s.farmer_name}</b><br>ขาย: ${s.quantity_ton} ตัน<br>ราคา: ${s.price_per_ton}`);
-                layer.saleId = s.id;
-                markers.addLayer(layer);
+            // --- 2.3 Render รายการ ---
+            listDiv.innerHTML = '';
+            markers.clearLayers();
+            countSpan.innerText = openSales.length; 
+
+            if (sortedSales.length === 0) {
+                listDiv.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-10"><i class="fa-solid fa-basket-shopping text-5xl mb-3"></i><p>ไม่มีข้อมูล</p></div>`;
+                return;
             }
-        });
+
+            sortedSales.forEach(s => {
+                const isClosed = s.status === 'CLOSED';
+                const totalPrice = (s.quantity_ton * s.price_per_ton).toLocaleString();
+                const pricePerTon = s.price_per_ton.toLocaleString();
+                const datePost = new Date(s.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
+                
+                // ✅ ดึงค่าพื้นที่มาแสดง (ถ้าไม่มีให้แสดง - )
+                const fieldArea = s.field_area ? s.field_area : '-';
+
+                // กำหนด Style ตามสถานะ
+                let borderClass = isClosed ? "border-gray-300 opacity-60 grayscale-[50%]" : "border-l-4 border-l-orange-500";
+                let badgeStatus = isClosed 
+                    ? `<span class="bg-gray-200 text-gray-600 text-[10px] px-2 py-0.5 rounded-full font-bold">ขายแล้ว</span>`
+                    : `<span class="bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">รอรับซื้อ</span>`;
+                
+                let actionBtn = isClosed 
+                    ? `<button class="w-full bg-gray-100 text-gray-400 font-bold py-2 rounded-lg cursor-not-allowed" disabled><i class="fa-solid fa-check"></i> รายการนี้ขายแล้ว</button>`
+                    : `<button onclick="confirmBuy(event, ${s.id}, '${s.farmer_name}', '${totalPrice}', ${s.quantity_ton}, '${s.variety_display}', '${s.field_name}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg shadow transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-handshake"></i> ยืนยันการรับซื้อ</button>`;
+
+                const isNew = !isClosed && new Date(s.created_at) > lastReadTime;
+                const newBadge = isNew ? `<span class="ml-2 bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded font-bold animate-bounce">NEW</span>` : '';
+
+                listDiv.innerHTML += `
+                    <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group relative overflow-hidden ${borderClass} mb-3" onclick="focusMap(${s.id})">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                    <i class="fa-solid fa-user-circle text-gray-400"></i> ${s.farmer_name} ${newBadge}
+                                </h4>
+                                <p class="text-xs text-gray-500 flex items-center gap-1"><i class="fa-solid fa-clock"></i> ${datePost} ${badgeStatus}</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-lg">${s.quantity_ton} ตัน</span>
+                        </div>
+                        <div class="bg-gray-50 p-3 rounded-lg border border-dashed border-gray-200 text-sm space-y-1 mb-3">
+                            <div class="flex justify-between"><span class="text-gray-500">พันธุ์ข้าว:</span><span class="font-semibold text-blue-600">${s.variety_display}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">พื้นที่:</span><span class="font-semibold text-gray-700">${fieldArea} ไร่</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500">ราคา/ตัน:</span><span class="font-semibold">${pricePerTon} บ.</span></div>
+                            <div class="flex justify-between border-t border-gray-200 pt-1 mt-1"><span class="text-gray-700 font-bold">ราคารวม:</span><span class="font-bold text-green-600 text-lg">${totalPrice} บ.</span></div>
+                            <div class="flex justify-between items-center mt-2 pt-2 border-t border-dashed border-gray-300"><span class="text-gray-500"><i class="fa-solid fa-phone"></i> ติดต่อ:</span><a href="tel:${s.phone}" class="font-bold text-gray-700 hover:text-blue-600">${s.phone}</a></div>
+                        </div>
+                        ${actionBtn}
+                    </div>
+                `;
+
+                if(s.field_location) {
+                    try {
+                        const geoJson = JSON.parse(s.field_location);
+                        const color = isClosed ? '#9ca3af' : '#f97316';
+                        const opacity = isClosed ? 0.3 : 0.6;
+                        const layer = L.geoJSON(geoJson, { style:{color: color, fillOpacity: opacity, weight: 2} })
+                            .bindPopup(`<div class="text-center min-w-[150px]"><b class="text-lg text-gray-800">${s.farmer_name}</b><br><span class="text-${isClosed?'gray':'green'}-600 font-bold text-xl">${isClosed ? 'ขายแล้ว' : s.quantity_ton + ' ตัน'}</span><br><span class="text-xs text-gray-400">${s.variety_display} (${fieldArea} ไร่)</span></div>`);
+                        layer.saleId = s.id;
+                        markers.addLayer(layer);
+                    } catch(e){}
+                }
+            });
+
+        } catch(e) { console.error("Load Data Error:", e); }
     }
 
+    // ==========================================
+    // 3. Notification UI
+    // ==========================================
+    function updateNotificationUI(newOffers) {
+        const badge = document.getElementById('notif-badge');
+        const listContainer = document.getElementById('notif-list-container');
+        
+        if (newOffers.length > 0) {
+            badge.innerText = newOffers.length;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+
+        if (newOffers.length === 0) {
+            listContainer.innerHTML = `<div class="p-8 text-center text-gray-400 text-sm"><i class="fa-regular fa-bell-slash text-2xl mb-2 opacity-50"></i><br>ไม่มีรายการใหม่</div>`;
+        } else {
+            listContainer.innerHTML = '';
+            newOffers.forEach(s => {
+                const time = new Date(s.created_at).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+                listContainer.innerHTML += `
+                    <div class="p-3 border-b border-gray-50 hover:bg-blue-50 cursor-pointer transition-colors" onclick="focusMap(${s.id})">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-blue-100 text-blue-600 p-2 rounded-full h-8 w-8 flex items-center justify-center font-bold text-xs shrink-0">NEW</div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800 line-clamp-1">${s.farmer_name}</p>
+                                <p class="text-xs text-gray-600">${s.quantity_ton} ตัน • ${s.variety_display}</p>
+                                <p class="text-[10px] text-gray-400 mt-1">${time} น.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    // ==========================================
+    // 4. Actions
+    // ==========================================
     window.focusMap = function(saleId) {
         markers.eachLayer(function(layer) {
             if(layer.saleId === saleId) {
-                map.flyToBounds(layer.getBounds(), {padding:[50,50], maxZoom:15});
+                map.flyToBounds(layer.getBounds(), {padding:[100,100], maxZoom:15, duration:1.5});
                 layer.openPopup();
+            }
+        });
+        document.getElementById('notif-dropdown').classList.add('hidden');
+    }
+
+    window.confirmBuy = async function(e, saleId, farmerName, totalPrice, qty, variety, fieldName) {
+        e.stopPropagation(); 
+        Swal.fire({
+            title: 'ยืนยันการรับซื้อ?',
+            html: `<div class="text-left bg-blue-50 p-4 rounded-lg border border-blue-100"><p><b>ผู้ขาย:</b> ${farmerName}</p><p><b>สินค้า:</b> ${variety} (${qty} ตัน)</p><p><b>ยอดสุทธิ:</b> <span class="text-green-600 text-xl font-bold">${totalPrice}</span> บาท</p></div>`,
+            icon: 'question', showCancelButton: true, confirmButtonColor: '#16a34a', cancelButtonColor: '#d33', confirmButtonText: 'ยืนยัน', cancelButtonText: 'ยกเลิก'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`/api/sales/${saleId}/`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                        body: JSON.stringify({ status: 'CLOSED' })
+                    });
+                    if (res.ok) {
+                        Swal.fire('สำเร็จ!', 'บันทึกการรับซื้อเรียบร้อยแล้ว', 'success');
+                        loadData(); 
+                    } else { Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error'); }
+                } catch (error) { Swal.fire('Error', 'เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error'); }
             }
         });
     }
 
+    window.toggleNotif = function() {
+        document.getElementById('notif-dropdown').classList.toggle('hidden');
+    }
+    
+    window.markAllRead = function() {
+        lastReadTime = new Date();
+        localStorage.setItem('millerLastRead', lastReadTime);
+        loadData(); 
+        document.getElementById('notif-dropdown').classList.add('hidden');
+    }
+
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('notif-dropdown');
+        const button = event.target.closest('button');
+        const isToggleBtn = button && button.getAttribute('onclick')?.includes('toggleNotif');
+        const isInsideDropdown = event.target.closest('#notif-dropdown');
+        if (!isToggleBtn && !isInsideDropdown && !dropdown.classList.contains('hidden')) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
     loadData();
-    setInterval(loadData, 10000);
+    setInterval(loadData, 5000); 
 </script>
 {% endblock %}

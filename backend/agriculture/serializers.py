@@ -1,12 +1,24 @@
 from rest_framework import serializers
-from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from .models import RiceField, YieldEstimation, SaleNotification
 
 class RiceFieldSerializer(serializers.ModelSerializer):
     variety_display = serializers.CharField(source='get_variety_display', read_only=True)
+    boundary = serializers.SerializerMethodField()
+    latest_yield = serializers.SerializerMethodField()
+
     class Meta:
         model = RiceField
         fields = '__all__'
+
+    def get_boundary(self, obj):
+        if obj.boundary: return obj.boundary.json
+        return None
+
+    def get_latest_yield(self, obj):
+        estimation = obj.yieldestimation_set.order_by('-created_at').first()
+        if estimation:
+            return {'ndvi': estimation.ndvi_mean, 'yield': estimation.estimated_yield_ton}
+        return None
 
 class YieldEstimationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,13 +28,19 @@ class YieldEstimationSerializer(serializers.ModelSerializer):
 class SaleNotificationSerializer(serializers.ModelSerializer):
     farmer_name = serializers.CharField(source='farmer.username', read_only=True)
     field_name = serializers.CharField(source='rice_field.name', read_only=True)
+    field_area = serializers.FloatField(source='rice_field.area_rai', read_only=True)
     variety_display = serializers.CharField(source='rice_field.get_variety_display', read_only=True)
     field_location = serializers.SerializerMethodField()
+
+    # ✅ เพิ่ม: ข้อมูลผู้ซื้อ (Miller)
+    buyer_name = serializers.CharField(source='buyer.username', read_only=True)
+    buyer_phone = serializers.CharField(source='buyer.phone', read_only=True)
 
     class Meta:
         model = SaleNotification
         fields = ['id', 'farmer_name', 'rice_field', 'field_name', 'field_location', 'variety_display', 
-                  'quantity_ton', 'price_per_ton', 'phone', 'status', 'created_at']
+                  'quantity_ton', 'price_per_ton', 'phone', 'status', 'created_at', 'field_area', 
+                  'buyer', 'buyer_name', 'buyer_phone', 'sold_at']
 
     def get_field_location(self, obj):
         if obj.rice_field and obj.rice_field.boundary:

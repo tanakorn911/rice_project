@@ -9,7 +9,6 @@ class RiceField(models.Model):
     district = models.CharField(max_length=100, default='Phayao')
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # เพิ่มตัวเลือกพันธุ์ข้าว
     VARIETY_CHOICES = [
         ('KDML105', 'หอมมะลิ 105'),
         ('RD6', 'กข 6 (ข้าวเหนียว)'),
@@ -29,13 +28,17 @@ class YieldEstimation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class SaleNotification(models.Model):
-    farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    farmer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sales')
     rice_field = models.ForeignKey(RiceField, on_delete=models.CASCADE)
     quantity_ton = models.FloatField(help_text="จำนวนตันที่ต้องการขาย")
     price_per_ton = models.DecimalField(max_digits=10, decimal_places=2, help_text="ราคาที่ต้องการ (บาท/ตัน)")
     phone = models.CharField(max_length=20, help_text="เบอร์ติดต่อ")
     status = models.CharField(max_length=20, default='OPEN', choices=[('OPEN', 'รอรับซื้อ'), ('CLOSED', 'ขายแล้ว')])
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # ✅ เพิ่ม: เก็บข้อมูลคนซื้อ และ เวลาที่ซื้อ
+    buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='purchases')
+    sold_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.farmer} ขาย {self.quantity_ton} ตัน"

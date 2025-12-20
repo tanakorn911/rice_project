@@ -172,7 +172,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             val = ndvi.reduceRegion(
                 reducer=ee.Reducer.mean(), 
                 geometry=ee_geometry, 
-                scale=20,  
+                scale=10,  
                 maxPixels=1e9
             ).get('NDVI').getInfo()
             
@@ -199,11 +199,21 @@ class SaleNotificationViewSet(viewsets.ModelViewSet):
         user = self.request.user
         role = getattr(user, 'role', 'FARMER')
         
-        # แก้ไขให้ Admin, Miller, Govt เห็นทั้งหมด
+        # ✅ แก้ไข: Admin, Miller, Govt เห็น "ทั้งหมด" (ทั้ง OPEN และ CLOSED)
         if user.is_superuser or role in ['MILLER', 'GOVT']:
-            return SaleNotification.objects.filter(status='OPEN').order_by('-created_at')
+            return SaleNotification.objects.all().order_by('-created_at')
             
         return SaleNotification.objects.filter(farmer=user).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(farmer=self.request.user)
+        
+    def perform_update(self, serializer):
+        if 'status' in serializer.validated_data and serializer.validated_data['status'] == 'CLOSED':
+            # ถ้าเป็น Miller กดซื้อ ให้บันทึกชื่อและเวลา
+            if self.request.user.role == 'MILLER':
+                serializer.save(buyer=self.request.user, sold_at=datetime.datetime.now())
+            else:
+                serializer.save()
+        else:
+            serializer.save()
