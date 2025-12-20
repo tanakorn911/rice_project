@@ -1,6 +1,5 @@
 FROM python:3.10-slim-bullseye
 
-# ติดตั้ง System Dependencies สำหรับ GIS (GDAL, PROJ, GEOS)
 RUN apt-get update && apt-get install -y \
     binutils \
     libproj-dev \

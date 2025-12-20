@@ -29,6 +29,6 @@ services:
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/backend/gee-key.json
       - PYTHONUNBUFFERED=1
-
+    restart: on-failure
 volumes:
   postgres_data:
