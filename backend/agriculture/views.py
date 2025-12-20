@@ -69,10 +69,9 @@ def govt_dashboard(request):
 @api_view(['GET'])
 @login_required
 def dashboard_stats(request):
-    """API สรุปข้อมูลสถิติรวม (แก้ไขให้ข้อมูล Update ตามแปลงนาที่มีอยู่จริง)"""
+    """API สรุปข้อมูลสถิติรวม"""
     
     # 1. ดึงเฉพาะการวิเคราะห์ NDVI ที่ "แปลงนา" ยังไม่ถูกลบ (Active Fields only)
-    # เราใช้ filter(field__isnull=False) เพื่อความชัวร์ว่ายังมี Object แปลงนาเชื่อมโยงอยู่
     estimations = YieldEstimation.objects.filter(field__in=RiceField.objects.all())
     
     # 2. คำนวณสถิติสุขภาพข้าวจากรายการที่กรองแล้ว
@@ -99,7 +98,7 @@ def dashboard_stats(request):
         'total_yield': round(total_yield, 2),
         'charts': {
             'variety': {'labels': v_labels, 'data': v_data},
-            'health': {'data': [h_good, h_med, h_poor]} # ข้อมูลจะกลายเป็น 0 ทันทีถ้าลบแปลงนา
+            'health': {'data': [h_good, h_med, h_poor]}
         }
     })
 
@@ -110,7 +109,6 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         role = getattr(user, 'role', 'FARMER')
-        # Admin และ Miller เห็นทุกคน, Farmer เห็นแค่ของตัวเอง
         if user.is_superuser or role in ['MILLER', 'GOVT']:
             return RiceField.objects.all().order_by('-created_at')
         return RiceField.objects.filter(owner=user).order_by('-created_at')
@@ -150,7 +148,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def calculate_yield(self, request, pk=None):
-        """วิเคราะห์ NDVI และคำนวณผลผลิตผ่าน Google Earth Engine"""
+        """วิเคราะห์ NDVI และคำนวณผลผลิตผ่าน Google Earth Engine (แบบรวดเร็ว)"""
         rice_field = self.get_object()
         try:
             geom_json = json.loads(rice_field.boundary.json)
@@ -159,21 +157,27 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             end_date = datetime.datetime.now()
             start_date = end_date - datetime.timedelta(days=30)
             
+            # 1. ดึงภาพดาวเทียม (ตัดการเช็ค .size() ออกเพื่อความเร็ว)
             dataset = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
                        .filterBounds(ee_geometry)
                        .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
                        .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
                        .sort('CLOUDY_PIXEL_PERCENTAGE'))
             
-            if dataset.size().getInfo() == 0:
-                return Response({'error': 'ไม่พบภาพดาวเทียมในช่วงเวลานี้'}, status=400)
-            
+            # 2. คำนวณ NDVI
             image = dataset.first()
             ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI')
-            val = ndvi.reduceRegion(ee.Reducer.mean(), ee_geometry, 10).get('NDVI').getInfo()
+            
+            # 3. ดึงค่าเฉลี่ย (ลด scale=20, เพิ่ม maxPixels) ช่วยให้เร็วขึ้นมาก
+            val = ndvi.reduceRegion(
+                reducer=ee.Reducer.mean(), 
+                geometry=ee_geometry, 
+                scale=20,  
+                maxPixels=1e9
+            ).get('NDVI').getInfo()
             
             if val is None: 
-                return Response({'error': 'คำนวณค่า NDVI ไม่ได้'}, status=400)
+                return Response({'error': 'ไม่พบภาพดาวเทียมที่ชัดเจนในช่วงนี้'}, status=400)
             
             # Yield Model: NDVI * 850 (กก./ไร่) / 1000 = ตัน
             yield_ton = (val * 850 * rice_field.area_rai) / 1000
@@ -184,7 +188,8 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             
             return Response({'ndvi': round(val, 4), 'yield_ton': round(yield_ton, 2)})
         except Exception as e:
-            return Response({'error': f'GEE Error: {str(e)}'}, status=500)
+            print(f"GEE Error: {e}")
+            return Response({'error': 'ระบบดาวเทียมตอบสนองช้า หรือพื้นที่นี้ไม่มีภาพ'}, status=500)
 
 class SaleNotificationViewSet(viewsets.ModelViewSet):
     """จัดการการแจ้งขายผลผลิต"""
@@ -192,9 +197,13 @@ class SaleNotificationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == 'FARMER':
-            return SaleNotification.objects.filter(farmer=user).order_by('-created_at')
-        return SaleNotification.objects.filter(status='OPEN').order_by('-created_at')
+        role = getattr(user, 'role', 'FARMER')
+        
+        # แก้ไขให้ Admin, Miller, Govt เห็นทั้งหมด
+        if user.is_superuser or role in ['MILLER', 'GOVT']:
+            return SaleNotification.objects.filter(status='OPEN').order_by('-created_at')
+            
+        return SaleNotification.objects.filter(farmer=user).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(farmer=self.request.user)
