@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+GDAL_LIBRARY_PATH = "/usr/lib/x86_64-linux-gnu/libgdal.so"
 SECRET_KEY = 'django-insecure-change-me-please'
 DEBUG = True
 ALLOWED_HOSTS = ['*']

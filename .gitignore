@@ -8,3 +8,16 @@ __pycache__/
 
 # Env
 .env
+
+# Virtual Environment
+venv/
+.env
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+
+# OS
+.DS_Store
