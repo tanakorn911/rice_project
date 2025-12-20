@@ -102,6 +102,8 @@
                             <option value="KDML105">ข้าวหอมมะลิ 105</option>
                             <option value="RD6">ข้าวเหนียว กข 6</option>
                             <option value="RD15">ข้าวหอมมะลิ กข 15</option>
+                            <option value="PT105">ข้าวหอมมะลิ ปทุมธานี 105</option>
+                            <option value="other">พันธุ์อื่น ๆ</option>
                         </select>
                     </div>
                 </div>
@@ -258,7 +260,7 @@
             method: 'POST',
             headers: {'X-CSRFToken': csrftoken}
         });
-        const data = await res.json();
+        const data = await res.jsราon();
         if(res.ok) {
             Swal.fire({
                 title: 'วิเคราะห์สำเร็จ',
