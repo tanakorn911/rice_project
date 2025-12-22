@@ -18,6 +18,9 @@ class RiceField(models.Model):
     ]
     variety = models.CharField(max_length=20, choices=VARIETY_CHOICES, default='KDML105')
 
+    class Meta:
+        unique_together = ('owner', 'name')
+
     def __str__(self):
         return f"{self.name} - {self.owner}"
 

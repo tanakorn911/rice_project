@@ -22,8 +22,8 @@
 
                     <div id="notif-dropdown" class="hidden absolute right-0 mt-3 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50 animate-fade-in-down">
                         <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                            <span class="text-sm font-bold text-gray-700"><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการขาย</span>
-                            <span class="text-xs text-blue-500 cursor-pointer hover:text-blue-700 hover:underline" onclick="markAllRead()">ล้างการแจ้งเตือน</span>
+                            <span class="text-sm font-bold text-gray-700"><i class="fa-solid fa-clock-rotate-left"></i> แจ้งเตือน</span>
+                            <span class="text-xs text-blue-500 cursor-pointer hover:text-blue-700 hover:underline" onclick="markAllRead()">อ่านทั้งหมด</span>
                         </div>
                         <div id="notif-list" class="max-h-72 overflow-y-auto custom-scrollbar bg-white">
                             <div class="p-6 text-center text-gray-400 text-sm flex flex-col items-center">
@@ -51,7 +51,7 @@
             <div class="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
         </div>
     </div>
-
+    
     <div class="lg:col-span-8 h-full">
         <div class="bg-white p-1 rounded-2xl shadow-lg border border-gray-100 h-full flex flex-col relative overflow-hidden group">
             <div class="absolute top-4 left-14 z-[400] bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl shadow-md border border-gray-200 pointer-events-none transition-opacity group-hover:opacity-100">
@@ -69,53 +69,50 @@
 </div>
 
 <style>
-    /* Custom Scrollbar */
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     
-    /* Animation สำหรับ Dropdown */
     @keyframes fadeInDown {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
     }
     .animate-fade-in-down { animation: fadeInDown 0.2s ease-out; }
 
-    /* SweetAlert Tweaks */
     .swal2-input, .swal2-select { 
         border: 1px solid #e2e8f0 !important; border-radius: 12px !important; 
         height: 45px !important; margin: 10px auto !important; box-shadow: none !important;
     }
     .swal2-input:focus, .swal2-select:focus { border-color: #22c55e !important; ring: 2px solid #bbf7d0 !important; }
-    .swal2-popup { border-radius: 20px !important; padding: 2rem !important; font-family: 'Kanit', sans-serif; }
+    .swal2-popup { border-radius: 20px !important; padding: 2rem !important; font-family: 'Sarabun', sans-serif; }
+    
+    /* ปรับปุ่ม Close ให้สวยขึ้น */
+    .swal2-close {
+        font-size: 1.5em !important;
+        color: #64748b !important;
+    }
+    .swal2-close:hover {
+        color: #ef4444 !important;
+    }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
     // ==========================================
-    // 1. Map Initialization & Configuration
+    // 1. Map Initialization
     // ==========================================
     var googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: 'Google Hybrid' });
-    var googleSat = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: 'Google Satellite' });
-    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: 'OpenStreetMap' });
+    var map = L.map('map', { center: [19.1667, 99.9000], zoom: 12, layers: [googleHybrid], zoomControl: false });
 
-    var map = L.map('map', { 
-        center: [19.1667, 99.9000], zoom: 12, 
-        layers: [googleHybrid], zoomControl: false 
-    });
-
-    // เพิ่มปุ่มควบคุม
-    L.control.layers({ "ดาวเทียม (ผสม)": googleHybrid, "ดาวเทียม (ล้วน)": googleSat, "แผนที่ถนน": osm }, null, {position: 'topright'}).addTo(map);
-    L.control.scale({ imperial: false, metric: true, position: 'bottomleft' }).addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     var drawnItems = new L.FeatureGroup().addTo(map);
     var fieldLayers = {}; 
-    var lastStatusMap = {}; // เก็บสถานะเก่าเพื่อเปรียบเทียบ (สำหรับแจ้งเตือน)
+    var lastStatusMap = {}; 
 
-    // เครื่องมือวาดแปลงนา
+    // เครื่องมือวาด
     map.addControl(new L.Control.Draw({
         position: 'topright',
         draw: { polygon: true, rectangle: true, marker: false, circle: false, polyline: false },
@@ -133,26 +130,32 @@
         }
     });
     map.addControl(new LocateControl());
-    
+
     map.on('locationfound', function(e) {
-        if (window.currentPosMarker) map.removeLayer(window.currentPosMarker);
-        window.currentPosMarker = L.marker(e.latlng).addTo(map).bindPopup("คุณอยู่ที่นี่").openPopup();
+        L.popup().setLatLng(e.latlng).setContent("คุณอยู่ที่นี่").openOn(map);
     });
 
     // ==========================================
     // 2. Event Handlers (Drawing)
     // ==========================================
-    map.on(L.Draw.Event.CREATED, function (e) {
+    map.on(L.Draw.Event.CREATED, async function (e) {
         var layer = e.layer;
         var center = layer.getBounds().getCenter();
         
         // Simple Geofence Check (Phayao)
         if (center.lng < 99.80 || center.lng > 100.10 || center.lat < 19.00 || center.lat > 19.35) {
-            Swal.fire({ icon: 'error', title: 'นอกเขตพื้นที่!', text: 'กรุณาวาดแปลงนาภายใน อ.เมือง จ.พะเยา เท่านั้น' });
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'นอกเขตพื้นที่!', 
+                text: 'กรุณาวาดแปลงนาภายใน อ.เมือง จ.พะเยา เท่านั้น',
+                showCloseButton: true,
+                timer: 5000,
+                timerProgressBar: true 
+            });
             return;
         }
 
-        Swal.fire({
+        const { value: formValues } = await Swal.fire({
             title: '🌱 เพิ่มแปลงนาใหม่',
             html: `
                 <div class="text-left space-y-3">
@@ -175,48 +178,62 @@
                 if(!name) Swal.showValidationMessage('กรุณาใส่ชื่อแปลงนา');
                 return { name, variety: document.getElementById('swal-variety').value }
             }
-        }).then((result) => {
-            if (result.isConfirmed) saveField(result.value.name, layer.toGeoJSON().geometry, result.value.variety);
         });
+
+        if (formValues) {
+            saveField(formValues.name, layer.toGeoJSON().geometry, formValues.variety);
+        }
     });
 
     async function saveField(name, geom, variety) {
         try {
             const res = await fetch('/api/rice-fields/', {
-                method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrftoken},
+                method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
                 body: JSON.stringify({name, geometry: geom, variety})
             });
+            const data = await res.json();
+            
             if(res.ok) { 
-                Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false });
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'บันทึกสำเร็จ', 
+                    timer: 5000, 
+                    timerProgressBar: true,
+                    showCloseButton: true,
+                    showConfirmButton: false 
+                });
                 loadFields(); 
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อผิดพลาด',
+                    text: data.error || 'บันทึกไม่สำเร็จ',
+                    showCloseButton: true
+                });
             }
-        } catch(e) { Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'); }
+        } catch(e) { 
+            Swal.fire({ icon: 'error', title: 'Error', text: 'บันทึกไม่สำเร็จ', showCloseButton: true }); 
+        }
     }
 
     // ==========================================
-    // 3. Core Logic: Load Data & Real-time Update
+    // 3. Core Logic: Load Data
     // ==========================================
     async function loadFields() {
         try {
-            // ดึงข้อมูล 2 API พร้อมกันเพื่อประสิทธิภาพ
             const [fieldRes, saleRes] = await Promise.all([fetch('/api/rice-fields/'), fetch('/api/sales/')]);
             const fields = await fieldRes.json();
             const sales = await saleRes.json();
             
-            // Map ข้อมูลการขาย (Key = FieldID) และแยกรายการที่ขายแล้ว
             const saleMap = {};
-            const soldList = []; 
+            const notifList = [];
             sales.forEach(s => { 
-                // เก็บรายการล่าสุดของแต่ละแปลง
-                if (!saleMap[s.rice_field]) { saleMap[s.rice_field] = s; }
-                // เก็บรายการที่ขายแล้วทั้งหมดเข้า Notification List
-                if (s.status === 'CLOSED') { soldList.push(s); }
+                if (!saleMap[s.rice_field]) saleMap[s.rice_field] = s;
+                if (s.status === 'REQUESTED' || s.status === 'SOLD') notifList.push(s);
             });
 
-            // อัปเดต UI แจ้งเตือน
-            updateNotifications(soldList);
+            updateNotifications(notifList);
 
-            // เคลียร์ UI รายการแปลงนา
             const listContainer = document.getElementById('fieldList');
             document.getElementById('field-count').innerText = fields.length;
             listContainer.innerHTML = '';
@@ -232,82 +249,111 @@
                 const activeSale = saleMap[f.id];
                 const status = activeSale ? activeSale.status : 'NONE';
 
-                // --- ตรวจสอบการเปลี่ยนแปลงสถานะเพื่อแจ้งเตือน Popup ---
-                if (lastStatusMap[f.id] === 'OPEN' && status === 'CLOSED') {
-                    Swal.fire({
-                        title: '🎉 ยินดีด้วย! ขายสำเร็จ',
-                        html: `แปลงนา <b>"${f.name}"</b><br>ได้รับการรับซื้อเรียบร้อยแล้ว`,
-                        icon: 'success', timer: 5000, timerProgressBar: true
-                    });
+                // ✅ Popup Alert Status Change (แจ้งเตือนเมื่อขายสำเร็จ)
+                if (lastStatusMap[f.id] && lastStatusMap[f.id] !== status) {
+                    if (status === 'REQUESTED') {
+                        Swal.fire({ 
+                            title: 'มีคนขอซื้อ!', 
+                            text: `แปลง "${f.name}" มีผู้สนใจ`, 
+                            icon: 'info',
+                            timer: 10000, // 10 วิ
+                            timerProgressBar: true,
+                            showCloseButton: true
+                        });
+                    } else if (status === 'SOLD') {
+                        Swal.fire({ 
+                            title: '🎉 ยินดีด้วย! ขายสำเร็จ',
+                            html: `แปลงนา <b>"${f.name}"</b><br>ได้รับการรับซื้อเรียบร้อยแล้ว`, 
+                            icon: 'success', 
+                            timer: 10000, // 10 วิ
+                            timerProgressBar: true,
+                            showCloseButton: true
+                        });
+                    }
                 }
-                lastStatusMap[f.id] = status; // อัปเดตสถานะล่าสุด
+                lastStatusMap[f.id] = status;
 
-                // --- กำหนด Style การ์ดตามสถานะ ---
+                // UI Variables
                 let borderClass = "border-l-green-500", bgHover = "hover:bg-green-50";
                 let statusBadge = "", actionButtons = "";
                 let polyColor = "#22c55e", dashArray = '5, 5';
 
-                if (status === 'OPEN') { // รอขาย
-                    borderClass = "border-l-orange-500"; bgHover = "hover:bg-orange-50";
-                    polyColor = "#f97316"; dashArray = null;
-                    statusBadge = `<span class="absolute top-2 right-10 text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold border border-orange-200 shadow-sm animate-pulse"><i class="fa-solid fa-clock"></i> รอรับซื้อ</span>`;
-                    actionButtons = `<div class="col-span-2"><button onclick="cancelSale(${activeSale.id}, '${f.name}')" class="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold py-2.5 rounded-lg transition-all border border-red-100"><i class="fa-solid fa-xmark"></i> ยกเลิกการขาย</button></div>`;
+                // --- Logic การแสดงปุ่มตามสถานะ (Status Flow) ---
+                if (status === 'OPEN') {
+                    // รอขาย
+                    borderClass = "border-l-orange-500"; bgHover = "hover:bg-orange-50"; polyColor = "#f97316"; dashArray = null;
+                    statusBadge = `<span class="absolute top-2 right-10 text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold border border-orange-200 shadow-sm"><i class="fa-solid fa-clock"></i> รอรับซื้อ</span>`;
+                    actionButtons = `<div class="col-span-2"><button onclick="cancelSale(${activeSale.id}, '${f.name}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold py-2.5 rounded-lg border border-red-100"><i class="fa-solid fa-xmark"></i> ยกเลิกการขาย</button></div>`;
                 
-                } else if (status === 'CLOSED') { // ขายแล้ว
-                    borderClass = "border-l-yellow-500"; bgHover = "hover:bg-yellow-50";
-                    polyColor = "#eab308"; dashArray = null;
-                    statusBadge = `<span class="absolute top-2 right-10 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold border border-green-200 shadow-sm"><i class="fa-solid fa-check-circle"></i> ขายแล้ว</span>`;
-                    actionButtons = `<div class="col-span-2"><div class="text-center text-xs text-gray-500 py-2 bg-gray-50 rounded-lg border border-gray-100 flex items-center justify-center gap-2"><i class="fa-solid fa-handshake text-green-500"></i> การซื้อขายเสร็จสมบูรณ์</div></div>`;
-                
-                } else { // ปกติ
-                    // Logic ปุ่มคำนวณใหม่
-                    let calcBtnText = '<i class="fa-solid fa-satellite-dish"></i> วิเคราะห์';
-                    let calcBtnColor = 'bg-gradient-to-r from-orange-400 to-orange-500 hover:from-orange-500 hover:to-orange-600';
-                    if (f.latest_yield) {
-                        calcBtnText = '<i class="fa-solid fa-rotate"></i> คำนวณใหม่';
-                        calcBtnColor = 'bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600';
-                    }
+                } else if (status === 'REQUESTED') {
+                    // มีคนขอซื้อ (รออนุมัติ)
+                    borderClass = "border-l-yellow-500"; bgHover = "hover:bg-yellow-50"; polyColor = "#eab308";
+                    statusBadge = `<span class="absolute top-2 right-10 text-[10px] bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-bold border border-yellow-200 animate-pulse"><i class="fa-solid fa-bell"></i> รออนุมัติ</span>`;
                     actionButtons = `
-                        <button onclick="calcYield(${f.id})" class="flex items-center justify-center gap-2 ${calcBtnColor} text-white text-xs font-bold py-2.5 rounded-lg shadow-sm active:scale-95 transition-all">${calcBtnText}</button>
-                        <button onclick="notifySale(${f.id}, '${f.name}')" class="flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-xs font-bold py-2.5 rounded-lg shadow-sm active:scale-95 transition-all"><i class="fa-solid fa-bullhorn"></i> แจ้งขาย</button>
+                        <div class="col-span-2 bg-yellow-50 p-2 rounded-lg border border-yellow-200 mb-2 text-xs text-gray-700">
+                            <b>ผู้ซื้อ:</b> ${activeSale.buyer_name || 'ไม่ระบุ'}<br>
+                            <b>ติดต่อ:</b> ${activeSale.buyer_contact || '-'}
+                        </div>
+                        <button onclick="respondSale(${activeSale.id}, 'approve')" class="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-2.5 rounded-lg shadow-sm">ขายเลย</button>
+                        <button onclick="respondSale(${activeSale.id}, 'reject')" class="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white text-xs font-bold py-2.5 rounded-lg shadow-sm">ปฏิเสธ</button>
+                    `;
+
+                } else if (status === 'SOLD') {
+                    // ขายแล้ว
+                    borderClass = "border-l-gray-400 opacity-80"; bgHover = "hover:bg-gray-50"; polyColor = "#9ca3af"; dashArray = null;
+                    statusBadge = `<span class="absolute top-2 right-10 text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold border border-gray-200"><i class="fa-solid fa-check-circle"></i> ขายแล้ว</span>`;
+                    actionButtons = `<div class="col-span-2 text-center text-xs text-green-600 py-2 bg-green-50 rounded-lg border border-green-100 font-bold"><i class="fa-solid fa-handshake"></i> ซื้อขายเสร็จสมบูรณ์</div>`;
+
+                } else {
+                    // ปกติ (ยังไม่ขาย)
+                    let calcBtnText = '<i class="fa-solid fa-satellite-dish"></i> วิเคราะห์';
+                    if (f.latest_yield) calcBtnText = '<i class="fa-solid fa-rotate"></i> คำนวณใหม่';
+                    
+                    // ปุ่มแจ้งขายจะกดได้ก็ต่อเมื่อมีผลผลิต (yield > 0)
+                    let canSell = f.latest_yield && f.latest_yield.yield > 0;
+                    let sellBtnClass = canSell ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed';
+                    
+                    actionButtons = `
+                        <button onclick="calcYield(${f.id}, this)" class="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold py-2.5 rounded-lg shadow-sm transition-all">${calcBtnText}</button>
+                        <button onclick="notifySale(${f.id})" class="flex items-center justify-center gap-2 ${sellBtnClass} text-xs font-bold py-2.5 rounded-lg shadow-sm transition-all" ${canSell ? '' : 'disabled'}><i class="fa-solid fa-bullhorn"></i> แจ้งขาย</button>
                     `;
                 }
 
-                // --- ส่วนแสดงผล Yield ---
+                // Render Yield Info
                 let yieldContent = f.latest_yield ? 
                     `<div class="grid grid-cols-2 gap-4 text-center divide-x divide-green-200">
-                        <div><p class="text-[10px] text-gray-500 uppercase">ดัชนีพืชพรรณ (NDVI)</p><p class="text-lg font-bold text-green-700">${f.latest_yield.ndvi.toFixed(3)}</p></div>
-                        <div><p class="text-[10px] text-gray-500 uppercase">คาดการณ์ผลผลิต</p><p class="text-lg font-bold text-orange-600">${f.latest_yield.yield.toFixed(2)} <span class="text-xs text-gray-400 font-normal">ตัน</span></p></div>
+                        <div><p class="text-[10px] text-gray-500 uppercase">NDVI</p><p class="text-lg font-bold text-green-700">${f.latest_yield.ndvi.toFixed(3)}</p></div>
+                        <div><p class="text-[10px] text-gray-500 uppercase">ผลผลิต</p><p class="text-lg font-bold text-orange-600">${f.latest_yield.yield.toFixed(2)} <span class="text-xs text-gray-400 font-normal">ตัน</span></p></div>
                     </div>` : '<p class="text-xs opacity-60">ยังไม่เคยวิเคราะห์ข้อมูล</p>';
                 let yieldClass = f.latest_yield ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-dashed border-gray-200 text-gray-400';
 
-                // --- สร้าง HTML การ์ด ---
+                // Create Card
                 const card = document.createElement('div');
                 card.className = `bg-white border border-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 relative group overflow-hidden border-l-4 ${borderClass} mb-2`;
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-2">
                         <div class="pr-2 overflow-hidden cursor-pointer ${bgHover} rounded p-1 transition-colors w-full" onclick="focusField(${f.id})">
-                            <h3 class="font-bold text-gray-800 text-lg truncate flex items-center gap-2" title="${f.name}">${f.name} <i class="fa-solid fa-magnifying-glass-location text-gray-300 text-xs opacity-50"></i></h3>
+                            <h3 class="font-bold text-gray-800 text-lg truncate flex items-center gap-2">${f.name}</h3>
                             ${statusBadge}
                             <div class="flex flex-wrap items-center gap-2 mt-1">
-                                <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md flex items-center"><i class="fa-solid fa-seedling text-green-500 mr-1"></i> ${f.variety_display || f.variety}</span>
-                                <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md flex items-center"><i class="fa-solid fa-chart-area text-blue-500 mr-1"></i> ${f.area_rai} ไร่</span>
+                                <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md"><i class="fa-solid fa-seedling text-green-500 mr-1"></i> ${f.variety_display || f.variety}</span>
+                                <span class="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md"><i class="fa-solid fa-chart-area text-blue-500 mr-1"></i> ${f.area_rai} ไร่</span>
                             </div>
                         </div>
-                        <button onclick="deleteField(${f.id}, '${f.name}')" class="flex-shrink-0 text-gray-300 hover:text-red-500 bg-white rounded-full p-1.5 hover:bg-red-50 ml-2 z-10 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                        <button onclick="deleteField(${f.id}, '${f.name}')" class="text-gray-300 hover:text-red-500 p-1.5"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
-                    <div id="yield-info-${f.id}" class="my-3 p-3 rounded-lg border ${yieldClass} text-center transition-all duration-500">${yieldContent}</div>
+                    <div class="my-3 p-3 rounded-lg border ${yieldClass} text-center transition-all">${yieldContent}</div>
                     <div class="grid grid-cols-2 gap-2 mt-2">${actionButtons}</div>
                 `;
                 listContainer.appendChild(card);
 
-                // --- วาดแผนที่ ---
+                // Map
                 if(f.boundary) {
                     try {
                         const geoJsonData = (typeof f.boundary === 'string') ? JSON.parse(f.boundary) : f.boundary;
                         const layer = L.geoJSON(geoJsonData, {
                             style: { color: polyColor, weight: 2, fillOpacity: 0.3, dashArray: dashArray }
-                        }).bindPopup(`<div class="text-center"><b class="text-gray-800">${f.name}</b><br><span class="text-xs text-gray-500">${f.area_rai} ไร่</span></div>`).addTo(map).addTo(drawnItems);
+                        }).bindPopup(`<b>${f.name}</b><br>${f.area_rai} ไร่`).addTo(map).addTo(drawnItems);
                         fieldLayers[f.id] = layer;
                     } catch(e) {}
                 }
@@ -316,161 +362,242 @@
     }
 
     // ==========================================
-    // 4. Notification System
+    // 4. Notifications & UI Utils
     // ==========================================
-    function updateNotifications(soldList) {
-        const listDiv = document.getElementById('notif-list');
+    function updateNotifications(notifList) {
         const badge = document.getElementById('notif-badge');
-        
-        // Logic นับจำนวนที่ยังไม่อ่าน (เทียบกับ localStorage)
-        const totalSold = soldList.length;
-        const seenCount = parseInt(localStorage.getItem('seenNotif') || '0');
-        const unread = Math.max(0, totalSold - seenCount);
+        const listDiv = document.getElementById('notif-list');
+        const unread = notifList.length;
 
         if (unread > 0) {
             badge.innerText = unread > 9 ? '9+' : unread;
             badge.classList.remove('hidden');
-            badge.classList.add('animate-bounce'); // เพิ่ม Animation เด้งดึ๋ง
+            badge.classList.add('animate-bounce');
         } else {
             badge.classList.add('hidden');
-            badge.classList.remove('animate-bounce');
         }
 
-        if (soldList.length === 0) {
-            listDiv.innerHTML = `<div class="p-8 text-center text-gray-400 text-sm flex flex-col items-center"><i class="fa-regular fa-bell-slash text-2xl mb-2 opacity-50"></i>ยังไม่มีการแจ้งเตือน</div>`;
-            return;
-        }
-
-        listDiv.innerHTML = '';
-        // เรียงจากล่าสุดไปเก่าสุด
-        soldList.sort((a,b) => b.id - a.id).forEach(s => {
-            const total = (s.quantity_ton * s.price_per_ton).toLocaleString();
-            const date = new Date(s.created_at).toLocaleDateString('th-TH', {day:'numeric', month:'short'});
-            
-            listDiv.innerHTML += `
-                <div class="p-3 border-b border-gray-50 hover:bg-green-50 cursor-pointer transition-colors" onclick="focusField(${s.rice_field})">
-                    <div class="flex items-start gap-3">
-                        <div class="bg-green-100 text-green-600 p-2 rounded-full shadow-sm"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <p class="text-sm font-bold text-gray-800">ขายสำเร็จ!</p>
-                                <span class="text-[10px] text-gray-400">${date}</span>
-                            </div>
-                            <p class="text-xs text-gray-500">แปลง: ${s.field_name}</p>
-                            <p class="text-xs text-green-600 font-bold mt-1">💰 ได้รับเงิน: ${total} บาท</p>
+        if (notifList.length === 0) {
+            listDiv.innerHTML = `<div class="p-8 text-center text-gray-400 text-sm"><i class="fa-regular fa-bell-slash text-2xl mb-2 opacity-50"></i><br>ไม่มีการแจ้งเตือน</div>`;
+        } else {
+            listDiv.innerHTML = '';
+            notifList.sort((a,b) => b.id - a.id).forEach(s => {
+                let msg = s.status === 'REQUESTED' ? 'มีคนขอซื้อข้าว' : 'ขายสำเร็จแล้ว';
+                let icon = s.status === 'REQUESTED' ? 'fa-user-clock text-yellow-500' : 'fa-check-circle text-green-500';
+                
+                listDiv.innerHTML += `
+                    <div class="p-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onclick="focusField(${s.rice_field})">
+                        <div class="flex items-start gap-3">
+                            <div class="bg-white p-2 rounded-full shadow-sm"><i class="fa-solid ${icon}"></i></div>
+                            <div><p class="text-sm font-bold text-gray-800">${msg}</p><p class="text-xs text-gray-500">แปลง: ${s.field_name}</p></div>
                         </div>
-                    </div>
-                </div>
-            `;
-        });
+                    </div>`;
+            });
+        }
     }
 
     window.toggleNotif = function() {
-        const dropdown = document.getElementById('notif-dropdown');
-        dropdown.classList.toggle('hidden');
-        
-        if (!dropdown.classList.contains('hidden')) {
-            // เมื่อเปิดดู ถือว่าอ่านแล้วทั้งหมด (แต่ยังไม่ล้าง List)
-            const itemsCount = document.querySelectorAll('#notif-list > div').length;
-            const hasEmptyMsg = document.getElementById('notif-list').innerText.includes('ไม่มี');
-            const realCount = hasEmptyMsg ? 0 : itemsCount;
-            
-            // ซ่อน Badge ทันทีเพื่อ UX ที่ดี
-            document.getElementById('notif-badge').classList.add('hidden');
-            
-            // บันทึกสถานะว่าเห็นแล้ว
-            localStorage.setItem('seenNotif', realCount);
-        }
+        document.getElementById('notif-dropdown').classList.toggle('hidden');
     }
-
+    
     window.markAllRead = function() {
-        // ฟังก์ชันล้างแจ้งเตือน (ในที่นี้คือซ่อน Badge และอาจจะ Clear list ถ้าต้องการ)
         document.getElementById('notif-badge').classList.add('hidden');
-        // ถ้าต้องการล้าง List ด้วยต้องเรียก API Delete (แต่ในที่นี้แค่ Mark as read)
-        Swal.fire({ icon: 'success', title: 'ล้างการแจ้งเตือนแล้ว', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+        Swal.fire({ icon: 'success', title: 'อ่านแล้ว', toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
     }
 
     // ==========================================
-    // 5. Action Functions
+    // 5. Actions (Calc, Sell, Approve)
     // ==========================================
-    window.focusField = function(id) {
-        if (fieldLayers[id]) {
-            map.flyToBounds(fieldLayers[id].getBounds(), { padding: [100, 100], maxZoom: 18, duration: 1.5 });
-            fieldLayers[id].openPopup();
-            // ถ้าเปิดผ่าน Notification ให้ปิด Dropdown ด้วย
-            document.getElementById('notif-dropdown').classList.add('hidden');
-        }
-    }
-
-    window.deleteField = function(id, name) {
-        Swal.fire({
-            title: 'ลบแปลงนา?', text: `ต้องการลบ "${name}" ใช่หรือไม่?`, icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'ใช่, ลบเลย', cancelButtonText: 'ยกเลิก'
-        }).then(async (result) => {
-            if (result.isConfirmed) { await fetch(`/api/rice-fields/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': csrftoken} }); loadFields(); }
-        });
-    }
-
-    window.notifySale = function(fieldId, fieldName) {
-        Swal.fire({
-            title: '📢 แจ้งขายผลผลิต',
-            html: `
-                <div class="text-left bg-green-50 p-3 rounded-lg border border-green-100 mb-4"><p class="text-green-800 text-sm font-bold"><i class="fa-solid fa-location-dot mr-1"></i> ${fieldName}</p></div>
-                <div class="space-y-3">
-                    <input id="sale-qty" type="number" class="swal2-input w-full" placeholder="ปริมาณ (ตัน)">
-                    <input id="sale-price" type="number" class="swal2-input w-full" placeholder="ราคาเสนอขาย (บาท/ตัน)">
-                    <input id="sale-phone" type="tel" class="swal2-input w-full" placeholder="เบอร์โทรศัพท์ติดต่อกลับ">
-                </div>
-            `,
-            showCancelButton: true, confirmButtonText: 'ยืนยันการขาย', confirmButtonColor: '#16a34a', cancelButtonText: 'ยกเลิก',
-            preConfirm: () => {
-                const q = document.getElementById('sale-qty').value, p = document.getElementById('sale-price').value, ph = document.getElementById('sale-phone').value;
-                if(!q || !p || !ph) Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบ');
-                return { rice_field: fieldId, quantity_ton: q, price_per_ton: p, phone: ph }
-            }
-        }).then(async (result) => {
-            if(result.isConfirmed) {
-                const res = await fetch('/api/sales/', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrftoken}, body: JSON.stringify(result.value) });
-                if(res.ok) { Swal.fire({ icon:'success', title: 'ประกาศขายสำเร็จ', timer: 1500, showConfirmButton: false }); loadFields(); }
-            }
-        });
-    }
-
-    window.cancelSale = function(saleId, fieldName) {
-        Swal.fire({ title: 'ยกเลิกการขาย?', text: `ยกเลิกประกาศขายของ "${fieldName}"?`, icon: 'question', showCancelButton: true, confirmButtonText: 'ยกเลิกประกาศ', confirmButtonColor: '#ef4444' }).then(async (result) => {
-            if (result.isConfirmed) { await fetch(`/api/sales/${saleId}/`, { method: 'DELETE', headers: {'X-CSRFToken': csrftoken} }); loadFields(); }
-        });
-    }
-
-    window.calcYield = async function(id) {
-        const div = document.getElementById(`yield-info-${id}`);
-        div.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-orange-500"></i> กำลังวิเคราะห์ภาพดาวเทียม...`;
+    window.calcYield = async (id, btn) => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>'; 
+        btn.disabled = true;
         
         try {
-            const res = await fetch(`/api/rice-fields/${id}/calculate_yield/`, { method: 'POST', headers: {'X-CSRFToken': csrftoken} });
+            const res = await fetch(`/api/rice-fields/${id}/calculate_yield/`, { 
+                method: 'POST', 
+                headers: {'X-CSRFToken': '{{ csrf_token }}'} 
+            });
             const data = await res.json();
             
             if(res.ok) {
-                loadFields(); // โหลดใหม่เพื่ออัปเดต UI ปุ่มและข้อมูล
-                const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
-                Toast.fire({ icon: 'success', title: 'วิเคราะห์สำเร็จ' });
+                // จัดรูปแบบ NDVI ให้เหลือ 3 ตำแหน่ง
+                const ndviFixed = parseFloat(data.ndvi).toFixed(3);
+
+                if (data.result_type === 'water') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ตรวจพบแหล่งน้ำ!',
+                        html: `ค่า NDVI: <b>${ndviFixed}</b><br>พื้นที่นี้เป็นแหล่งน้ำ ไม่สามารถคำนวณผลผลิตได้`,
+                        position: 'center',
+                        timer: 10000,
+                        timerProgressBar: true,
+                        showCloseButton: true,
+                        confirmButtonColor: '#3b82f6'
+                    });
+                } 
+                else if (data.result_type === 'road') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'ไม่ใช่พื้นที่เกษตร!',
+                        html: `ค่า NDVI: <b>${ndviFixed}</b><br>ตรวจพบเป็นถนนหรือสิ่งปลูกสร้าง`,
+                        position: 'center',
+                        timer: 10000,
+                        timerProgressBar: true,
+                        showCloseButton: true,
+                        confirmButtonColor: '#f59e0b'
+                    });
+                } 
+                else {
+                    Swal.fire({ 
+                        icon: 'success', 
+                        title: 'วิเคราะห์สำเร็จ', 
+                        html: `NDVI: <b>${ndviFixed}</b><br>ผลผลิตคาดการณ์: <b>${data.yield_ton} ตัน</b><br><span class="text-xs text-gray-500">(${data.note})</span>`,
+                        position: 'center',
+                        timer: 10000, 
+                        timerProgressBar: true,
+                        showCloseButton: true,
+                        showConfirmButton: false 
+                    });
+                }
+                loadFields(); 
             } else {
-                div.innerHTML = `<span class="text-red-500 text-xs"><i class="fa-solid fa-triangle-exclamation"></i> ${data.error}</span>`;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: data.error,
+                    position: 'center',
+                    showCloseButton: true,
+                    timer: 10000,
+                    timerProgressBar: true
+                });
             }
-        } catch(e) { div.innerHTML = `<span class="text-red-500 text-xs">เชื่อมต่อล้มเหลว</span>`; }
+        } catch(e) { 
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Error', 
+                text: 'เชื่อมต่อล้มเหลว', 
+                position: 'top-start',
+                showCloseButton: true 
+            }); 
+        } finally { 
+            btn.innerHTML = originalText; 
+            btn.disabled = false; 
+        }
     }
 
-    // Start App & Real-time Update (5 Sec)
-    loadFields();
-    setInterval(loadFields, 5000); 
-
-    // ปิด Dropdown เมื่อคลิกข้างนอก
-    document.addEventListener('click', function(event) {
-        const dropdown = document.getElementById('notif-dropdown');
-        const button = event.target.closest('button');
-        if (!dropdown.contains(event.target) && (!button || !button.getAttribute('onclick')?.includes('toggleNotif'))) {
-            dropdown.classList.add('hidden');
+    window.notifySale = async (id) => {
+        const { value: form } = await Swal.fire({
+            title: '📢 แจ้งขายผลผลิต',
+            html: `
+                <input id="q" type="number" class="swal2-input" placeholder="จำนวน (ตัน)">
+                <input id="p" type="number" class="swal2-input" placeholder="ราคา (บาท/ตัน)">
+                <input id="ph" type="tel" class="swal2-input" placeholder="เบอร์โทรติดต่อ">
+            `,
+            showCancelButton: true, confirmButtonText: 'ยืนยัน', confirmButtonColor: '#16a34a',
+            preConfirm: () => {
+                const q = document.getElementById('q').value, p = document.getElementById('p').value, ph = document.getElementById('ph').value;
+                if(!q || !p || !ph) Swal.showValidationMessage('กรุณากรอกให้ครบ');
+                return { rice_field: id, quantity_ton: q, price_per_ton: p, phone: ph }
+            }
+        });
+        if(form) { 
+            await fetch('/api/sales/', { method: 'POST', headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'}, body: JSON.stringify(form) });
+            loadFields(); 
+            Swal.fire({ 
+                icon: 'success', 
+                title: 'สำเร็จ', 
+                text: 'ประกาศขายแล้ว', 
+                timer: 5000, 
+                timerProgressBar: true,
+                showCloseButton: true,
+                showConfirmButton: false
+            });
         }
+    }
+
+    window.respondSale = async (id, action) => {
+        const url = `/api/sales/${id}/${action}_sell/`;
+        Swal.fire({title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading()});
+        try {
+            const res = await fetch(url, { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'} });
+            if(res.ok) {
+                Swal.fire({
+                    icon: 'success', 
+                    title: 'สำเร็จ', 
+                    text: action==='approve'?'ขายเรียบร้อย':'ปฏิเสธแล้ว',
+                    timer: 5000,
+                    timerProgressBar: true,
+                    showCloseButton: true,
+                    showConfirmButton: false
+                });
+                loadFields();
+            }
+        } catch(e) { Swal.fire({ icon: 'error', title: 'Error', text: 'เชื่อมต่อไม่ได้', showCloseButton: true }); }
+    }
+
+    window.cancelSale = async (id) => {
+        if(confirm('ยกเลิกขาย?')) {
+            await fetch(`/api/sales/${id}/`, { method: 'DELETE', headers: {'X-CSRFToken': '{{ csrf_token }}'} });
+            loadFields();
+        }
+    }
+
+    window.focusField = function(id) {
+        if (fieldLayers[id]) {
+            map.flyToBounds(fieldLayers[id].getBounds(), { padding: [100, 100], maxZoom: 16 });
+            fieldLayers[id].openPopup();
+        }
+    }
+
+    window.deleteField = async (id, name) => {
+        const result = await Swal.fire({
+            title: '⚠️ ยืนยันการลบ',
+            html: `คุณต้องการลบแปลงนา<br><b>"${name}"</b> ใช่หรือไม่?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'ลบ',
+            cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#94a3b8',
+            reverseButtons: true,
+            showCloseButton: true
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await fetch(`/api/rice-fields/${id}/`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ลบสำเร็จ',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+
+                loadFields();
+            } catch (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: 'ไม่สามารถลบข้อมูลได้',
+                    showCloseButton: true
+                });
+            }
+        }
+    };
+
+    // Close Dropdown
+    document.addEventListener('click', function(e) {
+        const dd = document.getElementById('notif-dropdown');
+        if (!dd.contains(e.target) && !e.target.closest('button[onclick="toggleNotif()"]')) dd.classList.add('hidden');
     });
+
+    loadFields();
+    setInterval(loadFields, 5000);
 </script>
 {% endblock %}
