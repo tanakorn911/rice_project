@@ -5,17 +5,13 @@
     <title>{% block title %}Rice Supply Chain{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
 
-    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
 
-    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
     <style>
@@ -30,47 +26,57 @@
 
 <body class="flex flex-col min-h-screen">
 
-<!-- ===== NAVBAR ===== -->
-<nav class="bg-green-700 text-white shadow-lg">
+<nav class="bg-green-700 text-white shadow-lg relative z-50">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-            <i class="fa-solid fa-seedling text-2xl"></i>
-            <span class="text-xl font-bold">Rice Chain Phayao</span>
-        </div>
+        <a href="/" class="flex items-center gap-2 hover:opacity-90 transition">
+            <i class="fa-solid fa-seedling text-2xl text-green-300"></i>
+            <span class="text-xl font-bold tracking-wide">Rice Chain Phayao</span>
+        </a>
 
         <div class="flex items-center gap-4">
             {% if request.user.is_authenticated %}
-                <span class="text-sm">
-                    {{ request.user.username }} ({{ request.user.role }})
+                
+                <a href="{% url 'history' %}" class="text-white/80 hover:text-white text-sm flex items-center gap-1 transition hidden sm:flex">
+                    <i class="fa-solid fa-clock-rotate-left"></i> ประวัติ
+                </a>
+                
+                <a href="{% url 'profile' %}" class="text-white/80 hover:text-white text-sm flex items-center gap-1 transition mr-2 hidden sm:flex">
+                    <i class="fa-solid fa-user-gear"></i> โปรไฟล์
+                </a>
+
+                <span class="text-xs sm:text-sm bg-white/20 px-3 py-1 rounded-full border border-white/10 backdrop-blur-sm flex items-center gap-2">
+                    <i class="fa-solid fa-circle-user"></i>
+                    {{ request.user.username }} 
+                    <span class="bg-black/20 px-1.5 rounded text-[10px]">{{ request.user.role }}</span>
                 </span>
 
-                <form action="{% url 'logout' %}" method="post">
+                <form action="{% url 'logout' %}" method="post" class="inline">
                     {% csrf_token %}
-                    <button class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded text-sm">
-                        <i class="fa-solid fa-right-from-bracket"></i> ออก
+                    <button class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-transform hover:scale-105" title="ออกจากระบบ">
+                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
                     </button>
                 </form>
+
             {% else %}
                 <a href="{% url 'login' %}"
-                   class="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded text-sm">
-                    เข้าสู่ระบบ
+                   class="bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
+                   <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ
                 </a>
             {% endif %}
         </div>
     </div>
 </nav>
 
-<!-- ===== MAIN ===== -->
-<main class="container mx-auto px-4 py-4 flex-grow">
+<main class="container mx-auto px-4 py-6 flex-grow">
     {% block content %}{% endblock %}
 </main>
 
-<!-- ===== FOOTER ===== -->
-<footer class="bg-gray-800 text-gray-300 py-3 text-center text-sm">
-    © 2025 Rice Supply Chain Project
+<footer class="bg-gray-800 text-gray-400 py-4 text-center text-sm mt-auto border-t border-gray-700">
+    <div class="container mx-auto">
+        <p>© 2025 Rice Supply Chain Project. All rights reserved.</p>
+    </div>
 </footer>
 
-<!-- JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

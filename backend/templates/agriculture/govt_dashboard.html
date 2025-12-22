@@ -16,48 +16,57 @@
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
-        <div class="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-5 text-white shadow-lg relative overflow-hidden group">
+        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl p-5 text-white shadow-lg relative overflow-hidden group">
             <p class="text-emerald-100 text-xs uppercase font-bold tracking-wider">มูลค่าการซื้อขายจริง (Sold)</p>
-            <h3 class="text-3xl font-bold mt-2"><span id="stat-sold-value">0</span> <span class="text-base font-normal">บาท</span></h3>
-            <i class="fa-solid fa-sack-dollar absolute -bottom-4 -right-4 text-7xl text-white opacity-20 group-hover:scale-110 transition-transform"></i>
+            <h3 class="text-3xl font-bold mt-2"><span id="stat-sold-value">0.00</span> <span class="text-base font-normal">บาท</span></h3>
+            <i class="fa-solid fa-hand-holding-dollar absolute -bottom-4 -right-4 text-7xl text-white opacity-20 group-hover:scale-110 transition-transform"></i>
         </div>
+        
         <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 relative overflow-hidden group hover:border-orange-300 transition-colors">
             <p class="text-gray-500 text-xs uppercase font-bold tracking-wider">มูลค่ารอการขาย (Pending)</p>
-            <h3 class="text-2xl font-bold text-orange-500 mt-2"><span id="stat-pending-value">0</span> <span class="text-sm text-gray-400">บาท</span></h3>
+            <h3 class="text-2xl font-bold text-orange-500 mt-2"><span id="stat-pending-value">0.00</span> <span class="text-sm text-gray-400">บาท</span></h3>
             <div class="absolute top-4 right-4 bg-orange-50 p-2 rounded-lg text-orange-500"><i class="fa-solid fa-clock"></i></div>
         </div>
+        
         <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 relative overflow-hidden group hover:border-blue-300 transition-colors">
             <p class="text-gray-500 text-xs uppercase font-bold tracking-wider">ปริมาณผลผลิตรวม</p>
-            <h3 class="text-2xl font-bold text-blue-600 mt-2"><span id="stat-yield">0</span> <span class="text-sm text-gray-400">ตัน</span></h3>
+            <h3 class="text-2xl font-bold text-blue-600 mt-2"><span id="stat-yield">0.00</span> <span class="text-sm text-gray-400">ตัน</span></h3>
             <div class="absolute top-4 right-4 bg-blue-50 p-2 rounded-lg text-blue-500"><i class="fa-solid fa-wheat-awn"></i></div>
         </div>
+        
         <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 relative overflow-hidden group hover:border-purple-300 transition-colors">
             <p class="text-gray-500 text-xs uppercase font-bold tracking-wider">พื้นที่เพาะปลูก</p>
-            <h3 class="text-2xl font-bold text-gray-800 mt-2"><span id="stat-area">0</span> <span class="text-sm text-gray-400">ไร่</span></h3>
+            <h3 class="text-2xl font-bold text-gray-800 mt-2"><span id="stat-area">0.00</span> <span class="text-sm text-gray-400">ไร่</span></h3>
             <div class="absolute top-4 right-4 bg-purple-50 p-2 rounded-lg text-purple-500"><i class="fa-solid fa-map"></i></div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[420px]">
-        <div class="lg:col-span-2 bg-white p-1 rounded-xl shadow-sm border border-gray-100 relative h-[400px] lg:h-full">
-            <div id="map" class="w-full h-full rounded-lg bg-gray-100"></div>
-            <div class="absolute top-3 left-14 bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-sm text-xs z-[400]">
-                <div class="flex items-center gap-2 mb-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> ซื้อขายแล้ว</div>
-                <div class="flex items-center gap-2 mb-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span> รอขาย</div>
-                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-400 opacity-50"></span> แปลงนาทั่วไป</div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div class="lg:col-span-2 bg-white p-1 rounded-xl shadow-sm border border-gray-100 relative h-[260px] sm:h-[400px] lg:h-[530px] group">
+            <div id="map" class="w-full h-full rounded-lg bg-gray-100 z-0"></div>
+            <div class="absolute top-3 left-14 bg-white/95 backdrop-blur px-4 py-2 rounded-lg shadow-md text-xs z-[400] border border-gray-200 hidden sm:block">
+                <h4 class="font-bold text-gray-700 mb-2">สถานะแปลงนา</h4>
+                <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-green-500 border border-green-600"></span> ซื้อขายสำเร็จ</div>
+                <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-yellow-400 border border-yellow-500"></span> รออนุมัติ (มีคนขอซื้อ)</div>
+                <div class="flex items-center gap-2 mb-1"><span class="w-3 h-3 rounded-full bg-orange-500 border border-orange-600"></span> รอขาย</div>
+                <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-slate-300 border border-slate-400"></span> ยังไม่ประกาศ</div>
             </div>
         </div>
 
         <div class="lg:col-span-1 flex flex-col gap-4 h-full">
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col">
-                <h4 class="text-xs font-bold text-gray-500 uppercase mb-2"><i class="fa-solid fa-chart-bar text-blue-500 mr-1"></i> ปริมาณแยกตามพันธุ์ข้าว (ตัน)</h4>
-                <div class="relative flex-grow w-full h-full">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <h4 class="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-blue-500"></i> สัดส่วนพันธุ์ข้าว (ตัน)
+                </h4>
+                <div class="relative w-full h-[180px] sm:h-[200px]">
                     <canvas id="varietyChart"></canvas>
                 </div>
             </div>
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col">
-                <h4 class="text-xs font-bold text-gray-500 uppercase mb-2"><i class="fa-solid fa-arrow-trend-up text-green-500 mr-1"></i> แนวโน้มราคาเฉลี่ย (บาท/ตัน)</h4>
-                <div class="relative flex-grow w-full h-full">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col">
+                <h4 class="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> ราคาเฉลี่ย (บาท/ตัน)
+                </h4>
+                <div class="relative w-full h-[180px] sm:h-[200px]">
                     <canvas id="priceChart"></canvas>
                 </div>
             </div>
@@ -67,13 +76,15 @@
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
             <h3 class="font-bold text-gray-800 text-sm flex items-center gap-2">
-                <i class="fa-solid fa-table-list text-gray-500"></i> บันทึกการซื้อขาย (Transaction Log)
+                <i class="fa-solid fa-table-list text-gray-500"></i> รายการซื้อขายล่าสุด (คลิกเพื่อดูรายละเอียด 📍)
             </h3>
-            <button onclick="exportCSV()" class="text-xs bg-white border hover:bg-gray-50 text-gray-600 px-3 py-1.5 rounded shadow-sm font-medium"><i class="fa-solid fa-download"></i> CSV</button>
+            <button onclick="exportCSV()" class="text-xs bg-white border hover:bg-gray-50 text-gray-600 px-3 py-1.5 rounded shadow-sm font-medium transition">
+                <i class="fa-solid fa-download"></i> CSV
+            </button>
         </div>
-        <div class="overflow-x-auto custom-scrollbar">
+        <div class="overflow-x-auto custom-scrollbar max-h-[320px] sm:max-h-[400px] lg:max-h-none">
             <table class="w-full text-sm text-left whitespace-nowrap">
-                <thead class="bg-white text-gray-500 border-b text-xs uppercase tracking-wider">
+                <thead class="bg-white text-gray-500 border-b text-xs uppercase tracking-wider sticky top-0 z-10 shadow-sm">
                     <tr>
                         <th class="py-3 px-6">วันที่</th>
                         <th class="py-3 px-6">เกษตรกร</th>
@@ -82,44 +93,13 @@
                         <th class="py-3 px-6 text-right">ราคา/ตัน</th>
                         <th class="py-3 px-6 text-right">ยอดรวม</th>
                         <th class="py-3 px-6 text-center">สถานะ</th>
-                        <th class="py-3 px-6 text-center">ผู้รับซื้อ (Miller)</th>
+                        <th class="py-3 px-6 text-center">ผู้รับซื้อ</th>
                     </tr>
                 </thead>
                 <tbody id="marketTableBody" class="divide-y divide-gray-50 text-gray-700">
-                    <tr><td colspan="8" class="text-center py-8 text-gray-400">กำลังโหลด...</td></tr>
+                    <tr><td colspan="8" class="text-center py-8 text-gray-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>กำลังโหลดข้อมูล...</td></tr>
                 </tbody>
             </table>
-        </div>
-    </div>
-</div>
-
-<div id="buyerModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative transform transition-all scale-100">
-        <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
-        <div class="text-center">
-            <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
-                <i class="fa-solid fa-industry"></i>
-            </div>
-            <h3 class="text-xl font-bold text-gray-800 mb-1" id="modal-buyer-name">-</h3>
-            <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold">โรงสี / ผู้รับซื้อ</span>
-            
-            <div class="mt-6 space-y-3 text-left bg-gray-50 p-4 rounded-xl">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-500 shadow-sm"><i class="fa-solid fa-phone"></i></div>
-                    <div>
-                        <p class="text-xs text-gray-400">เบอร์โทรศัพท์</p>
-                        <p class="font-bold text-gray-700" id="modal-buyer-phone">-</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-500 shadow-sm"><i class="fa-solid fa-clock"></i></div>
-                    <div>
-                        <p class="text-xs text-gray-400">เวลาที่ทำรายการ</p>
-                        <p class="font-bold text-gray-700" id="modal-sold-at">-</p>
-                    </div>
-                </div>
-            </div>
-            <button onclick="closeModal()" class="mt-5 w-full bg-gray-800 hover:bg-gray-900 text-white py-2 rounded-xl font-bold transition">ปิดหน้าต่าง</button>
         </div>
     </div>
 </div>
@@ -128,6 +108,25 @@
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    #marketTableBody tr { cursor: pointer; transition: background-color 0.2s; }
+    
+    /* Popup Style Override */
+    .leaflet-popup-content-wrapper { border-radius: 12px; overflow: hidden; padding: 0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .leaflet-popup-content { margin: 0; width: 280px !important; }
+    .leaflet-container a.leaflet-popup-close-button { color: #fff; top: 8px; right: 8px; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+
+    .leaflet-popup-content {
+    max-height: 60vh;
+    overflow-y: auto;
+    }
+
+    @media (max-width: 640px) {
+        .leaflet-popup-content {
+            width: 90vw !important;
+            max-height: 65vh;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -140,29 +139,24 @@
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     const fieldLayer = L.featureGroup().addTo(map);
 
-    // --- 2. Init Charts (New Design) ---
+    let layersMap = {}; 
+
+    window.addEventListener('resize', () => { setTimeout(() => map.invalidateSize(), 300); });
+
+    // --- 2. Init Charts ---
     const vCtx = document.getElementById('varietyChart').getContext('2d');
     const pCtx = document.getElementById('priceChart').getContext('2d');
 
     const vChart = new Chart(vCtx, {
-        type: 'bar', // เปลี่ยนเป็น Bar Chart แนวนอน
-        data: { labels: [], datasets: [{ label: 'ปริมาณ (ตัน)', data: [], backgroundColor: '#3b82f6', borderRadius: 4 }] },
-        options: {
-            indexAxis: 'y', // แนวนอน
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { x: { grid: { display: false } }, y: { grid: { display: false } } }
-        }
+        type: 'doughnut', 
+        data: { labels: [], datasets: [{ data: [], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'], borderWidth: 0 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } }, cutout: '70%' }
     });
 
     const pChart = new Chart(pCtx, {
-        type: 'line', // เปลี่ยนเป็น Line Chart
-        data: { labels: [], datasets: [{ label: 'ราคาเฉลี่ย', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }] },
-        options: {
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: false }, x: { grid: { display: false } } }
-        }
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'ราคาเฉลี่ย', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4, pointRadius: 2 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, grid: { borderDash: [2, 2] } }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
     });
 
     // --- 3. Data Logic ---
@@ -178,143 +172,245 @@
             const sales = await salesRes.json();
             globalSales = sales;
 
-            // 3.1 Calculate Stats
+            // 3.1 Calculate Stats & Maps
             let soldVal = 0, pendingVal = 0;
-            const salesMap = {};
+            const salesMap = {}; 
             const varietyData = {}; 
             const priceData = []; 
 
             sales.forEach(s => {
                 const total = s.quantity_ton * s.price_per_ton;
-                // เก็บรายการล่าสุดสำหรับ Map
-                if (!salesMap[s.rice_field] || new Date(salesMap[s.rice_field].created_at) < new Date(s.created_at)) salesMap[s.rice_field] = s;
                 
-                if (s.status === 'CLOSED') soldVal += total; else pendingVal += total;
+                // เก็บข้อมูลการขายล่าสุดของแต่ละแปลง
+                if (!salesMap[s.rice_field] || new Date(salesMap[s.rice_field].created_at) < new Date(s.created_at)) {
+                    salesMap[s.rice_field] = s;
+                }
+                
+                if (s.status === 'SOLD') soldVal += total;
+                else if (s.status === 'OPEN' || s.status === 'REQUESTED') pendingVal += total;
 
-                // Data for Bar Chart (Aggregated Variety)
                 if (!varietyData[s.variety_display]) varietyData[s.variety_display] = 0;
                 varietyData[s.variety_display] += s.quantity_ton;
 
-                // Data for Line Chart (Simplified: just push all points)
                 priceData.push({ date: new Date(s.created_at), price: s.price_per_ton });
             });
 
-            animateValue("stat-sold-value", soldVal);
-            animateValue("stat-pending-value", pendingVal);
-            animateValue("stat-yield", stats.total_yield);
-            animateValue("stat-area", stats.total_area);
+            animateValue("stat-sold-value", soldVal, 2);       // 0 ตำแหน่ง (เงินบาท)
+            animateValue("stat-pending-value", pendingVal, 2); // 0 ตำแหน่ง (เงินบาท)
+            animateValue("stat-yield", stats.total_yield, 2);  // ✅ 2 ตำแหน่ง (ผลผลิต)
+            animateValue("stat-area", stats.total_area, 2);
 
             // 3.2 Update Charts
-            // Bar Chart
             vChart.data.labels = Object.keys(varietyData);
             vChart.data.datasets[0].data = Object.values(varietyData);
             vChart.update();
 
-            // Line Chart (Sort by date)
             priceData.sort((a,b) => a.date - b.date);
-            // Limit to last 10 points for cleanliness
-            const limitedPriceData = priceData.slice(-10);
+            const limitedPriceData = priceData.slice(-10); 
             pChart.data.labels = limitedPriceData.map(d => d.date.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
             pChart.data.datasets[0].data = limitedPriceData.map(d => d.price);
             pChart.update();
 
             // 3.3 Update Table
             const tableBody = document.getElementById('marketTableBody');
-            if (sales.length === 0) tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-400">ไม่มีข้อมูล</td></tr>`;
-            else {
+            if (sales.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-400">ไม่มีข้อมูลการซื้อขาย</td></tr>`;
+            } else {
                 tableBody.innerHTML = '';
                 sales.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
                 
                 sales.forEach(s => {
                     const date = new Date(s.created_at).toLocaleDateString('th-TH', {day:'2-digit', month:'2-digit', year:'2-digit'});
-                    const isSold = s.status === 'CLOSED';
+                    const total = (s.quantity_ton * s.price_per_ton).toLocaleString();
                     
-                    // ปุ่มดูข้อมูลผู้ซื้อ (เฉพาะรายการที่ขายแล้ว)
-                    let buyerCell = '<span class="text-gray-300">-</span>';
-                    if (isSold && s.buyer_name) {
-                        // ส่งข้อมูลใส่ฟังก์ชัน openBuyerModal
-                        buyerCell = `<button onclick="openBuyerModal('${s.buyer_name}', '${s.buyer_phone || 'ไม่ระบุ'}', '${s.sold_at}')" class="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-1 rounded-full font-bold transition flex items-center justify-center mx-auto gap-1"><i class="fa-solid fa-user-tag"></i> ${s.buyer_name}</button>`;
-                    } else if (isSold) {
-                        buyerCell = '<span class="text-xs text-gray-400">ไม่ระบุ</span>';
+                    let statusBadge = '';
+                    let buyerText = '<span class="text-gray-300">-</span>';
+                    let amountClass = 'text-gray-400';
+
+                    if (s.status === 'SOLD') {
+                        statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800"><i class="fa-solid fa-check mr-1"></i> ขายแล้ว</span>`;
+                        amountClass = 'text-green-600';
+                        buyerText = `<span class="text-blue-600 font-bold text-xs"><i class="fa-solid fa-industry"></i> ${s.buyer_name || 'ไม่ระบุ'}</span>`;
+                    } else if (s.status === 'REQUESTED') {
+                        statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-800 animate-pulse"><i class="fa-solid fa-clock mr-1"></i> รออนุมัติ</span>`;
+                        buyerText = `<span class="text-xs text-yellow-600">รอเจ้าของยืนยัน</span>`;
+                    } else {
+                        statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-800">รอขาย</span>`;
                     }
 
-                    const statusBadge = isSold 
-                        ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800">ขายแล้ว</span>`
-                        : `<span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-orange-100 text-orange-800">รอขาย</span>`;
-
                     tableBody.innerHTML += `
-                        <tr class="hover:bg-gray-50 border-b border-gray-50 transition">
+                        <tr class="hover:bg-blue-50 border-b border-gray-50 transition active:bg-blue-100" onclick="focusField(${s.rice_field})">
                             <td class="py-3 px-6 text-gray-500 text-xs">${date}</td>
-                            <td class="py-3 px-6 font-medium text-gray-800">${s.farmer_name}</td>
+                            <td class="py-3 px-6 font-medium text-gray-800 flex items-center gap-1"><i class="fa-solid fa-user-circle text-gray-400"></i> ${s.farmer_name}</td>
                             <td class="py-3 px-6 text-gray-600 text-xs">${s.variety_display}</td>
                             <td class="py-3 px-6 text-right font-medium">${s.quantity_ton}</td>
                             <td class="py-3 px-6 text-right text-gray-500 text-xs">${s.price_per_ton.toLocaleString()}</td>
-                            <td class="py-3 px-6 text-right font-bold ${isSold ? 'text-green-600' : 'text-gray-400'}">${(s.quantity_ton * s.price_per_ton).toLocaleString()}</td>
+                            <td class="py-3 px-6 text-right font-bold ${amountClass}">${total}</td>
                             <td class="py-3 px-6 text-center">${statusBadge}</td>
-                            <td class="py-3 px-6 text-center">${buyerCell}</td>
+                            <td class="py-3 px-6 text-center">${buyerText}</td>
                         </tr>
                     `;
                 });
             }
 
-            // 3.4 Update Map
+            // 3.4 Update Map & Detailed Popups
             fieldLayer.clearLayers();
+            layersMap = {}; 
             fields.forEach(f => {
                 if(f.boundary) {
                     try {
                         const geoJson = typeof f.boundary === 'string' ? JSON.parse(f.boundary) : f.boundary;
                         const sale = salesMap[f.id];
-                        let color = '#94a3b8';
-                        if (sale) color = (sale.status === 'CLOSED' ? '#22c55e' : '#f97316');
-                        L.geoJSON(geoJson, { style: { color: color, weight: sale?2:1, fillOpacity: sale?0.6:0.3 } })
-                         .bindPopup(`<b>${f.name}</b><br>${f.area_rai} ไร่`).addTo(fieldLayer);
+                        
+                        let color = '#cbd5e1'; // เทา (ไม่มีข้อมูล)
+                        let opacity = 0.3;
+                        let weight = 1;
+                        let popupContent = `
+                            <div class="text-center p-3">
+                                <b class="text-sm text-gray-800">${f.name}</b><br>
+                                <span class="text-xs text-gray-500">พื้นที่: ${f.area_rai} ไร่</span>
+                                <div class="mt-2 text-xs bg-gray-100 rounded px-2 py-1 text-gray-500">ไม่มีประกาศขาย</div>
+                            </div>
+                        `;
+
+                        if (sale) {
+                            // เตรียมข้อมูล Popup แบบละเอียด (Full Detail)
+                            const totalPrice = (sale.quantity_ton * sale.price_per_ton).toLocaleString();
+                            const buyerInfo = sale.status === 'SOLD' 
+                                ? `<div class="mt-2 pt-2 border-t border-gray-100">
+                                     <p class="text-[10px] text-gray-400 uppercase">ผู้รับซื้อ (Buyer)</p>
+                                     <p class="font-bold text-blue-600 text-xs"><i class="fa-solid fa-industry"></i> ${sale.buyer_name || '-'}</p>
+                                     <p class="text-xs text-gray-500"><i class="fa-solid fa-phone text-[10px]"></i> ${sale.buyer_phone || '-'}</p>
+                                   </div>` 
+                                : '';
+
+                            let statusColor = 'bg-orange-100 text-orange-700';
+                            let statusText = 'รอการขาย';
+                            
+                            if (sale.status === 'SOLD') {
+                                color = '#22c55e'; opacity = 0.6; weight = 2;
+                                statusColor = 'bg-green-500 text-white'; statusText = 'ขายแล้ว';
+                            } else if (sale.status === 'REQUESTED') {
+                                color = '#eab308'; opacity = 0.8; weight = 2;
+                                statusColor = 'bg-yellow-400 text-yellow-900'; statusText = 'รออนุมัติ';
+                            } else {
+                                color = '#f97316'; opacity = 0.5; weight = 2;
+                            }
+
+                            popupContent = `
+                                <div class="font-sans">
+                                    <div class="${statusColor} py-1.5 px-3 text-xs font-bold text-center uppercase tracking-wide">
+                                        ${statusText}
+                                    </div>
+                                    <div class="p-4 space-y-2">
+                                        <div>
+                                            <h3 class="font-bold text-gray-800 text-sm flex items-center gap-1">
+                                                <i class="fa-solid fa-location-dot text-red-500"></i> ${f.name}
+                                            </h3>
+                                            <p class="text-xs text-gray-500">พื้นที่: <b>${f.area_rai}</b> ไร่</p>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 gap-2 text-xs bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                            <div>
+                                                <span class="text-gray-400">พันธุ์ข้าว</span><br>
+                                                <span class="font-semibold text-gray-700">${sale.variety_display}</span>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="text-gray-400">ปริมาณ</span><br>
+                                                <span class="font-semibold text-gray-700">${sale.quantity_ton} ตัน</span>
+                                            </div>
+                                            <div>
+                                                <span class="text-gray-400">ราคา/ตัน</span><br>
+                                                <span class="font-semibold text-gray-700">${sale.price_per_ton.toLocaleString()}</span>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="text-gray-400">รวมเงิน</span><br>
+                                                <span class="font-bold text-green-600">${totalPrice} บ.</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 text-xs text-gray-600">
+                                            <div class="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center"><i class="fa-solid fa-user"></i></div>
+                                            <div>
+                                                <p class="font-bold text-gray-800">${sale.farmer_name}</p>
+                                                <p class="text-[10px] text-gray-400">เกษตรกรผู้ขาย</p>
+                                            </div>
+                                        </div>
+
+                                        ${buyerInfo}
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        const layer = L.geoJSON(geoJson, { style: { color: color, weight: weight, fillOpacity: opacity } })
+                          .bindPopup(popupContent);
+                        
+                        layer.addTo(fieldLayer);
+                        layersMap[f.id] = layer;
                     } catch(e){}
                 }
             });
             document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString('th-TH');
 
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error("Update Error:", e); }
     }
 
-    // --- 4. Modal Functions ---
-    window.openBuyerModal = function(name, phone, soldTime) {
-        document.getElementById('modal-buyer-name').innerText = name;
-        document.getElementById('modal-buyer-phone').innerText = phone;
-        
-        const dateStr = soldTime ? new Date(soldTime).toLocaleString('th-TH') : '-';
-        document.getElementById('modal-sold-at').innerText = dateStr;
-        
-        const modal = document.getElementById('buyerModal');
-        modal.classList.remove('hidden');
-        setTimeout(() => { modal.firstElementChild.classList.remove('scale-95', 'opacity-0'); }, 10);
+    // --- 4. Focus Map Function ---
+    window.focusField = function(fieldId) {
+        const layer = layersMap[fieldId];
+        if (layer) {
+            // เลื่อนแผนที่ไปหา
+            map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 15, duration: 1.5 });
+            layer.openPopup();
+            
+            // เลื่อนหน้าจอไปหาแผนที่
+            const mapEl = document.getElementById('map');
+            mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Highlight
+            const originalStyle = layer.options.style;
+            layer.setStyle({ color: '#3b82f6', weight: 4, fillOpacity: 0.8 });
+            setTimeout(() => { layer.setStyle(originalStyle); }, 2500);
+        } else {
+            Swal.fire({ title: 'ไม่พบพิกัด', text: 'ข้อมูลแปลงนานี้อาจถูกลบไปแล้ว', icon: 'warning', timer: 2000, showConfirmButton: false });
+        }
     }
 
-    window.closeModal = function() {
-        const modal = document.getElementById('buyerModal');
-        modal.firstElementChild.classList.add('scale-95', 'opacity-0');
-        setTimeout(() => { modal.classList.add('hidden'); }, 200);
-    }
-
-    // Animation Utils
-    function animateValue(id, end) {
+    function animateValue(id, end, decimals = 0) { 
         const obj = document.getElementById(id);
+        if(!obj) return;
+        
+        // ลบ comma ออกก่อนแปลงเป็น float เพื่อกัน error
         const start = parseFloat(obj.innerText.replace(/,/g, '')) || 0;
         if(start === end) return;
-        let current = start; const step = (end - start) / 20;
+        
+        let current = start; 
+        const range = end - start;
+        const step = range / 20;
+        
         const timer = setInterval(() => {
             current += step;
-            if ((step > 0 && current >= end) || (step < 0 && current <= end)) { current = end; clearInterval(timer); }
-            obj.innerText = current.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
-        }, 30);
+            if ((step > 0 && current >= end) || (step < 0 && current <= end)) { 
+                current = end; 
+                clearInterval(timer); 
+            }
+            // ใช้ค่า decimals ที่ส่งมา
+            obj.innerText = current.toLocaleString(undefined, {
+                minimumFractionDigits: decimals, 
+                maximumFractionDigits: decimals
+            });
+        }, 20);
     }
 
-    // Export CSV
     window.exportCSV = function() {
-        if(!globalSales.length) return Swal.fire('ไม่มีข้อมูล');
-        let csv = "\uFEFFวันที่,เกษตรกร,แปลง,พันธุ์,ปริมาณ,ราคา,ยอดรวม,สถานะ,ผู้รับซื้อ\n";
+        if(!globalSales.length) return Swal.fire('ไม่มีข้อมูล', '', 'info');
+        let csv = "\uFEFFวันที่,เกษตรกร,แปลง,พันธุ์,ปริมาณ(ตัน),ราคาต่อตัน,ยอดรวม,สถานะ,ผู้รับซื้อ\n";
         globalSales.forEach(s => {
             const date = new Date(s.created_at).toLocaleDateString('th-TH');
-            csv += `"${date}","${s.farmer_name}","${s.field_name}","${s.variety_display}",${s.quantity_ton},${s.price_per_ton},${s.quantity_ton*s.price_per_ton},"${s.status}","${s.buyer_name || '-'}"\n`;
+            const statusText = s.status === 'SOLD' ? 'ขายแล้ว' : (s.status === 'REQUESTED' ? 'รออนุมัติ' : 'รอขาย');
+            const buyer = s.buyer_name || '-';
+            csv += `"${date}","${s.farmer_name}","${s.field_name}","${s.variety_display}",${s.quantity_ton},${s.price_per_ton},${s.quantity_ton*s.price_per_ton},"${statusText}","${buyer}"\n`;
         });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
@@ -323,7 +419,15 @@
         link.click();
     }
 
+    function safeInvalidateMap() {
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 400);
+}
+
+    window.addEventListener('load', () => { setTimeout(() => { map.invalidateSize(); }, 300); });
     updateData();
-    setInterval(updateData, 15000);
+
+    setInterval(updateData, 10000); 
 </script>
 {% endblock %}

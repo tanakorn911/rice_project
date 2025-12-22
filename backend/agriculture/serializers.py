@@ -26,21 +26,20 @@ class YieldEstimationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SaleNotificationSerializer(serializers.ModelSerializer):
-    farmer_name = serializers.CharField(source='farmer.username', read_only=True)
+    farmer_name = serializers.CharField(source='farmer.get_full_name', read_only=True)
     field_name = serializers.CharField(source='rice_field.name', read_only=True)
     field_area = serializers.FloatField(source='rice_field.area_rai', read_only=True)
     variety_display = serializers.CharField(source='rice_field.get_variety_display', read_only=True)
     field_location = serializers.SerializerMethodField()
 
-    # ✅ เพิ่ม: ข้อมูลผู้ซื้อ (Miller)
-    buyer_name = serializers.CharField(source='buyer.username', read_only=True)
+    buyer_name = serializers.CharField(source='buyer.get_full_name', read_only=True)
     buyer_phone = serializers.CharField(source='buyer.phone', read_only=True)
 
     class Meta:
         model = SaleNotification
         fields = ['id', 'farmer_name', 'rice_field', 'field_name', 'field_location', 'variety_display', 
                   'quantity_ton', 'price_per_ton', 'phone', 'status', 'created_at', 'field_area', 
-                  'buyer', 'buyer_name', 'buyer_phone', 'sold_at']
+                  'buyer', 'buyer_name', 'buyer_phone', 'buyer_contact', 'sold_at']
 
     def get_field_location(self, obj):
         if obj.rice_field and obj.rice_field.boundary:
