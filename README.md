@@ -4,7 +4,7 @@
 มุ่งเน้นการประยุกต์ใช้เทคโนโลยีสารสนเทศเพื่อแก้ปัญหาด้านการเกษตรของประเทศไทย  
 โดยใช้ข้อมูลภาพถ่ายดาวเทียมและระบบเว็บแอปพลิเคชัน
 
-![Project Banner](https://via.placeholder.com/1200x400?text=Rice+War+Room+Platform)
+![Project Banner](https://pixabay.com/illustrations/project-banner-header-conception-1287781//1200x400?text=Rice+War+Room+Platform)
 
 ---
 
