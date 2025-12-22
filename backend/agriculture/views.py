@@ -54,36 +54,32 @@ def govt_dashboard(request): return render(request, 'agriculture/govt_dashboard.
 @api_view(['GET'])
 @login_required
 def dashboard_stats(request):
-    # 1. ข้อมูลพื้นฐานแปลงนา (จำนวนแปลง, พื้นที่รวม, จำนวนเกษตรกร)
+    # 1. ข้อมูลพื้นฐานแปลงนา
     all_fields = RiceField.objects.all()
     total_fields = all_fields.count()
-    # รวมพื้นที่ (ไร่) ทั้งหมดที่มีในระบบ
     total_area = all_fields.aggregate(Sum('area_rai'))['area_rai__sum'] or 0
     total_farmers = all_fields.values('owner').distinct().count()
     
     # 2. คำนวณยอดเงิน และ ปริมาณผลผลิต (จากรายการขายจริง ไม่ใช่ดาวเทียม)
     sales = SaleNotification.objects.all()
     
-    total_yield = 0      # เก็บปริมาณตันรวม (จากที่เกษตรกรกรอกขาย)
+    total_yield = 0      # เก็บปริมาณตันรวม
     sold_value = 0       # มูลค่าขายแล้ว
     pending_value = 0    # มูลค่ารอขาย
 
     for s in sales:
-        # คำนวณมูลค่าเงินต่อรายการ
         val = s.quantity_ton * float(s.price_per_ton)
         
-        # แยกยอดเงินตามสถานะ
         if s.status == 'SOLD': 
             sold_value += val
         elif s.status in ['OPEN', 'REQUESTED']: 
             pending_value += val
             
-        # ✅ แก้ไขตรงนี้: รวมน้ำหนักข้าว (ตัน) จากทุกรายการที่มีการประกาศขาย
-        # ไม่ว่าจะ "รอขาย", "รออนุมัติ", หรือ "ขายแล้ว" ให้นับรวมหมดว่าเป็น Supply ในตลาด
+        # นับรวมทุกสถานะที่เป็น active supply
         if s.status in ['SOLD', 'OPEN', 'REQUESTED']:
             total_yield += s.quantity_ton
 
-    # 3. เตรียมข้อมูลกราฟ (เหมือนเดิม)
+    # 3. เตรียมข้อมูลกราฟ
     variety_data = RiceField.objects.values('variety').annotate(total=Count('variety'))
     variety_dict = dict(RiceField.VARIETY_CHOICES)
     v_labels = [variety_dict.get(item['variety'], item['variety']) for item in variety_data]
@@ -93,7 +89,7 @@ def dashboard_stats(request):
         'total_fields': total_fields,
         'total_area': round(total_area, 2),
         'total_farmers': total_farmers,
-        'total_yield': round(total_yield, 2), # ✅ ค่านี้จะมาจากยอดขายที่กรอกเองแล้ว
+        'total_yield': round(total_yield, 2),
         'sold_value': sold_value,
         'pending_value': pending_value,
         'charts': {'variety': {'labels': v_labels, 'data': v_data}}
@@ -113,9 +109,8 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
         try:
             data = request.data
             geom_input = data.get('geometry')
-            field_name = data.get('name', 'แปลงนาใหม่').strip() # ตัดช่องว่างหน้าหลัง
+            field_name = data.get('name', 'แปลงนาใหม่').strip()
 
-            # 1. เช็คว่าชื่อซ้ำไหม (เฉพาะ User คนนี้)
             if RiceField.objects.filter(owner=request.user, name=field_name).exists():
                 return Response({'error': f"คุณมีแปลงนาชื่อ '{field_name}' อยู่แล้ว กรุณาตั้งชื่ออื่น"}, status=400)
 
@@ -130,7 +125,6 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             area_sqm = poly.transform(32647, clone=True).area
             area_rai = round(area_sqm / 1600, 2)
             
-            # บันทึกข้อมูล
             field = RiceField.objects.create(
                 owner=request.user, 
                 name=field_name,
@@ -150,26 +144,39 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             ee_geometry = ee.Geometry.Polygon(geom_json['coordinates'])
             
             end_date = datetime.date.today()
-            start_date = end_date - datetime.timedelta(days=30)
+            # ยืดเวลาเป็น 60 วัน เพื่อเพิ่มโอกาสหา 'วันที่ฟ้าใสที่สุด' มาซ่อมภาพ
+            start_date = end_date - datetime.timedelta(days=60) 
             
-            # ดึงข้อมูลดาวเทียม Sentinel-2
+            # --- ✅ สูตรใหม่: ใช้ SCL (Scene Classification) แม่นยำกว่า QA60 ---
+            def mask_s2_scl(image):
+                scl = image.select('SCL')
+                # SCL Values: 
+                # 3 = เงาเมฆ, 8 = เมฆปานกลาง, 9 = เมฆหนา, 10 = เมฆ Cirrus (บางๆ), 11 = หิมะ
+                # เราสั่งให้ Mask ค่าพวกนี้ทิ้งไปเลย (ให้เป็น Transparent)
+                mask = scl.neq(3).And(scl.neq(8)).And(scl.neq(9)).And(scl.neq(10)).And(scl.neq(11))
+                return image.updateMask(mask).divide(10000)
+
             dataset = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
                        .filterBounds(ee_geometry)
                        .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
-                       .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 80)))
-            
-            if dataset.size().getInfo() == 0:
-                return Response({'error': 'เมฆมากเกินไป ไม่สามารถวิเคราะห์ได้ในขณะนี้'}, status=400)
+                       .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 70)) # ยอมรับภาพที่มีเมฆได้มากขึ้น (เพราะเดี๋ยวเราลบออก)
+                       .map(mask_s2_scl)) # เรียกใช้ฟังก์ชัน SCL
 
+            if dataset.size().getInfo() == 0:
+                return Response({'error': 'ช่วงนี้พายุเข้า เมฆบังมิดทุกวัน ไม่สามารถถ่ายภาพได้'}, status=400)
+
+            # ใช้ Median เพื่อ "เฉลี่ยค่าแสง" (ถ้าภาพหนึ่งติดเมฆ อีกภาพหนึ่งอาจจะชัด ระบบจะเลือกจุดที่ชัดที่สุดมาผสมกัน)
             image = dataset.median()
             
-            # 1. คำนวณ NDVI (พืชพรรณ) -> (NIR - Red) / (NIR + Red)
+            # ปรับแสงให้สวยงาม (True Color)
+            vis_params = {'min': 0.0, 'max': 0.3, 'bands': ['B4', 'B3', 'B2'], 'gamma': 1.3}
+            map_id = image.getMapId(vis_params)
+            tile_url = map_id['tile_fetcher'].url_format
+
+            # คำนวณค่าดัชนี (NDVI / NDBI)
             ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI')
-            
-            # 2. คำนวณ NDBI (สิ่งปลูกสร้าง) -> (SWIR - NIR) / (SWIR + NIR)
             ndbi = image.normalizedDifference(['B11', 'B8']).rename('NDBI')
 
-            # รวม Band เพื่อหาค่าเฉลี่ยในพื้นที่
             combined = ndvi.addBands(ndbi)
             stats = combined.reduceRegion(
                 reducer=ee.Reducer.mean(), 
@@ -181,41 +188,31 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             val_ndvi = stats.get('NDVI')
             val_ndbi = stats.get('NDBI')
             
-            if val_ndvi is None: return Response({'error': 'พื้นที่เล็กเกินไป'}, status=400)
+            if val_ndvi is None: return Response({'error': 'พื้นที่เล็กเกินไป หรือข้อมูลภาพเสียหาย'}, status=400)
             
             yield_ton = 0
             revenue = 0
             
-            # --- Logic จำแนกพื้นที่ (ปรับปรุงใหม่) ---
-            
-            # 1. น้ำ: NDVI ติดลบ
+            # --- Logic จำแนกพื้นที่ ---
             if val_ndvi < 0:
                 result_type = 'water'
                 note = "แหล่งน้ำ (Water Body)"
-            
-            # 2. สิ่งปลูกสร้างขนาดใหญ่/อาคารหนาแน่น: NDBI ต้องสูงชัดเจน (> 0.1)
-            # *ถนนส่วนใหญ่ค่า NDBI จะอยู่ประมาณ 0.0 - 0.1 ซึ่งจะไม่เข้าเงื่อนไขนี้*
             elif val_ndbi > 0.1:
                 result_type = 'building'
-                note = "อาคาร/สิ่งปลูกสร้าง (Building)"
-            
-            # 3. ถนน/ดินโล่ง/ลานคอนกรีต: NDVI ต่ำ (แต่น้ำไม่ท่วม และไม่ใช่ตึกสูง)
+                note = "อาคาร/สิ่งปลูกสร้าง"
             elif val_ndvi < 0.35:
                 result_type = 'road'
-                note = "ถนน/ดินโล่ง (Road/Soil)"
-            
-            # 4. พื้นที่เกษตร: NDVI สูง
+                note = "ถนน/ดินโล่ง"
             else:
                 result_type = 'rice'
+                note = "นาข้าวสมบูรณ์"
                 yield_ton = (val_ndvi * 850 * rice_field.area_rai) / 1000
-                note = "นาข้าวสมบูรณ์ (Rice Field)"
                 
                 est_price = 12000 
                 if rice_field.variety == 'KDML105': est_price = 14000
                 elif rice_field.variety == 'RD6': est_price = 13000
                 revenue = yield_ton * est_price
             
-            # บันทึกประวัติ
             YieldEstimation.objects.create(field=rice_field, ndvi_mean=val_ndvi, estimated_yield_ton=yield_ton)
             
             return Response({
@@ -225,7 +222,8 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
                 'revenue': round(revenue, 2),
                 'note': note,
                 'result_type': result_type,
-                'area': rice_field.area_rai
+                'area': rice_field.area_rai,
+                'satellite_image': tile_url
             })
 
         except Exception as e:
@@ -245,13 +243,11 @@ class SaleNotificationViewSet(viewsets.ModelViewSet):
         
         if role == 'FARMER':
             return SaleNotification.objects.filter(farmer=user).order_by('-created_at')
-        # แสดงรายการที่ สถานะรอขาย หรือ รายการที่ตัวเองกดซื้อไปแล้ว หรือ ขายจบไปแล้ว
         return SaleNotification.objects.filter(Q(status='OPEN') | Q(buyer=user) | Q(status='SOLD')).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(farmer=self.request.user)
 
-    # ✅ โรงสีกดขอซื้อ (เปลี่ยนสถานะเป็น REQUESTED)
     @action(detail=True, methods=['post'])
     def request_buy(self, request, pk=None):
         sale = self.get_object()
@@ -260,11 +256,10 @@ class SaleNotificationViewSet(viewsets.ModelViewSet):
         
         sale.status = 'REQUESTED'
         sale.buyer = request.user
-        sale.buyer_contact = request.data.get('contact', request.user.phone or '-') # รับเบอร์โทรจากคนซื้อ
+        sale.buyer_contact = request.data.get('contact', request.user.phone or '-')
         sale.save()
         return Response({'status': 'requested', 'msg': 'ส่งคำขอซื้อเรียบร้อย รอชาวนายืนยัน'})
 
-    # ✅ ชาวนากดยืนยันขาย (เปลี่ยนสถานะเป็น SOLD)
     @action(detail=True, methods=['post'])
     def approve_sell(self, request, pk=None):
         sale = self.get_object()
@@ -279,7 +274,6 @@ class SaleNotificationViewSet(viewsets.ModelViewSet):
         sale.save()
         return Response({'status': 'sold', 'msg': 'ยืนยันการขายสำเร็จ'})
     
-    # ✅ ชาวนาปฏิเสธ (กลับไปเป็น OPEN)
     @action(detail=True, methods=['post'])
     def reject_sell(self, request, pk=None):
         sale = self.get_object()
@@ -297,7 +291,6 @@ def history_view(request):
     user = request.user
     role = getattr(user, 'role', 'FARMER')
     
-    # ดึงข้อมูลประวัติการซื้อขายที่สำเร็จแล้ว (SOLD)
     if role == 'FARMER':
         transactions = SaleNotification.objects.filter(farmer=user, status='SOLD').order_by('-sold_at')
     elif role == 'MILLER':
@@ -305,6 +298,6 @@ def history_view(request):
     elif role == 'GOVT':
         transactions = SaleNotification.objects.filter(status='SOLD').order_by('-sold_at')
     else:
-        transactions = [] # Admin หรืออื่นๆ
+        transactions = [] 
 
     return render(request, 'agriculture/history.html', {'transactions': transactions, 'role': role})

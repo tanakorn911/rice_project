@@ -63,6 +63,13 @@
                     <span class="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full shadow-sm">📍 จ.พะเยา</span>
                 </div>
             </div>
+            
+            <div id="sat-control" class="hidden absolute top-4 right-14 z-[400] bg-white shadow-md rounded-lg p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 transition">
+                <button onclick="toggleSatellite()" class="text-xs font-bold text-gray-600 px-2 py-1 flex items-center gap-1 focus:outline-none">
+                    <i class="fa-solid fa-layer-group text-blue-500"></i> <span id="sat-text">ซ่อนภาพดาวเทียม</span>
+                </button>
+            </div>
+
             <div id="map" class="w-full h-full rounded-xl z-0 bg-gray-100"></div>
         </div>
     </div>
@@ -117,7 +124,6 @@
                     </div>
                 </div>
             </div>
-            
             <button onclick="closeModal()" class="mt-5 w-full bg-gray-800 hover:bg-gray-900 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-lg shadow-gray-200">ปิดหน้าต่าง</button>
         </div>
     </div>
@@ -158,9 +164,9 @@
 
     var drawnItems = new L.FeatureGroup().addTo(map);
     var fieldLayers = {}; 
-    var lastStatusMap = {}; // เก็บสถานะล่าสุดของแต่ละแปลงเพื่อเทียบการเปลี่ยนแปลง
+    var satelliteLayer = null; // ✅ ตัวแปรเก็บ Layer ภาพดาวเทียม
+    var lastStatusMap = {}; 
     
-    // เก็บเวลาที่กด "อ่านทั้งหมด" ล่าสุด
     let lastReadTime = new Date(localStorage.getItem('farmerLastRead') || 0);
 
     // เครื่องมือวาด
@@ -193,7 +199,6 @@
         var layer = e.layer;
         var center = layer.getBounds().getCenter();
         
-        // Simple Geofence Check (Phayao)
         if (center.lng < 99.80 || center.lng > 100.10 || center.lat < 19.00 || center.lat > 19.35) {
             Swal.fire({ icon: 'error', title: 'นอกเขตพื้นที่!', text: 'กรุณาวาดแปลงนาภายใน อ.เมือง จ.พะเยา เท่านั้น', timer: 3000, showConfirmButton: false });
             return;
@@ -254,29 +259,17 @@
             const sales = await saleRes.json();
             
             const saleMap = {};
-            // จัดกลุ่มรายการขาย (เอาเฉพาะ REQUESTED และ SOLD ไปแจ้งเตือน)
             const activeRequests = [];
             const newSoldItems = [];
 
             sales.forEach(s => { 
                 if (!saleMap[s.rice_field]) saleMap[s.rice_field] = s;
-                
-                // Logic แจ้งเตือน
-                if (s.status === 'REQUESTED') {
-                    // รายการรออนุมัติ: ถือว่ายังไม่อ่านถ้ายังไม่ทำรายการ
-                    activeRequests.push(s); 
-                } else if (s.status === 'SOLD' && s.sold_at) {
-                    // รายการขายสำเร็จ: เช็คเวลากับ lastReadTime
-                    if (new Date(s.sold_at) > lastReadTime) {
-                        newSoldItems.push(s);
-                    }
-                }
+                if (s.status === 'REQUESTED') activeRequests.push(s); 
+                else if (s.status === 'SOLD' && s.sold_at && new Date(s.sold_at) > lastReadTime) newSoldItems.push(s);
             });
 
-            // อัปเดต Notification UI
             updateNotifications(activeRequests, newSoldItems);
 
-            // Render หน้าจอ
             const listContainer = document.getElementById('fieldList');
             document.getElementById('field-count').innerText = fields.length;
             listContainer.innerHTML = '';
@@ -292,40 +285,27 @@
                 const activeSale = saleMap[f.id];
                 const status = activeSale ? activeSale.status : 'NONE';
 
-                // --- Real-time Popup Alert (เด้งเมื่อสถานะเปลี่ยน) ---
                 if (lastStatusMap[f.id] && lastStatusMap[f.id] !== status) {
                     if (status === 'REQUESTED') {
-                        Swal.fire({ 
-                            title: '🔔 มีคำขอซื้อใหม่!', 
-                            html: `มีผู้สนใจซื้อข้าวแปลง <b>${f.name}</b><br>กรุณาตรวจสอบและอนุมัติ`, 
-                            icon: 'info', timer: 10000, showCloseButton: true
-                        });
+                        Swal.fire({ title: '🔔 มีคำขอซื้อใหม่!', html: `มีผู้สนใจซื้อข้าวแปลง <b>${f.name}</b>`, icon: 'info', timer: 10000, showCloseButton: true });
                     } else if (status === 'SOLD') {
-                        Swal.fire({ 
-                            title: '🎉 ขายสำเร็จ!', 
-                            html: `แปลง <b>${f.name}</b> ขายเรียบร้อยแล้ว`, 
-                            icon: 'success', timer: 5000, showCloseButton: true
-                        });
+                        Swal.fire({ title: '🎉 ขายสำเร็จ!', html: `แปลง <b>${f.name}</b> ขายเรียบร้อยแล้ว`, icon: 'success', timer: 5000, showCloseButton: true });
                     }
                 }
                 lastStatusMap[f.id] = status;
 
-                // --- UI Rendering ---
                 let borderClass = "border-l-green-500", bgHover = "hover:bg-green-50";
                 let statusBadge = "", actionButtons = "";
                 let polyColor = "#22c55e", dashArray = '5, 5';
 
                 if (status === 'OPEN') {
-                    // สถานะ: รอขาย
                     borderClass = "border-l-orange-500"; bgHover = "hover:bg-orange-50"; polyColor = "#f97316"; dashArray = null;
                     statusBadge = `<span class="absolute top-2 right-10 text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold border border-orange-200 shadow-sm"><i class="fa-solid fa-clock"></i> รอรับซื้อ</span>`;
                     actionButtons = `<div class="col-span-2"><button onclick="cancelSale(${activeSale.id})" class="w-full bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold py-2.5 rounded-lg border border-red-100"><i class="fa-solid fa-xmark"></i> ยกเลิกประกาศ</button></div>`;
                 
                 } else if (status === 'REQUESTED') {
-                    // สถานะ: รออนุมัติ (สำคัญ!)
                     borderClass = "border-l-yellow-500"; bgHover = "hover:bg-yellow-50"; polyColor = "#eab308";
                     statusBadge = `<span class="absolute top-2 right-10 text-[10px] bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full font-bold border border-yellow-200 animate-pulse"><i class="fa-solid fa-bell"></i> รออนุมัติ</span>`;
-                    
                     const contactInfo = activeSale.buyer_contact || activeSale.buyer_phone || '-';
                     actionButtons = `
                         <div class="col-span-2 bg-yellow-50 p-3 rounded-lg border border-yellow-200 mb-2 text-xs text-gray-700">
@@ -341,16 +321,12 @@
                     `;
 
                 } else if (status === 'SOLD') {
-                    // สถานะ: ขายแล้ว
                     borderClass = "border-l-gray-400 opacity-80"; bgHover = "hover:bg-gray-50"; polyColor = "#9ca3af"; dashArray = null;
                     statusBadge = `<span class="absolute top-2 right-10 text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-bold border border-gray-200"><i class="fa-solid fa-check-circle"></i> ขายแล้ว</span>`;
-                    
-                    // คำนวณราคาทันที
                     const totalPrice = (activeSale.quantity_ton * activeSale.price_per_ton).toLocaleString();
                     const buyerName = activeSale.buyer_name || 'ไม่ระบุ';
                     const buyerPhone = activeSale.buyer_contact || activeSale.buyer_phone || '-';
                     const soldDate = new Date(activeSale.sold_at).toLocaleString('th-TH');
-
                     actionButtons = `
                         <div class="col-span-2">
                             <button onclick="openSaleModal('${buyerName}', '${buyerPhone}', '${soldDate}', '${activeSale.quantity_ton}', '${activeSale.price_per_ton.toLocaleString()}', '${totalPrice}')" 
@@ -359,12 +335,8 @@
                             </button>
                         </div>
                     `;
-                
                 } else {
-                    // สถานะ: ว่าง (ยังไม่ขาย)
-                    let calcBtnText = '<i class="fa-solid fa-satellite-dish"></i> วิเคราะห์';
-                    if (f.latest_yield) calcBtnText = '<i class="fa-solid fa-rotate"></i> คำนวณใหม่';
-                    
+                    let calcBtnText = f.latest_yield ? '<i class="fa-solid fa-rotate"></i> คำนวณใหม่' : '<i class="fa-solid fa-satellite-dish"></i> วิเคราะห์';
                     let canSell = f.latest_yield && f.latest_yield.yield > 0;
                     let sellBtnClass = canSell ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed';
                     
@@ -374,7 +346,6 @@
                     `;
                 }
 
-                // Render Card
                 let yieldContent = f.latest_yield ? 
                     `<div class="grid grid-cols-2 gap-4 text-center divide-x divide-green-200">
                         <div><p class="text-[10px] text-gray-500 uppercase">NDVI</p><p class="text-lg font-bold text-green-700">${parseFloat(f.latest_yield.ndvi).toFixed(3)}</p></div>
@@ -400,7 +371,6 @@
                 `;
                 listContainer.appendChild(card);
 
-                // Map Layer
                 if(f.boundary) {
                     try {
                         const geoJsonData = (typeof f.boundary === 'string') ? JSON.parse(f.boundary) : f.boundary;
@@ -413,15 +383,11 @@
         } catch (error) { console.error(error); }
     }
 
-    // ==========================================
-    // 4. Notifications & UI Utils
-    // ==========================================
     function updateNotifications(activeRequests, newSoldItems) {
         const badge = document.getElementById('notif-badge');
         const listDiv = document.getElementById('notif-list');
         const totalUnread = activeRequests.length + newSoldItems.length;
 
-        // Badge Logic
         if (totalUnread > 0) {
             badge.innerText = totalUnread > 9 ? '9+' : totalUnread;
             badge.classList.remove('hidden');
@@ -430,13 +396,10 @@
             badge.classList.add('hidden');
         }
 
-        // List Content
         if (totalUnread === 0) {
             listDiv.innerHTML = `<div class="p-8 text-center text-gray-400 text-sm"><i class="fa-regular fa-bell-slash text-2xl mb-2 opacity-50"></i><br>ไม่มีการแจ้งเตือนใหม่</div>`;
         } else {
             listDiv.innerHTML = '';
-            
-            // แสดงรายการ "รออนุมัติ" ก่อน (สำคัญสุด)
             activeRequests.forEach(s => {
                 listDiv.innerHTML += `
                     <div class="p-3 border-b border-gray-50 bg-yellow-50 hover:bg-yellow-100 cursor-pointer transition-colors" onclick="focusField(${s.rice_field})">
@@ -450,8 +413,6 @@
                         </div>
                     </div>`;
             });
-
-            // แสดงรายการ "ขายสำเร็จล่าสุด"
             newSoldItems.forEach(s => {
                 listDiv.innerHTML += `
                     <div class="p-3 border-b border-gray-50 hover:bg-green-50 cursor-pointer transition-colors" onclick="focusField(${s.rice_field})">
@@ -468,7 +429,6 @@
         }
     }
 
-    // ฟังก์ชันอ่านทั้งหมด
     window.markAllRead = function() {
         lastReadTime = new Date();
         localStorage.setItem('farmerLastRead', lastReadTime);
@@ -512,7 +472,7 @@
     // ==========================================
     window.calcYield = async (id, btn) => {
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> รอสักครู่...'; 
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> กำลังวิเคราะห์...'; 
         btn.disabled = true;
         
         try {
@@ -523,85 +483,80 @@
             const data = await res.json();
             
             if(res.ok) {
-                // 1. ตรวจจับสิ่งปลูกสร้าง (ใหม่!)
-                if (data.result_type === 'building') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '⚠️ พื้นที่นี้คือสิ่งปลูกสร้าง',
-                        html: `
-                            <div class="text-left text-sm bg-red-50 p-3 rounded-lg border border-red-100">
-                                <p><b>NDVI (พืช):</b> ${data.ndvi}</p>
-                                <p><b>NDBI (ตึก):</b> ${data.ndbi}</p>
-                                <hr class="my-2 border-red-200">
-                                <p class="text-red-600">ระบบตรวจพบค่าการสะท้อนแสงแบบอาคาร/บ้านเรือน ไม่สามารถคำนวณผลผลิตข้าวได้</p>
-                            </div>
-                        `,
-                        confirmButtonColor: '#ef4444'
-                    });
-                } 
-                // 2. ตรวจจับแหล่งน้ำ
-                else if (data.result_type === 'water') {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: '💧 ตรวจพบแหล่งน้ำ',
-                        text: `ค่า NDVI: ${data.ndvi} (พื้นที่น้ำ)`,
-                        confirmButtonColor: '#3b82f6'
-                    });
-                } 
-                // 3. ตรวจจับถนน
-                else if (data.result_type === 'road') {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: '🛣️ ตรวจพบถนน/พื้นที่โล่ง',
-                        html: `
-                            <div class="text-left text-sm bg-orange-50 p-3 rounded-lg border border-orange-100">
-                                <p><b>NDVI:</b> ${data.ndvi}</p>
-                                <p><b>NDBI:</b> ${data.ndbi}</p>
-                                <hr class="my-2 border-orange-200">
-                                <p class="text-orange-800">พื้นที่นี้เป็นถนน, ดินโล่ง, หรือลานคอนกรีตที่ไม่มีพืชปกคลุม</p>
-                            </div>
-                        `,
-                        confirmButtonColor: '#f97316'
-                    });
-                } 
-                // 4. ✅ พื้นที่เกษตร (แสดงข้อมูลเยอะๆ ตามที่ขอ)
-                else {
-                    Swal.fire({ 
-                        title: '🎉 วิเคราะห์ผลผลิตสำเร็จ!',
-                        html: `
-                            <div class="mt-2">
-                                <div class="bg-green-50 p-4 rounded-xl border border-green-200 shadow-sm mb-3">
-                                    <h3 class="text-3xl font-bold text-green-700">${data.yield_ton} <span class="text-base text-gray-500 font-normal">ตัน</span></h3>
-                                    <p class="text-sm text-green-600">ผลผลิตคาดการณ์</p>
-                                </div>
-                                
-                                <div class="grid grid-cols-2 gap-3 text-left text-sm">
-                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                        <span class="text-gray-500 block text-xs">💰 มูลค่าประเมิน</span>
-                                        <span class="font-bold text-gray-800 text-lg">${data.revenue.toLocaleString()} บ.</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                        <span class="text-gray-500 block text-xs">🌿 ดัชนีความสมบูรณ์</span>
-                                        <span class="font-bold text-gray-800 text-lg">${data.ndvi}</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                        <span class="text-gray-500 block text-xs">📏 ขนาดพื้นที่</span>
-                                        <span class="font-bold text-gray-800 text-lg">${data.area} ไร่</span>
-                                    </div>
-                                    <div class="bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                        <span class="text-gray-500 block text-xs">📊 ผลผลิตเฉลี่ย</span>
-                                        <span class="font-bold text-gray-800 text-lg">${(data.yield_ton/data.area).toFixed(2)} ตัน/ไร่</span>
-                                    </div>
-                                </div>
-                                <p class="text-xs text-gray-400 mt-3 text-center">*คำนวณจากภาพถ่ายดาวเทียม Sentinel-2 ล่าสุด</p>
-                            </div>
-                        `,
-                        icon: 'success',
-                        confirmButtonText: 'ยอดเยี่ยม!',
-                        confirmButtonColor: '#16a34a',
-                        width: '400px'
-                    });
+                // 1. แสดงภาพดาวเทียม
+                if (satelliteLayer) map.removeLayer(satelliteLayer); 
+                if (data.satellite_image) {
+                    satelliteLayer = L.tileLayer(data.satellite_image, {
+                        attribution: 'Sentinel-2 (Real-time)',
+                        opacity: 1.0 
+                    }).addTo(map);
+                    
+                    if(fieldLayers[id]) map.flyToBounds(fieldLayers[id].getBounds(), { padding: [50,50], maxZoom: 16 });
+                    document.getElementById('sat-control').classList.remove('hidden');
                 }
+
+                // 2. เตรียมข้อความแจ้งเตือน (Header)
+                let headerHtml = '';
+                let icon = 'success';
+                let btnColor = '#16a34a';
+
+                if (data.result_type === 'building') {
+                    headerHtml = `<div class="bg-red-100 text-red-700 p-2 rounded-lg mb-3 text-sm border border-red-200">⚠️ ตรวจพบเป็น <b>สิ่งปลูกสร้าง</b> (NDBI: ${data.ndbi})</div>`;
+                    icon = 'error';
+                    btnColor = '#ef4444';
+                } else if (data.result_type === 'road') {
+                    headerHtml = `<div class="bg-orange-100 text-orange-700 p-2 rounded-lg mb-3 text-sm border border-orange-200">🛣️ ตรวจพบเป็น <b>ถนน/ดินโล่ง</b> (NDVI ต่ำ)</div>`;
+                    icon = 'warning';
+                    btnColor = '#f97316';
+                } else if (data.result_type === 'water') {
+                    headerHtml = `<div class="bg-blue-100 text-blue-700 p-2 rounded-lg mb-3 text-sm border border-blue-200">💧 ตรวจพบเป็น <b>แหล่งน้ำ</b></div>`;
+                    icon = 'info';
+                    btnColor = '#3b82f6';
+                } else {
+                    headerHtml = `<div class="bg-green-100 text-green-700 p-2 rounded-lg mb-3 text-sm border border-green-200">🌾 <b>นาข้าวสมบูรณ์</b> พร้อมเก็บเกี่ยว</div>`;
+                }
+
+                // 3. แสดงผล (Layout เดิม แต่ข้อมูลครบทุกกรณี)
+                Swal.fire({ 
+                    title: 'ผลการวิเคราะห์',
+                    html: `
+                        <div class="mt-2">
+                            ${headerHtml}
+                            
+                            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm mb-3">
+                                <h3 class="text-3xl font-bold text-gray-800">${data.yield_ton} <span class="text-base text-gray-500 font-normal">ตัน</span></h3>
+                                <p class="text-sm text-gray-500">ผลผลิตคาดการณ์</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-3 text-left text-sm">
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                    <span class="text-gray-400 block text-[10px] uppercase">💰 มูลค่าประเมิน</span>
+                                    <span class="font-bold text-gray-800 text-lg">${data.revenue.toLocaleString()} บ.</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                    <span class="text-gray-400 block text-[10px] uppercase">🌿 ดัชนีพืช (NDVI)</span>
+                                    <span class="font-bold text-gray-800 text-lg">${data.ndvi}</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                    <span class="text-gray-400 block text-[10px] uppercase">📏 ขนาดพื้นที่</span>
+                                    <span class="font-bold text-gray-800 text-lg">${data.area} ไร่</span>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                                    <span class="text-gray-400 block text-[10px] uppercase">🏢 ดัชนีสิ่งปลูกสร้าง</span>
+                                    <span class="font-bold text-gray-800 text-lg">${data.ndbi}</span>
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-gray-400 mt-3 text-center">
+                                <i class="fa-solid fa-satellite"></i> วิเคราะห์จากภาพดาวเทียม Sentinel-2 ล่าสุด
+                            </p>
+                        </div>
+                    `,
+                    icon: icon,
+                    confirmButtonText: 'รับทราบ',
+                    confirmButtonColor: btnColor,
+                    width: '400px'
+                });
+
                 loadFields(); 
             } else {
                 Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: data.error });
@@ -611,6 +566,18 @@
         } finally { 
             btn.innerHTML = originalText; 
             btn.disabled = false; 
+        }
+    }
+
+    window.toggleSatellite = function() {
+        if(satelliteLayer) {
+            if(map.hasLayer(satelliteLayer)) {
+                map.removeLayer(satelliteLayer);
+                document.getElementById('sat-text').innerText = 'แสดงภาพดาวเทียม';
+            } else {
+                map.addLayer(satelliteLayer);
+                document.getElementById('sat-text').innerText = 'ซ่อนภาพดาวเทียม';
+            }
         }
     }
 
