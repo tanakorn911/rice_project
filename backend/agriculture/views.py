@@ -10,7 +10,8 @@ from rest_framework.response import Response
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Q
+from django.conf import settings
 
 from .models import RiceField, YieldEstimation, SaleNotification
 from .serializers import RiceFieldSerializer, YieldEstimationSerializer, SaleNotificationSerializer
@@ -19,14 +20,15 @@ from .serializers import RiceFieldSerializer, YieldEstimationSerializer, SaleNot
 # 0. GEE Initialization (การเชื่อมต่อระบบดาวเทียม)
 # ==========================================
 try:
-    KEY_PATH = 'gee-key.json' 
+    KEY_PATH = os.path.join(settings.BASE_DIR, 'gee-key.json')
     if os.path.exists(KEY_PATH):
         SCOPES = ['https://www.googleapis.com/auth/earthengine']
         credentials = service_account.Credentials.from_service_account_file(KEY_PATH, scopes=SCOPES)
         ee.Initialize(credentials=credentials)
         print("✅ GEE Initialized Successfully!")
     else:
-        ee.Initialize() 
+        ee.Initialize()
+        print("⚠️ GEE Initialized (No Key File)")
 except Exception as e:
     print(f"❌ GEE Init Error: {e}")
 
@@ -71,10 +73,10 @@ def govt_dashboard(request):
 def dashboard_stats(request):
     """API สรุปข้อมูลสถิติรวม"""
     
-    # 1. ดึงเฉพาะการวิเคราะห์ NDVI ที่ "แปลงนา" ยังไม่ถูกลบ (Active Fields only)
+    # 1. ดึงเฉพาะการวิเคราะห์ NDVI ที่ "แปลงนา" ยังไม่ถูกลบ
     estimations = YieldEstimation.objects.filter(field__in=RiceField.objects.all())
     
-    # 2. คำนวณสถิติสุขภาพข้าวจากรายการที่กรองแล้ว
+    # 2. คำนวณสถิติสุขภาพข้าว
     h_good = estimations.filter(ndvi_mean__gte=0.5).count()
     h_med = estimations.filter(ndvi_mean__gte=0.3, ndvi_mean__lt=0.5).count()
     h_poor = estimations.filter(ndvi_mean__lt=0.3).count()
@@ -107,6 +109,10 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
     serializer_class = RiceFieldSerializer
 
     def get_queryset(self):
+        # ป้องกัน AnonymousUser หลุดเข้ามา
+        if not self.request.user.is_authenticated:
+            return RiceField.objects.none()
+
         user = self.request.user
         role = getattr(user, 'role', 'FARMER')
         if user.is_superuser or role in ['MILLER', 'GOVT']:
@@ -128,11 +134,13 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             
             # 📍 ล็อคพิกัด อ.เมืองพะเยา (99.80 - 100.10 E, 19.00 - 19.35 N)
             centroid = poly.centroid
+            # หากต้องการปลดล็อคให้วาดที่ไหนก็ได้ ให้ comment 2 บรรทัดล่างนี้ทิ้ง
             if not (99.80 <= centroid.x <= 100.10 and 19.00 <= centroid.y <= 19.35):
-                return Response({'error': 'อยู่นอกเขตพื้นที่ อ.เมืองพะเยา'}, status=400)
+                 return Response({'error': 'อยู่นอกเขตพื้นที่ อ.เมืองพะเยา'}, status=400)
             
             # คำนวณพื้นที่ (ตร.ม. -> ไร่)
-            area_rai = round(poly.transform(32647, clone=True).area / 1600, 2)
+            area_sqm = poly.transform(32647, clone=True).area
+            area_rai = round(area_sqm / 1600, 2)
 
             field = RiceField.objects.create(
                 owner=request.user,
@@ -148,27 +156,30 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def calculate_yield(self, request, pk=None):
-        """วิเคราะห์ NDVI และคำนวณผลผลิตผ่าน Google Earth Engine (แบบรวดเร็ว)"""
+        """วิเคราะห์ NDVI และคำนวณผลผลิต (แก้ไขเรื่องเมฆและค่าติดลบแล้ว)"""
         rice_field = self.get_object()
         try:
             geom_json = json.loads(rice_field.boundary.json)
             ee_geometry = ee.Geometry.Polygon(geom_json['coordinates'])
             
-            end_date = datetime.datetime.now()
-            start_date = end_date - datetime.timedelta(days=30)
+            # 🔧 แก้ไข 1: ขยายเวลาเป็น 1 ปี เพื่อให้เจอภาพแน่นอน
+            end_date = datetime.date.today()
+            start_date = end_date - datetime.timedelta(days=365)
             
-            # 1. ดึงภาพดาวเทียม (ตัดการเช็ค .size() ออกเพื่อความเร็ว)
+            # 🔧 แก้ไข 2: ใช้ .median() แทน .first() เพื่อตัดเมฆออกอัตโนมัติ
             dataset = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
                        .filterBounds(ee_geometry)
                        .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
-                       .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20))
-                       .sort('CLOUDY_PIXEL_PERCENTAGE'))
+                       .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20)) # ยอมรับเมฆได้ 60%
+                       )
             
-            # 2. คำนวณ NDVI
-            image = dataset.first()
+            if dataset.size().getInfo() == 0:
+                return Response({'error': 'ไม่พบภาพดาวเทียมในช่วงเวลานี้ (เมฆมาก)'}, status=400)
+
+            # ใช้ค่ามัธยฐาน (Median) ตัด Noise และเมฆ
+            image = dataset.median()
             ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI')
             
-            # 3. ดึงค่าเฉลี่ย (ลด scale=20, เพิ่ม maxPixels) ช่วยให้เร็วขึ้นมาก
             val = ndvi.reduceRegion(
                 reducer=ee.Reducer.mean(), 
                 geometry=ee_geometry, 
@@ -177,43 +188,83 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             ).get('NDVI').getInfo()
             
             if val is None: 
-                return Response({'error': 'ไม่พบภาพดาวเทียมที่ชัดเจนในช่วงนี้'}, status=400)
+                return Response({'error': 'พื้นที่เล็กเกินไป หรืออยู่นอกขอบเขตภาพ'}, status=400)
             
-            # Yield Model: NDVI * 850 (กก./ไร่) / 1000 = ตัน
-            yield_ton = (val * 850 * rice_field.area_rai) / 1000
+            # 🔧 แก้ไข 3: ดักจับค่าน้ำ/สิ่งปลูกสร้าง (NDVI < 0.2)
+            if val < 0.2:
+                yield_ton = 0 # ไม่ใช่พืช ผลผลิตเป็น 0
+                note = "พื้นที่น้ำ/สิ่งปลูกสร้าง"
+            else:
+                # Yield Model: NDVI * 800 (กก./ไร่) / 1000 = ตัน
+                yield_ton = (val * 800 * rice_field.area_rai) / 1000
+                note = "ปกติ"
             
             YieldEstimation.objects.create(
                 field=rice_field, ndvi_mean=val, estimated_yield_ton=yield_ton
             )
             
-            return Response({'ndvi': round(val, 4), 'yield_ton': round(yield_ton, 2)})
+            return Response({'ndvi': round(val, 4), 'yield_ton': round(yield_ton, 2), 'note': note})
+
         except Exception as e:
             print(f"GEE Error: {e}")
-            return Response({'error': 'ระบบดาวเทียมตอบสนองช้า หรือพื้นที่นี้ไม่มีภาพ'}, status=500)
+            return Response({'error': 'ระบบดาวเทียมตอบสนองช้า หรือ Internet ไม่เสถียร'}, status=500)
 
 class SaleNotificationViewSet(viewsets.ModelViewSet):
-    """จัดการการแจ้งขายผลผลิต"""
+    """จัดการการแจ้งขายผลผลิต (Marketplace Flow)"""
     serializer_class = SaleNotificationSerializer
 
     def get_queryset(self):
+        if not self.request.user.is_authenticated:
+            return SaleNotification.objects.none()
+
         user = self.request.user
         role = getattr(user, 'role', 'FARMER')
         
-        # ✅ แก้ไข: Admin, Miller, Govt เห็น "ทั้งหมด" (ทั้ง OPEN และ CLOSED)
-        if user.is_superuser or role in ['MILLER', 'GOVT']:
-            return SaleNotification.objects.all().order_by('-created_at')
-            
-        return SaleNotification.objects.filter(farmer=user).order_by('-created_at')
+        # Farmer: เห็นแค่ของตัวเอง
+        if role == 'FARMER':
+            return SaleNotification.objects.filter(farmer=user).order_by('-created_at')
+        
+        # Miller/Govt: เห็นรายการที่เปิดขาย (OPEN) หรือ รายการที่ตัวเองจองไว้
+        return SaleNotification.objects.filter(
+            Q(status='OPEN') | Q(buyer=user)
+        ).order_by('-created_at')
 
     def perform_create(self, serializer):
         serializer.save(farmer=self.request.user)
+
+    # 1. โรงสีกดขอซื้อ
+    @action(detail=True, methods=['post'])
+    def request_buy(self, request, pk=None):
+        sale = self.get_object()
+        if sale.status != 'OPEN':
+            return Response({'error': 'รายการนี้ไม่ว่างขายแล้ว'}, status=400)
         
-    def perform_update(self, serializer):
-        if 'status' in serializer.validated_data and serializer.validated_data['status'] == 'CLOSED':
-            # ถ้าเป็น Miller กดซื้อ ให้บันทึกชื่อและเวลา
-            if self.request.user.role == 'MILLER':
-                serializer.save(buyer=self.request.user, sold_at=datetime.datetime.now())
-            else:
-                serializer.save()
-        else:
-            serializer.save()
+        sale.status = 'REQUESTED'
+        sale.buyer = request.user
+        sale.buyer_contact = request.data.get('contact', 'ไม่ระบุ')
+        sale.save()
+        return Response({'status': 'requested'})
+
+    # 2. ชาวนากดอนุมัติ
+    @action(detail=True, methods=['post'])
+    def approve_sell(self, request, pk=None):
+        sale = self.get_object()
+        if sale.farmer != request.user:
+            return Response({'error': 'คุณไม่ใช่เจ้าของรายการนี้'}, status=403)
+        
+        sale.status = 'SOLD'
+        sale.save()
+        return Response({'status': 'sold'})
+    
+    # 3. ชาวนากดปฏิเสธ
+    @action(detail=True, methods=['post'])
+    def reject_sell(self, request, pk=None):
+        sale = self.get_object()
+        if sale.farmer != request.user:
+            return Response({'error': 'คุณไม่ใช่เจ้าของรายการนี้'}, status=403)
+        
+        sale.status = 'OPEN'
+        sale.buyer = None
+        sale.buyer_contact = None
+        sale.save()
+        return Response({'status': 'open'})

@@ -2,7 +2,6 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class User(AbstractUser):
-    # กำหนดประเภทผู้ใช้
     ROLE_CHOICES = (
         ('FARMER', 'เกษตรกร'),
         ('MILLER', 'โรงสี/ผู้รับซื้อ'),
