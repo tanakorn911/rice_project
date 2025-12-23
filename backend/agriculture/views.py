@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry
 from django.db.models import Sum, Count, Q
 from django.conf import settings
-
+from django.views.decorators.csrf import csrf_exempt # <--- สำคัญสำหรับ API
 from .models import RiceField, YieldEstimation, SaleNotification
 from .serializers import RiceFieldSerializer, YieldEstimationSerializer, SaleNotificationSerializer
 
