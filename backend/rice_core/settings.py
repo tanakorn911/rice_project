@@ -87,3 +87,7 @@ LOGIN_REDIRECT_URL = 'dashboard_router'
 # (แนะนำ) เมื่อ Logout สำเร็จ ให้กลับมาหน้า Login
 LOGOUT_REDIRECT_URL = 'login'
 LOGOUT_ON_GET = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.railway.app",
+]
