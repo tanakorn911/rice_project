@@ -89,5 +89,6 @@ LOGOUT_REDIRECT_URL = 'login'
 LOGOUT_ON_GET = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*.railway.app",
+    "https://riceproject-production.up.railway.app",
+    
 ]
