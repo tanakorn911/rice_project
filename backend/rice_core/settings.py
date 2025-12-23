@@ -2,8 +2,14 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-change-me-please'
-DEBUG = True
+# SECRET_KEY = 'django-insecure-change-me-please'
+# DEBUG = True
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-change-me-please"
+)
+
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -50,14 +56,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'rice_core.wsgi.application'
 
 # Database เชื่อมกับ Docker
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.contrib.gis.db.backends.postgis',
+#         'NAME': 'rice_db',
+#         'USER': 'postgres',
+#         'PASSWORD': 'password',
+#         'HOST': 'db', # ชื่อ Service ใน Docker compose
+#         'PORT': '5432',
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'rice_db',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'db', # ชื่อ Service ใน Docker compose
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "NAME": os.environ.get("POSTGRES_DB"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "HOST": os.environ.get("POSTGRES_HOST"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
 
