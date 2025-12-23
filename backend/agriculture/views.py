@@ -144,36 +144,30 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             ee_geometry = ee.Geometry.Polygon(geom_json['coordinates'])
             
             end_date = datetime.date.today()
-            # ยืดเวลาเป็น 60 วัน เพื่อเพิ่มโอกาสหา 'วันที่ฟ้าใสที่สุด' มาซ่อมภาพ
             start_date = end_date - datetime.timedelta(days=60) 
             
-            # --- ✅ สูตรใหม่: ใช้ SCL (Scene Classification) แม่นยำกว่า QA60 ---
             def mask_s2_scl(image):
                 scl = image.select('SCL')
-                # SCL Values: 
-                # 3 = เงาเมฆ, 8 = เมฆปานกลาง, 9 = เมฆหนา, 10 = เมฆ Cirrus (บางๆ), 11 = หิมะ
-                # เราสั่งให้ Mask ค่าพวกนี้ทิ้งไปเลย (ให้เป็น Transparent)
                 mask = scl.neq(3).And(scl.neq(8)).And(scl.neq(9)).And(scl.neq(10)).And(scl.neq(11))
                 return image.updateMask(mask).divide(10000)
 
             dataset = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
                        .filterBounds(ee_geometry)
                        .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
-                       .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 70)) # ยอมรับภาพที่มีเมฆได้มากขึ้น (เพราะเดี๋ยวเราลบออก)
-                       .map(mask_s2_scl)) # เรียกใช้ฟังก์ชัน SCL
+                       .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 70))
+                       .map(mask_s2_scl))
 
             if dataset.size().getInfo() == 0:
-                return Response({'error': 'ช่วงนี้พายุเข้า เมฆบังมิดทุกวัน ไม่สามารถถ่ายภาพได้'}, status=400)
+                return Response({'error': 'ไม่พบภาพดาวเทียมที่ไม่มีเมฆในช่วงนี้'}, status=400)
 
-            # ใช้ Median เพื่อ "เฉลี่ยค่าแสง" (ถ้าภาพหนึ่งติดเมฆ อีกภาพหนึ่งอาจจะชัด ระบบจะเลือกจุดที่ชัดที่สุดมาผสมกัน)
-            image = dataset.median()
+            # ✅ ดึงค่าเมฆเฉลี่ยจากชุดข้อมูล
+            cloud_score = dataset.aggregate_mean('CLOUDY_PIXEL_PERCENTAGE').getInfo() or 0
             
-            # ปรับแสงให้สวยงาม (True Color)
+            image = dataset.median()
             vis_params = {'min': 0.0, 'max': 0.3, 'bands': ['B4', 'B3', 'B2'], 'gamma': 1.3}
             map_id = image.getMapId(vis_params)
             tile_url = map_id['tile_fetcher'].url_format
 
-            # คำนวณค่าดัชนี (NDVI / NDBI)
             ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI')
             ndbi = image.normalizedDifference(['B11', 'B8']).rename('NDBI')
 
@@ -185,18 +179,17 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
                 maxPixels=1e9
             ).getInfo()
             
-            val_ndvi = stats.get('NDVI')
-            val_ndbi = stats.get('NDBI')
-            
-            if val_ndvi is None: return Response({'error': 'พื้นที่เล็กเกินไป หรือข้อมูลภาพเสียหาย'}, status=400)
+            val_ndvi = stats.get('NDVI') or 0
+            val_ndbi = stats.get('NDBI') or 0
             
             yield_ton = 0
             revenue = 0
-            
-            # --- Logic จำแนกพื้นที่ ---
+            result_type = 'rice'
+            note = "นาข้าวสมบูรณ์"
+
             if val_ndvi < 0:
                 result_type = 'water'
-                note = "แหล่งน้ำ (Water Body)"
+                note = "แหล่งน้ำ"
             elif val_ndbi > 0.1:
                 result_type = 'building'
                 note = "อาคาร/สิ่งปลูกสร้าง"
@@ -204,17 +197,18 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
                 result_type = 'road'
                 note = "ถนน/ดินโล่ง"
             else:
-                result_type = 'rice'
-                note = "นาข้าวสมบูรณ์"
                 yield_ton = (val_ndvi * 850 * rice_field.area_rai) / 1000
-                
-                est_price = 12000 
-                if rice_field.variety == 'KDML105': est_price = 14000
-                elif rice_field.variety == 'RD6': est_price = 13000
+                est_price = 14000 if rice_field.variety == 'KDML105' else 12000
                 revenue = yield_ton * est_price
             
-            YieldEstimation.objects.create(field=rice_field, ndvi_mean=val_ndvi, estimated_yield_ton=yield_ton)
+            # ✅ เก็บลง Database และดึงวันที่วิเคราะห์จริงออกมา
+            estimation = YieldEstimation.objects.create(
+                field=rice_field, 
+                ndvi_mean=val_ndvi, 
+                estimated_yield_ton=yield_ton
+            )
             
+            # ✅ ส่งข้อมูลกลับให้ครบตามที่หน้าบ้านต้องการ
             return Response({
                 'ndvi': round(val_ndvi, 3),
                 'ndbi': round(val_ndbi, 3),
@@ -223,12 +217,13 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
                 'note': note,
                 'result_type': result_type,
                 'area': rice_field.area_rai,
-                'satellite_image': tile_url
+                'satellite_image': tile_url,
+                'cloud_cover': round(cloud_score, 1),
+                'created_at': estimation.created_at.isoformat() 
             })
 
         except Exception as e:
-            print(f"GEE Error: {e}")
-            return Response({'error': 'ระบบดาวเทียมขัดข้องชั่วคราว'}, status=500)
+            return Response({'error': str(e)}, status=500)
 
 class SaleNotificationViewSet(viewsets.ModelViewSet):
     serializer_class = SaleNotificationSerializer

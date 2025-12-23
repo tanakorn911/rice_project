@@ -307,64 +307,53 @@
     // ==========================================
     // 3. Actions
     // ==========================================
-    window.focusMap = function(saleId) {
-        markers.eachLayer(function(layer) {
-            if(layer.saleId === saleId) {
-                map.flyToBounds(layer.getBounds(), {padding:[100,100], maxZoom:15, duration:1.5});
-                layer.openPopup();
-            }
-        });
-        document.getElementById('notif-dropdown').classList.add('hidden');
-    }
-
     window.confirmBuy = async function(e, saleId, farmerName, totalPrice, qty, variety) {
         e.stopPropagation();
 
         const { isConfirmed, value: contact } = await Swal.fire({
-            title: 'ยืนยันส่งคำขอซื้อ 🌾',
             html: `
-                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4 text-left space-y-2">
-                    <div class="flex justify-between text-sm">
+            <div class="bg-white p-6 rounded-2xl shadow-lg max-w-md mx-auto text-sm space-y-4">
+                <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-handshake text-blue-600"></i> ยืนยันส่งคำขอซื้อ
+                </h2>
+
+                <div class="border border-gray-200 rounded-xl p-4 space-y-2 bg-gray-50">
+                    <div class="flex justify-between">
                         <span class="text-gray-500">ผู้ขาย</span>
-                        <span class="font-bold text-gray-800">${farmerName}</span>
+                        <span class="font-semibold text-gray-800">${farmerName}</span>
                     </div>
-                    <div class="flex justify-between text-sm">
+                    <div class="flex justify-between">
                         <span class="text-gray-500">สินค้า</span>
                         <span class="font-semibold text-blue-600">${variety}</span>
                     </div>
-                    <div class="flex justify-between text-sm">
+                    <div class="flex justify-between">
                         <span class="text-gray-500">ปริมาณ</span>
                         <span class="font-semibold">${qty} ตัน</span>
                     </div>
-                    <div class="border-t pt-2 flex justify-between">
-                        <span class="font-bold text-gray-700">ยอดรวม</span>
+                    <div class="flex justify-between border-t border-gray-200 pt-2">
+                        <span class="font-bold text-gray-700">ราคารวม</span>
                         <span class="font-bold text-green-600 text-lg">${totalPrice} บาท</span>
                     </div>
                 </div>
 
-                <div class="text-left">
-                    <label class="block text-xs font-bold text-gray-500 mb-1">
-                        เบอร์โทรศัพท์ของคุณ
-                    </label>
-                    <input
-                        id="swal-contact"
-                        class="swal2-input w-full !mt-0 text-sm"
-                        placeholder="เช่น 081-234-5678"
-                        value="{{ request.user.phone }}"
-                    >
-                    <p class="text-[11px] text-gray-400 mt-1">
-                        เบอร์นี้จะแสดงให้ชาวนาใช้ติดต่อกลับ
-                    </p>
+                <div class="flex flex-col space-y-1">
+                    <label class="text-gray-500 text-xs font-bold ">เบอร์โทรศัพท์ของคุณ</label>
+                    <input id="swal-contact" class="swal2-input !mt-2 text-sm border border-gray-300 rounded-lg p-2" 
+                        placeholder="เช่น 081-234-5678" value="{{ request.user.phone }}">
+                    <p class="text-gray-400 text-[11px]">เบอร์นี้จะแสดงให้ชาวนาใช้ติดต่อกลับ</p>
                 </div>
+            </div>
             `,
             icon: 'info',
             showCancelButton: true,
             confirmButtonText: '🚀 ส่งคำขอซื้อ',
             cancelButtonText: 'ยกเลิก',
-            confirmButtonColor: '#2563eb',
-            cancelButtonColor: '#e5e7eb',
             reverseButtons: true,
             focusConfirm: false,
+            customClass: {
+                confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg',
+                cancelButton: 'bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg'
+            },
             preConfirm: () => {
                 const val = document.getElementById('swal-contact').value;
                 if (!val) {
@@ -410,7 +399,14 @@
             Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error');
         }
     };
-
+    window.focusMap = function(saleId) {
+        markers.eachLayer(function(layer) {
+            if (layer.saleId === saleId) {
+                map.flyToBounds(layer.getBounds().pad(1.5), { duration: 1 });
+                layer.openPopup();
+            }
+        });
+    }
 
     window.toggleNotif = function() {
         document.getElementById('notif-dropdown').classList.toggle('hidden');
