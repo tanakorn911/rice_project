@@ -1,6 +1,6 @@
 # Secrets
-# gee-key.json
-# *.json
+gee-key.json
+*.json
 
 # Python
 __pycache__/
