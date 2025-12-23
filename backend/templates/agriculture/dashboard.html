@@ -54,23 +54,34 @@
     
     <div class="lg:col-span-8 h-full">
         <div class="bg-white p-1 rounded-2xl shadow-lg border border-gray-100 h-full flex flex-col relative overflow-hidden group">
-            <div class="absolute top-4 left-14 z-[400] bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl shadow-md border border-gray-200 pointer-events-none transition-opacity group-hover:opacity-100">
-                <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-map-location-dot text-blue-600"></i> แผนที่แปลงเกษตร
-                </h2>
-                <div class="flex items-center gap-2 mt-1">
-                    <span class="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1"><i class="fa-solid fa-wifi text-[8px]"></i> Online</span>
-                    <span class="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full shadow-sm">📍 จ.พะเยา</span>
-                </div>
-            </div>
             
-            <div id="sat-control" class="hidden absolute top-4 right-14 z-[400] bg-white shadow-md rounded-lg p-1 border border-gray-200 cursor-pointer hover:bg-gray-50 transition">
-                <button onclick="toggleSatellite()" class="text-xs font-bold text-gray-600 px-2 py-1 flex items-center gap-1 focus:outline-none">
-                    <i class="fa-solid fa-layer-group text-blue-500"></i> <span id="sat-text">ซ่อนภาพดาวเทียม</span>
-                </button>
-            </div>
+            <div id="map" class="w-full h-full rounded-xl z-0 bg-gray-100 relative">
+                
+                <div class="leaflet-top leaflet-left mt-[10px] ml-[10px] pointer-events-none" style="z-index: 500;">
+                    <div class="bg-white/90 backdrop-blur-sm px-4 py-3 rounded-xl shadow-lg border border-gray-200 pointer-events-auto">
+                        <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa-solid fa-map-location-dot text-blue-600"></i> แผนที่แปลงเกษตร
+                        </h2>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-wifi text-[8px]"></i> Online
+                            </span>
+                            <span class="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+                                📍 จ.พะเยา
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-            <div id="map" class="w-full h-full rounded-xl z-0 bg-gray-100"></div>
+                <div class="leaflet-bottom leaflet-left mb-[20px] ml-[10px] pointer-events-none" style="z-index: 500;">
+                    <div class="bg-white/80 backdrop-blur-sm px-3 py-1 rounded-md shadow border border-gray-200 pointer-events-auto">
+                        <span class="text-xs font-bold text-gray-600 font-mono">
+                            <i class="fa-solid fa-magnifying-glass-plus mr-1"></i>Zoom: <span id="zoom-level-text" class="text-blue-600">11</span>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
@@ -150,38 +161,84 @@
     
     .swal2-close { font-size: 1.5em !important; color: #64748b !important; }
     .swal2-close:hover { color: #ef4444 !important; }
+
+    /* ปรับแต่ง Layer Control ของ Leaflet */
+    .leaflet-control-layers {
+        border-radius: 12px !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+        padding: 5px !important;
+    }
+    .leaflet-control-layers-toggle {
+        width: 44px !important;
+        height: 44px !important;
+    }
 </style>
 {% endblock %}
 
 {% block scripts %}
 <script>
     // ==========================================
-    // 1. Setup & Globals
+    // 1. Setup & Globals (ปรับปรุงใหม่)
     // ==========================================
-    var googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: 'Google Hybrid' });
-    var map = L.map('map', { center: [19.1667, 99.9000], zoom: 12, layers: [googleHybrid], zoomControl: false });
+    
+    // กำหนด Layer 3 รูปแบบ
+    var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+        maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: 'Google Streets'
+    });
+    var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+        maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: 'Google Satellite'
+    });
+    var googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { 
+        maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: 'Google Hybrid' 
+    });
+
+    // รวม Layer ไว้ใน Object เพื่อส่งให้ Control
+    var baseMaps = {
+        "แผนที่ถนน": googleStreets,
+        "ดาวเทียมล้วน": googleSat,
+        "ผสม (Hybrid)": googleHybrid
+    };
+
+    // สร้าง Map (เปลี่ยน Zoom เริ่มต้นเป็น 11 เพื่อให้ซูมออกหน่อย)
+    var map = L.map('map', { 
+        center: [19.1667, 99.9000], 
+        zoom: 11,  // <--- ปรับจาก 12 เป็น 11 ตามที่ขอ
+        layers: [googleHybrid], // เริ่มต้นด้วย Hybrid
+        zoomControl: false // ปิด Default Zoom เพื่อย้ายที่
+    });
+
+    // เพิ่มปุ่มเลือก Layer (มุมขวาบน)
+    L.control.layers(baseMaps).addTo(map);
+
+    // เพิ่มปุ่ม Zoom (มุมขวาล่าง)
     L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // Event Listener สำหรับอัปเดตตัวเลข Zoom
+    map.on('zoomend', function() {
+        document.getElementById('zoom-level-text').innerText = map.getZoom();
+    });
 
     var drawnItems = new L.FeatureGroup().addTo(map);
     var fieldLayers = {}; 
-    var satelliteLayer = null; // ✅ ตัวแปรเก็บ Layer ภาพดาวเทียม
+    var satelliteLayer = null; 
     var lastStatusMap = {}; 
     
     let lastReadTime = new Date(localStorage.getItem('farmerLastRead') || 0);
 
-    // เครื่องมือวาด
+    // เครื่องมือวาด (ตำแหน่งเดิม Top Right แต่อยู่ใต้ Layer Control อัตโนมัติ)
     map.addControl(new L.Control.Draw({
         position: 'topright',
         draw: { polygon: true, rectangle: true, marker: false, circle: false, polyline: false },
         edit: { featureGroup: drawnItems, remove: false } 
     }));
 
-    // ปุ่ม Locate Me
+    // ปุ่ม Locate Me (มุมขวาล่าง เหนือปุ่มซูม)
     var LocateControl = L.Control.extend({
         options: { position: 'bottomright' },
         onAdd: function (map) {
             var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
-            container.innerHTML = '<a href="#" class="bg-white hover:bg-gray-50 text-blue-600 w-8 h-8 flex items-center justify-center rounded shadow-sm transition-colors"><i class="fa-solid fa-crosshairs"></i></a>';
+            container.innerHTML = '<a href="#" class="bg-white hover:bg-gray-50 text-blue-600 w-8 h-8 flex items-center justify-center rounded shadow-sm transition-colors" title="ตำแหน่งปัจจุบัน"><i class="fa-solid fa-crosshairs"></i></a>';
             container.onclick = function(e) { e.preventDefault(); map.locate({setView: true, maxZoom: 18}); };
             return container;
         }
@@ -440,7 +497,7 @@
         document.getElementById('notif-dropdown').classList.toggle('hidden');
     }
 
-    // --- Modal Functions (New!) ---
+    // --- Modal Functions ---
     window.openSaleModal = function(buyerName, buyerPhone, soldAt, qty, price, total) {
         document.getElementById('modal-buyer-name').innerText = buyerName;
         document.getElementById('modal-buyer-phone-link').innerText = buyerPhone;
@@ -483,7 +540,7 @@
             const data = await res.json();
             
             if(res.ok) {
-                // 1. แสดงภาพดาวเทียม
+                // 1. แสดงภาพดาวเทียม (Logic ใหม่สำหรับ Layer Switcher)
                 if (satelliteLayer) map.removeLayer(satelliteLayer); 
                 if (data.satellite_image) {
                     satelliteLayer = L.tileLayer(data.satellite_image, {
@@ -492,10 +549,14 @@
                     }).addTo(map);
                     
                     if(fieldLayers[id]) map.flyToBounds(fieldLayers[id].getBounds(), { padding: [50,50], maxZoom: 16 });
-                    document.getElementById('sat-control').classList.remove('hidden');
+                    
+                    // แจ้งเตือนว่าโหลดภาพมาทับแล้ว
+                    Swal.fire({
+                        toast: true, position: 'top-end', icon: 'info', 
+                        title: 'แสดงภาพดาวเทียมล่าสุด', timer: 3000, showConfirmButton: false
+                    });
                 }
 
-                // 2. เตรียมข้อความแจ้งเตือน (Header)
                 let headerHtml = '';
                 let icon = 'success';
                 let btnColor = '#16a34a';
@@ -516,18 +577,15 @@
                     headerHtml = `<div class="bg-green-100 text-green-700 p-2 rounded-lg mb-3 text-sm border border-green-200">🌾 <b>นาข้าวสมบูรณ์</b> พร้อมเก็บเกี่ยว</div>`;
                 }
 
-                // 3. แสดงผล (Layout เดิม แต่ข้อมูลครบทุกกรณี)
                 Swal.fire({ 
                     title: 'ผลการวิเคราะห์',
                     html: `
                         <div class="mt-2">
                             ${headerHtml}
-                            
                             <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm mb-3">
                                 <h3 class="text-3xl font-bold text-gray-800">${data.yield_ton} <span class="text-base text-gray-500 font-normal">ตัน</span></h3>
                                 <p class="text-sm text-gray-500">ผลผลิตคาดการณ์</p>
                             </div>
-                            
                             <div class="grid grid-cols-2 gap-3 text-left text-sm">
                                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
                                     <span class="text-gray-400 block text-[10px] uppercase">💰 มูลค่าประเมิน</span>
@@ -551,10 +609,7 @@
                             </p>
                         </div>
                     `,
-                    icon: icon,
-                    confirmButtonText: 'รับทราบ',
-                    confirmButtonColor: btnColor,
-                    width: '400px'
+                    icon: icon, confirmButtonText: 'รับทราบ', confirmButtonColor: btnColor, width: '400px'
                 });
 
                 loadFields(); 
@@ -564,22 +619,11 @@
         } catch(e) { 
             Swal.fire({ icon: 'error', title: 'Error', text: 'เชื่อมต่อล้มเหลว' }); 
         } finally { 
-            btn.innerHTML = originalText; 
-            btn.disabled = false; 
+            btn.innerHTML = originalText; btn.disabled = false; 
         }
     }
 
-    window.toggleSatellite = function() {
-        if(satelliteLayer) {
-            if(map.hasLayer(satelliteLayer)) {
-                map.removeLayer(satelliteLayer);
-                document.getElementById('sat-text').innerText = 'แสดงภาพดาวเทียม';
-            } else {
-                map.addLayer(satelliteLayer);
-                document.getElementById('sat-text').innerText = 'ซ่อนภาพดาวเทียม';
-            }
-        }
-    }
+    // (ฟังก์ชัน toggleSatellite เดิมถูกลบออกเพราะใช้ Layer Control แทนแล้ว)
 
     window.notifySale = async (id) => {
         const { value: form } = await Swal.fire({
@@ -640,7 +684,6 @@
         }
     };
 
-    // Close Dropdown on click outside
     document.addEventListener('click', function(e) {
         const dd = document.getElementById('notif-dropdown');
         if (!dd.contains(e.target) && !e.target.closest('button[onclick="toggleNotif()"]')) dd.classList.add('hidden');
