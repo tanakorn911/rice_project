@@ -2,14 +2,8 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-# SECRET_KEY = 'django-insecure-change-me-please'
-# DEBUG = True
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-change-me-please"
-)
-
-DEBUG = os.environ.get("DEBUG", "False") == "True"
+SECRET_KEY = 'django-insecure-change-me-please'
+DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
@@ -56,26 +50,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'rice_core.wsgi.application'
 
 # Database เชื่อมกับ Docker
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-#         'NAME': 'rice_db',
-#         'USER': 'postgres',
-#         'PASSWORD': 'password',
-#         'HOST': 'db', # ชื่อ Service ใน Docker compose
-#         'PORT': '5432',
-#     }
-# }
 DATABASES = {
-    "default": {
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": os.environ.get("POSTGRES_DB"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
-        "HOST": os.environ.get("POSTGRES_HOST"),
-        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'rice_db',
+        'USER': 'postgres',
+        'PASSWORD': 'password',
+        'HOST': 'db', # ชื่อ Service ใน Docker compose
+        'PORT': '5432',
     }
 }
+
 
 AUTH_USER_MODEL = 'users.User'
 STATIC_URL = 'static/'
@@ -87,13 +72,3 @@ LOGIN_REDIRECT_URL = 'dashboard_router'
 # (แนะนำ) เมื่อ Logout สำเร็จ ให้กลับมาหน้า Login
 LOGOUT_REDIRECT_URL = 'login'
 LOGOUT_ON_GET = True
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://riceproject-production.up.railway.app",
-    
-]
-
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SAMESITE = 'None'
