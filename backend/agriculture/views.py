@@ -185,7 +185,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             yield_ton = 0
             revenue = 0
             result_type = 'rice'
-            note = "นาข้าวสมบูรณ์"
+            note = "พื้นที่สมบูรณ์"
 
             if val_ndvi < 0:
                 result_type = 'water'
@@ -193,7 +193,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             elif val_ndbi > 0.1:
                 result_type = 'building'
                 note = "อาคาร/สิ่งปลูกสร้าง"
-            elif val_ndvi < 0.35:
+            elif val_ndvi < 0.30:
                 result_type = 'road'
                 note = "ถนน/ดินโล่ง"
             else:
