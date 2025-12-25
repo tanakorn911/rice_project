@@ -16,7 +16,7 @@ class YieldEstimationAdmin(admin.ModelAdmin):
     list_display = ('field', 'ndvi_mean', 'estimated_yield_ton', 'created_at')
     list_filter = ('created_at',)
 
-# 3. ✅ เพิ่มตาราง "รายการแจ้งขาย" (SaleNotification)
+# 3. เพิ่มตาราง "รายการแจ้งขาย" (SaleNotification)
 @admin.register(SaleNotification)
 class SaleNotificationAdmin(admin.ModelAdmin):
     list_display = ('farmer', 'rice_field', 'quantity_ton', 'price_per_ton', 'status', 'created_at')

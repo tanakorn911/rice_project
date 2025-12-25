@@ -160,7 +160,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             if dataset.size().getInfo() == 0:
                 return Response({'error': 'ไม่พบภาพดาวเทียมที่ไม่มีเมฆในช่วงนี้'}, status=400)
 
-            # ✅ ดึงค่าเมฆเฉลี่ยจากชุดข้อมูล
+            # ดึงค่าเมฆเฉลี่ยจากชุดข้อมูล
             cloud_score = dataset.aggregate_mean('CLOUDY_PIXEL_PERCENTAGE').getInfo() or 0
             
             image = dataset.median()
@@ -201,14 +201,14 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
                 est_price = 14000 if rice_field.variety == 'KDML105' else 12000
                 revenue = yield_ton * est_price
             
-            # ✅ เก็บลง Database และดึงวันที่วิเคราะห์จริงออกมา
+            # เก็บลง Database และดึงวันที่วิเคราะห์จริงออกมา
             estimation = YieldEstimation.objects.create(
                 field=rice_field, 
                 ndvi_mean=val_ndvi, 
                 estimated_yield_ton=yield_ton
             )
             
-            # ✅ ส่งข้อมูลกลับให้ครบตามที่หน้าบ้านต้องการ
+            # ส่งข้อมูลกลับให้ครบตามที่หน้าบ้านต้องการ
             return Response({
                 'ndvi': round(val_ndvi, 3),
                 'ndbi': round(val_ndbi, 3),
