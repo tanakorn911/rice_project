@@ -144,7 +144,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             ee_geometry = ee.Geometry.Polygon(geom_json['coordinates'])
             
             end_date = datetime.date.today()
-            start_date = end_date - datetime.timedelta(days=60) 
+            start_date = end_date - datetime.timedelta(days=15) 
             
             def mask_s2_scl(image):
                 scl = image.select('SCL')
@@ -154,7 +154,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             dataset = (ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
                        .filterBounds(ee_geometry)
                        .filterDate(start_date.strftime('%Y-%m-%d'), end_date.strftime('%Y-%m-%d'))
-                       .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 70))
+                       .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 80)) # ลดเมฆต่ำกว่า 80%
                        .map(mask_s2_scl))
 
             if dataset.size().getInfo() == 0:
@@ -185,19 +185,28 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             yield_ton = 0
             revenue = 0
             result_type = 'rice'
-            note = "พื้นที่สมบูรณ์"
+            note = "พื้นที่เพาะปลูกข้าว"
 
-            if val_ndvi < 0:
+            if val_ndvi < 0.1:
                 result_type = 'water'
-                note = "แหล่งน้ำ"
-            elif val_ndbi > 0.1:
+                note = 'แหล่งน้ำ'
+                yield_ton = 0
+            elif val_ndbi > 0.1 and val_ndvi < 0.3:
                 result_type = 'building'
-                note = "อาคาร/สิ่งปลูกสร้าง"
-            elif val_ndvi < 0.30:
+                note = 'อาคารหรือสิ่งปลูกสร้าง'
+                yield_ton = 0
+            elif val_ndvi < 0.3:
                 result_type = 'road'
-                note = "ถนน/ดินโล่ง"
+                note = 'ถนน/ดินโล่ง'
+                yield_ton = 0
             else:
-                yield_ton = (val_ndvi * 850 * rice_field.area_rai) / 1000
+                a = 6.5
+                b = -1.2
+
+                yield_ton = max(
+                    ((a * val_ndvi + b) * rice_field.area_rai) / 6.25,
+                    0
+                )
                 est_price = 14000 if rice_field.variety == 'KDML105' else 12000
                 revenue = yield_ton * est_price
             
