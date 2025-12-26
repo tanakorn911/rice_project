@@ -8,7 +8,7 @@
             <div>
                 <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
                     <span class="bg-green-100 text-green-700 p-2 rounded-lg"><i class="fa-solid fa-list-ul"></i></span>
-                    แปลงนาของฉัน
+                    พื้นทื่แปลงนาของฉัน
                 </h2>
                 <p class="text-xs text-gray-400 mt-1 pl-11">จัดการข้อมูลและวิเคราะห์ผลผลิต</p>
             </div>
@@ -144,7 +144,7 @@
     <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center">
         <i class="fa-solid fa-satellite-dish fa-spin text-5xl text-blue-500 mb-4"></i>
         <h3 class="text-xl font-bold text-gray-800">กำลังวิเคราะห์ภาพดาวเทียม...</h3>
-        <p class="text-gray-500 text-sm mt-2">กรุณารอสักครู่ ระบบกำลังคำนวณค่า NDVI</p>
+        <p class="text-gray-500 text-sm mt-2">กรุณารอสักครู่... ระบบกำลังคำนวณค่า NDVI</p>
     </div>
 </div>
 
@@ -264,7 +264,7 @@
                 body: JSON.stringify({name, geometry: geom, variety})
             });
             if(res.ok) { Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500, showConfirmButton: false }); loadFields(); } 
-            else { Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ' }); }
+            else { Swal.fire({ icon: 'error', title: 'บันทึกไม่สำเร็จ/ชื่อแปลงนาซ้ำ' }); }
         } catch(e) { Swal.fire({ icon: 'error', title: 'Error', text: 'Connection failed' }); }
     }
 
@@ -361,7 +361,7 @@
                 }
                 else if (status !== 'SOLD') {
                     let canSell = f.latest_yield && parseFloat(f.latest_yield.yield) > 0;
-                    // ✅ เช็ค f.latest_yield เพื่อเปลี่ยนชื่อปุ่ม
+                    // เช็ค f.latest_yield เพื่อเปลี่ยนชื่อปุ่ม
                     let analysisBtnText = f.latest_yield ? 'วิเคราะห์ใหม่' : 'วิเคราะห์ผลผลิต';
                     
                     actionBtns = `<div class="grid grid-cols-2 gap-2 mt-2"><button onclick="calcYield(${f.id}, this)" class="py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-bold border border-blue-100">${analysisBtnText}</button><button onclick="notifySale(${f.id})" class="py-1.5 rounded-lg ${canSell ? 'bg-green-600 text-white hover:bg-green-700 shadow-sm' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} text-xs font-bold" ${canSell?'':'disabled'}>ประกาศขาย</button></div>`;
@@ -509,7 +509,7 @@
                 if (data.result_type === 'building') { headerHtml = `<div class="bg-red-100 text-red-700 p-2 rounded-lg mb-3 text-sm border border-red-200">⚠️ ตรวจพบเป็น <b>สิ่งปลูกสร้าง</b> (NDBI: ${data.ndbi})</div>`; icon = 'error'; btnColor = '#ef4444'; }
                 else if (data.result_type === 'road') { headerHtml = `<div class="bg-orange-100 text-orange-700 p-2 rounded-lg mb-3 text-sm border border-orange-200">🛣️ ตรวจพบเป็น <b>ถนน/ดินโล่ง</b> (NDVI ต่ำ)</div>`; icon = 'warning'; btnColor = '#f97316'; }
                 else if (data.result_type === 'water') { headerHtml = `<div class="bg-blue-100 text-blue-700 p-2 rounded-lg mb-3 text-sm border border-blue-200">💧 ตรวจพบเป็น <b>แหล่งน้ำ</b></div>`; icon = 'info'; btnColor = '#3b82f6'; }
-                else { headerHtml = `<div class="bg-green-100 text-green-700 p-2 rounded-lg mb-3 text-sm border border-green-200">🌾 <b>นาข้าวสมบูรณ์</b> พร้อมเก็บเกี่ยว</div>`; }
+                else { headerHtml = `<div class="bg-green-100 text-green-700 p-2 rounded-lg mb-3 text-sm border border-green-200">🌾 <b>พื้นที่สมบูรณ์</b> พร้อมทำการเกษตร</div>`; }
                 Swal.fire({ 
                     title: 'ผลการวิเคราะห์',
                     html: `<div class="mt-2">${headerHtml}<div class="bg-gray-50 p-4 rounded-xl border border-gray-200 shadow-sm mb-3"><h3 class="text-3xl font-bold text-gray-800">${parseFloat(data.yield_ton).toFixed(2)} <span class="text-base text-gray-500 font-normal">ตัน</span></h3><p class="text-sm text-gray-500">ผลผลิตคาดการณ์</p></div><div class="grid grid-cols-2 gap-3 text-left text-sm"><div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm"><span class="text-gray-400 block text-[10px] uppercase">💰 มูลค่าประเมิน</span><span class="font-bold text-gray-800 text-lg">${data.revenue.toLocaleString()} บ.</span></div><div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm"><span class="text-gray-400 block text-[10px] uppercase">🌿 ดัชนีพืช (NDVI)</span><span class="font-bold text-gray-800 text-lg">${data.ndvi}</span></div><div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm"><span class="text-gray-400 block text-[10px] uppercase">📏 ขนาดพื้นที่</span><span class="font-bold text-gray-800 text-lg">${data.area} ไร่</span></div><div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm"><span class="text-gray-400 block text-[10px] uppercase">🏢 ดัชนีสิ่งปลูกสร้าง</span><span class="font-bold text-gray-800 text-lg">${data.ndbi}</span></div></div><p class="text-[10px] text-gray-400 mt-3 text-center"><i class="fa-solid fa-satellite"></i> วิเคราะห์จากภาพดาวเทียม Sentinel-2 ล่าสุด</p></div>`,
