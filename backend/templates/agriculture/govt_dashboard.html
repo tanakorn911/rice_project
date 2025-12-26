@@ -134,7 +134,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // --- 1. Init Map ---
-    const map = L.map('map', { center: [19.1667, 99.9000], zoom: 11, zoomControl: false });
+    const map = L.map('map', { center: [19.1667, 99.9000], zoom: 13, zoomControl: false });
     L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']}).addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     const fieldLayer = L.featureGroup().addTo(map);

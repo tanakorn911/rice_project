@@ -113,7 +113,7 @@
     // ==========================================
     const currentUserId = {{ request.user.id }}; // รับ ID ของ User ปัจจุบัน
     
-    var map = L.map('map', { center:[19.1667, 99.9000], zoom:11, zoomControl: false });
+    var map = L.map('map', { center:[19.1667, 99.9000], zoom:13, zoomControl: false });
     L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']}).addTo(map);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
@@ -340,7 +340,7 @@
                     <label class="text-gray-500 text-xs font-bold ">เบอร์โทรศัพท์ของคุณ</label>
                     <input id="swal-contact" class="swal2-input !mt-2 text-sm border border-gray-300 rounded-lg p-2" 
                         placeholder="เช่น 081-234-5678" value="{{ request.user.phone }}">
-                    <p class="text-gray-400 text-[11px]">เบอร์นี้จะแสดงให้ชาวนาใช้ติดต่อกลับ</p>
+                    <p class="text-gray-400 text-[12px]">เบอร์นี้จะแสดงให้ชาวนาใช้ติดต่อกลับ</p>
                 </div>
             </div>
             `,

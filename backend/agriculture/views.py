@@ -55,7 +55,7 @@ def govt_dashboard(request): return render(request, 'agriculture/govt_dashboard.
 @login_required
 def dashboard_stats(request):
     # 1. ข้อมูลพื้นฐานแปลงนา
-    all_fields = RiceField.objects.all()
+    all_fields = RiceField.objects.filter(is_active=True)
     total_fields = all_fields.count()
     total_area = all_fields.aggregate(Sum('area_rai'))['area_rai__sum'] or 0
     total_farmers = all_fields.values('owner').distinct().count()
@@ -97,43 +97,85 @@ def dashboard_stats(request):
 
 class RiceFieldViewSet(viewsets.ModelViewSet):
     serializer_class = RiceFieldSerializer
+
+    @action(detail=False, methods=['get'])
+    def trash(self, request):
+        """ดึงรายการที่ถูกลบไปแล้ว (Soft Deleted)"""
+        if not request.user.is_authenticated:
+            return Response(status=401)
+        
+        # หาแปลงนาของฉัน ที่ is_active=False
+        deleted_fields = RiceField.objects.filter(owner=request.user, is_active=False).order_by('-updated_at')
+        serializer = self.get_serializer(deleted_fields, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def restore(self, request, pk=None):
+        """กู้คืนแปลงนา (Restore)"""
+        try:
+            # ต้อง Query เองโดยตรง เพราะ get_object() ปกติจะหาไม่เจอ (ติด Filter is_active=True ใน get_queryset)
+            field = RiceField.objects.get(pk=pk, owner=request.user, is_active=False)
+            field.is_active = True
+            field.save()
+            return Response({'status': 'restored', 'msg': f'กู้คืนแปลง "{field.name}" สำเร็จ'})
+        except RiceField.DoesNotExist:
+            return Response({'error': 'ไม่พบข้อมูลในถังขยะ'}, status=404)
+
+    @action(detail=True, methods=['delete'])
+    def force_delete(self, request, pk=None):
+        """ลบถาวร (Permanent Delete)"""
+        try:
+            field = RiceField.objects.get(pk=pk, owner=request.user, is_active=False)
+            
+            field.delete()
+            return Response({'status': 'deleted', 'msg': 'ลบข้อมูลถาวรเรียบร้อย'})
+        except RiceField.DoesNotExist:
+            return Response({'error': 'ไม่พบข้อมูล'}, status=404)
+
     def get_queryset(self):
-        if not self.request.user.is_authenticated: return RiceField.objects.none()
+        if not self.request.user.is_authenticated:
+            return RiceField.objects.none()
+        
         user = self.request.user
-        role = getattr(user, 'role', 'FARMER')
-        if user.is_superuser or role in ['MILLER', 'GOVT']:
-            return RiceField.objects.all().order_by('-created_at')
-        return RiceField.objects.filter(owner=user).order_by('-created_at')
-    
+        
+        # Superuser หรือ จนท.รัฐ เห็นทั้งหมด (รวมที่ลบไปแล้วได้ หรือจะกรองก็ได้)
+        if user.is_superuser or user.role == 'GOVT':
+            return RiceField.objects.filter(is_active=True).order_by('-created_at') # หรือจะเอาทั้งหมดก็ได้
+            
+        # เกษตรกรเห็นเฉพาะของตัวเองที่ "ยังไม่ถูกลบ"
+        return RiceField.objects.filter(owner=user, is_active=True).order_by('-created_at')
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+
     def create(self, request, *args, **kwargs):
         try:
             data = request.data
-            geom_input = data.get('geometry')
             field_name = data.get('name', 'แปลงนาใหม่').strip()
 
-            if RiceField.objects.filter(owner=request.user, name=field_name).exists():
-                return Response({'error': f"คุณมีแปลงนาชื่อ '{field_name}' อยู่แล้ว กรุณาตั้งชื่ออื่น"}, status=400)
+            if RiceField.objects.filter(owner=request.user, name=field_name, is_active=True).exists():
+                return Response({'error': f"คุณมีแปลงนาชื่อ '{field_name}' อยู่แล้ว"}, status=400)
 
+            geom_input = data.get('geometry')
             if not geom_input: return Response({'error': 'กรุณาวาดแปลงนา'}, status=400)
             if isinstance(geom_input, str): geom_input = json.loads(geom_input)
             poly = GEOSGeometry(json.dumps(geom_input))
             
-            centroid = poly.centroid
-            if not (99.80 <= centroid.x <= 100.10 and 19.00 <= centroid.y <= 19.35):
-                 return Response({'error': 'อยู่นอกเขตพื้นที่ อ.เมืองพะเยา'}, status=400)
-            
             area_sqm = poly.transform(32647, clone=True).area
             area_rai = round(area_sqm / 1600, 2)
-            
+
             field = RiceField.objects.create(
-                owner=request.user, 
+                owner=request.user,
                 name=field_name,
-                boundary=poly, 
-                area_rai=area_rai, 
-                variety=data.get('variety', 'KDML105')
+                boundary=poly,
+                area_rai=area_rai,
+                variety=data.get('variety', 'KDML105'),
+                is_active=True
             )
             return Response({'id': field.id, 'area': area_rai}, status=201)
-        except Exception as e: 
+
+        except Exception as e:
             return Response({'error': str(e)}, status=400)
 
     @action(detail=True, methods=['post'])
@@ -144,7 +186,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             ee_geometry = ee.Geometry.Polygon(geom_json['coordinates'])
             
             end_date = datetime.date.today()
-            start_date = end_date - datetime.timedelta(days=15) 
+            start_date = end_date - datetime.timedelta(days=60) 
             
             def mask_s2_scl(image):
                 scl = image.select('SCL')
@@ -201,7 +243,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
 
             # 3. ดินโล่ง/ถนน: NDVI ต่ำ (0 - 0.3)
             elif 0 <= val_ndvi < 0.3:
-                result_type = 'soil_road'
+                result_type = 'road'
                 note = 'ดินโล่ง/ถนน'
                 yield_ton = 0
 
