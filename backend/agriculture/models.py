@@ -52,6 +52,7 @@ class SaleNotification(models.Model):
     rice_field = models.ForeignKey(RiceField, on_delete=models.CASCADE)
     quantity_ton = models.FloatField(help_text="จำนวนตันที่ต้องการขาย")
     price_per_ton = models.DecimalField(max_digits=10, decimal_places=2, help_text="ราคาที่ต้องการ (บาท/ตัน)")
+    negotiated_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="ราคาที่โรงสีต่อรอง")
     phone = models.CharField(max_length=20, help_text="เบอร์ติดต่อชาวนา")
     
     status = models.CharField(max_length=20, default='OPEN', choices=STATUS_CHOICES)

@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
@@ -15,53 +15,94 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
     <style>
-        body {
-            font-family: 'Sarabun', sans-serif;
-            background-color: #f3f4f6;
-        }
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        .nav-link { @apply flex items-center gap-2 px-3 py-2 rounded-lg transition text-white/90 hover:text-white hover:bg-white/10; }
+        .nav-link.active { @apply bg-white/20 text-white font-bold; }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen text-gray-700">
 
-<nav class="bg-green-700 text-white shadow-lg relative z-50">
-    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-        <a href="/" class="flex items-center gap-2 hover:opacity-90 transition">
-            <i class="fa-solid fa-seedling text-2xl text-green-300"></i>
-            <span class="text-xl font-bold tracking-wide">Rice Chain Phayao</span>
-        </a>
+<nav class="bg-gradient-to-r from-green-700 to-green-600 text-white shadow-lg sticky top-0 z-[1000]">
+    <div class="container mx-auto px-4 py-3">
+        <div class="flex justify-between items-center">
+            
+            <a href="/" class="flex items-center gap-3 hover:opacity-90 transition group">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition">
+                    <i class="fa-solid fa-seedling text-xl text-yellow-300"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight">Rice Chain</h1>
+                    <p class="text-[10px] text-green-100 uppercase tracking-wider">Phayao Province</p>
+                </div>
+            </a>
 
-        <div class="flex items-center gap-4">
+            <div class="hidden md:flex items-center gap-2">
+                {% if request.user.is_authenticated %}
+                    <a href="/" class="nav-link {% if request.path == '/' or 'dashboard' in request.path %}active{% endif %}">
+                        <i class="fa-solid fa-house"></i> หน้าหลัก
+                    </a>
+                    
+                    <a href="{% url 'history' %}" class="nav-link {% if 'history' in request.path %}active{% endif %}">
+                        <i class="fa-solid fa-clock-rotate-left"></i> ประวัติ
+                    </a>
+                    
+                    <div class="h-6 w-px bg-white/20 mx-2"></div>
+
+                    <a href="{% url 'profile' %}" class="flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full bg-black/10 hover:bg-black/20 transition border border-white/10">
+                        <div class="w-7 h-7 bg-white text-green-700 rounded-full flex items-center justify-center text-xs font-bold">
+                            {{ request.user.username|make_list|first|upper }}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold leading-none">{{ request.user.username }}</span>
+                            <span class="text-[9px] text-green-100 leading-none mt-0.5">{{ request.user.get_role_display }}</span>
+                        </div>
+                    </a>
+
+                    <form action="{% url 'logout' %}" method="post" class="ml-2">
+                        {% csrf_token %}
+                        <button class="w-9 h-9 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition shadow-sm" title="ออกจากระบบ">
+                            <i class="fa-solid fa-power-off"></i>
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="bg-white text-green-700 hover:bg-green-50 px-5 py-2 rounded-full text-sm font-bold shadow-sm transition flex items-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ
+                    </a>
+                {% endif %}
+            </div>
+
+            <button onclick="toggleMobileMenu()" class="md:hidden text-white p-2 rounded-lg hover:bg-white/10 transition">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden pt-4 pb-2 border-t border-white/10 mt-3 space-y-2 animate-fade-in">
             {% if request.user.is_authenticated %}
-                
-                <a href="{% url 'history' %}" class="text-white/80 hover:text-white text-sm flex items-center gap-1 transition hidden sm:flex">
-                    <i class="fa-solid fa-clock-rotate-left"></i> ประวัติ
-                </a>
-                
-                <a href="{% url 'profile' %}" class="text-white/80 hover:text-white text-sm flex items-center gap-1 transition mr-2 hidden sm:flex">
-                    <i class="fa-solid fa-user-gear"></i> โปรไฟล์
-                </a>
+                <div class="flex items-center gap-3 px-2 pb-3 mb-2 border-b border-white/10">
+                    <div class="w-10 h-10 bg-white text-green-700 rounded-full flex items-center justify-center font-bold text-lg">
+                        {{ request.user.username|make_list|first|upper }}
+                    </div>
+                    <div>
+                        <p class="font-bold">{{ request.user.username }}</p>
+                        <p class="text-xs text-green-200">{{ request.user.get_role_display }}</p>
+                    </div>
+                </div>
 
-                <span class="text-xs sm:text-sm bg-white/20 px-3 py-1 rounded-full border border-white/10 backdrop-blur-sm flex items-center gap-2">
-                    <i class="fa-solid fa-circle-user"></i>
-                    {{ request.user.username }} 
-                    <span class="bg-black/20 px-1.5 rounded text-[10px]">{{ request.user.role }}</span>
-                </span>
-
-                <form action="{% url 'logout' %}" method="post" class="inline">
+                <a href="/" class="block px-3 py-2 rounded-lg hover:bg-white/10"><i class="fa-solid fa-house w-6 text-center"></i> หน้าหลัก</a>
+                <a href="{% url 'history' %}" class="block px-3 py-2 rounded-lg hover:bg-white/10"><i class="fa-solid fa-clock-rotate-left w-6 text-center"></i> ประวัติการทำรายการ</a>
+                <a href="{% url 'profile' %}" class="block px-3 py-2 rounded-lg hover:bg-white/10"><i class="fa-solid fa-user-gear w-6 text-center"></i> แก้ไขโปรไฟล์</a>
+                
+                <form action="{% url 'logout' %}" method="post" class="pt-2">
                     {% csrf_token %}
-                    <button class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-transform hover:scale-105" title="ออกจากระบบ">
-                        <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                    <button class="w-full text-left px-3 py-2 rounded-lg bg-red-500/20 text-red-100 hover:bg-red-500 hover:text-white transition">
+                        <i class="fa-solid fa-power-off w-6 text-center"></i> ออกจากระบบ
                     </button>
                 </form>
-
             {% else %}
-                <a href="{% url 'login' %}"
-                   class="bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded-lg text-sm font-bold shadow transition flex items-center gap-2">
-                   <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ
-                </a>
+                <a href="{% url 'login' %}" class="block w-full text-center bg-white text-green-700 py-2.5 rounded-lg font-bold">เข้าสู่ระบบ</a>
             {% endif %}
         </div>
     </div>
@@ -71,15 +112,28 @@
     {% block content %}{% endblock %}
 </main>
 
-<footer class="bg-gray-800 text-gray-400 py-4 text-center text-sm mt-auto border-t border-gray-700">
-    <div class="container mx-auto">
-        <p>© 2025 Rice Supply Chain Project. All rights reserved.</p>
+<footer class="bg-white text-gray-500 py-6 border-t border-gray-100 mt-auto">
+    <div class="container mx-auto px-4 text-center">
+        <p class="text-sm font-medium">© 2025 Rice Supply Chain Project (Phayao).</p>
+        <p class="text-xs mt-1 text-gray-400">พัฒนาโดย สาขาวิทยาการคอมพิวเตอร์ มหาวิทยาลัยพะเยา</p>
     </div>
 </footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobile-menu');
+        menu.classList.toggle('hidden');
+    }
+</script>
+
+<style>
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fadeIn 0.2s ease-out; }
+</style>
 
 {% block scripts %}{% endblock %}
 </body>

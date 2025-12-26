@@ -8,7 +8,12 @@ class User(AbstractUser):
         ('GOVT', 'เจ้าหน้าที่รัฐ'),
     )
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='FARMER')
-    phone = models.CharField(max_length=15, blank=True, null=True)
+    phone = models.CharField(max_length=15, blank=True, null=True, verbose_name="เบอร์โทรศัพท์")
+    
+    # --- ข้อมูลเพิ่มเติมที่เพิ่มเข้ามา ---
+    line_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="Line ID")
+    address = models.TextField(blank=True, null=True, verbose_name="ที่อยู่ / ที่ตั้งแปลงนา")
+    about_me = models.TextField(blank=True, null=True, verbose_name="เกี่ยวกับฉัน")
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"

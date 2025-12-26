@@ -161,7 +161,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             if not geom_input: return Response({'error': 'กรุณาวาดแปลงนา'}, status=400)
             if isinstance(geom_input, str): geom_input = json.loads(geom_input)
             poly = GEOSGeometry(json.dumps(geom_input))
-            
+
             area_sqm = poly.transform(32647, clone=True).area
             area_rai = round(area_sqm / 1600, 2)
 
@@ -319,8 +319,14 @@ class SaleNotificationViewSet(viewsets.ModelViewSet):
         sale.status = 'REQUESTED'
         sale.buyer = request.user
         sale.buyer_contact = request.data.get('contact', request.user.phone or '-')
+        
+        # +++ รับค่าราคาต่อรอง +++
+        negotiated_price = request.data.get('negotiated_price')
+        if negotiated_price:
+            sale.negotiated_price = float(negotiated_price)
+            
         sale.save()
-        return Response({'status': 'requested', 'msg': 'ส่งคำขอซื้อเรียบร้อย รอชาวนายืนยัน'})
+        return Response({'status': 'requested', 'msg': 'ส่งคำขอซื้อและราคาต่อรองเรียบร้อย'})
 
     @action(detail=True, methods=['post'])
     def approve_sell(self, request, pk=None):
@@ -330,6 +336,10 @@ class SaleNotificationViewSet(viewsets.ModelViewSet):
         
         if sale.status != 'REQUESTED':
             return Response({'error': 'สถานะรายการไม่ถูกต้อง'}, status=400)
+
+        # +++ ถ้ามีการต่อรองราคา ให้ใช้ราคานั้นเป็นราคาขายจริง +++
+        if sale.negotiated_price and sale.negotiated_price > 0:
+            sale.price_per_ton = sale.negotiated_price
 
         sale.status = 'SOLD'
         sale.sold_at = datetime.datetime.now()
