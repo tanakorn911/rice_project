@@ -506,9 +506,38 @@
                     if(fieldLayers[id]) map.flyToBounds(fieldLayers[id].getBounds(), { padding: [50,50], maxZoom: 17 });
                 }
                 let headerHtml = '', icon = 'success', btnColor = '#16a34a';
-                if (data.result_type === 'building') { headerHtml = `<div class="bg-red-100 text-red-700 p-2 rounded-lg mb-3 text-sm border border-red-200">⚠️ ตรวจพบเป็น <b>สิ่งปลูกสร้าง</b> (NDBI: ${data.ndbi})</div>`; icon = 'error'; btnColor = '#ef4444'; }
-                else if (data.result_type === 'road') { headerHtml = `<div class="bg-orange-100 text-orange-700 p-2 rounded-lg mb-3 text-sm border border-orange-200">🛣️ ตรวจพบเป็น <b>ถนน/ดินโล่ง</b> (NDVI ต่ำ)</div>`; icon = 'warning'; btnColor = '#f97316'; }
-                else if (data.result_type === 'water') { headerHtml = `<div class="bg-blue-100 text-blue-700 p-2 rounded-lg mb-3 text-sm border border-blue-200">💧 ตรวจพบเป็น <b>แหล่งน้ำ</b></div>`; icon = 'info'; btnColor = '#3b82f6'; }
+                if (data.result_type === 'building') { headerHtml = `
+                    <div class="bg-red-100 text-red-700 p-2 rounded-lg mb-3 text-sm border border-red-200">
+                        ⚠️ ตรวจพบเป็น <b>สิ่งปลูกสร้าง</b> (NDBI: ${data.ndbi})
+                    </div>`; 
+                    icon = 'error'; 
+                    btnColor = '#ef4444'; 
+                }
+
+                else if (data.result_type === 'road') { headerHtml = `
+                    <div class="bg-orange-100 text-orange-700 p-2 rounded-lg mb-3 text-sm border border-orange-200">
+                        🛣️ ตรวจพบเป็น <b>ถนน/ดินโล่ง</b> (NDVI ต่ำ)
+                    </div>`; 
+                    icon = 'warning'; 
+                    btnColor = '#f97316'; 
+                }
+
+                else if (data.result_type === 'water') { headerHtml = `
+                    <div class="bg-blue-100 text-blue-700 p-2 rounded-lg mb-3 text-sm border border-blue-200">
+                        💧 ตรวจพบเป็น <b>แหล่งน้ำ</b>
+                    </div>`; 
+                    icon = 'info'; 
+                    btnColor = '#3b82f6'; 
+                }
+
+                else if (data.result_type === 'young_rice') {
+                    headerHtml = `
+                    <div class="bg-lime-100 text-lime-700 p-2 rounded-lg mb-3 text-sm border border-lime-200">
+                        🌱 ตรวจพบเป็น <b>ข้าวระยะเริ่มต้น</b> (NDVI ยังต่ำ)
+                    </div>`;
+                    icon = 'info';
+                    btnColor = '#65a30d';
+                }
                 else { headerHtml = `<div class="bg-green-100 text-green-700 p-2 rounded-lg mb-3 text-sm border border-green-200">🌾 <b>พื้นที่สมบูรณ์</b> พร้อมทำการเกษตร</div>`; }
                 Swal.fire({ 
                     title: 'ผลการวิเคราะห์',

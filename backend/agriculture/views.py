@@ -187,26 +187,42 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             result_type = 'rice'
             note = "พื้นที่เพาะปลูกข้าว"
 
-            if val_ndvi < 0.1:
+            # 1. แหล่งน้ำ: NDVI ติดลบ
+            if val_ndvi < 0:
                 result_type = 'water'
-                note = 'แหล่งน้ำ'
+                note = 'แหล่งน้ำ (Water Body)'
                 yield_ton = 0
-            elif val_ndbi > 0.1 and val_ndvi < 0.3:
+
+            # 2. สิ่งปลูกสร้าง: NDBI เป็นบวก และมากกว่า NDVI (ลักษณะเฉพาะของคอนกรีต)
+            elif val_ndbi > 0 and val_ndbi > val_ndvi:
                 result_type = 'building'
                 note = 'อาคารหรือสิ่งปลูกสร้าง'
                 yield_ton = 0
-            elif val_ndvi < 0.3:
-                result_type = 'road'
-                note = 'ถนน/ดินโล่ง'
+
+            # 3. ดินโล่ง/ถนน: NDVI ต่ำ (0 - 0.3)
+            elif 0 <= val_ndvi < 0.3:
+                result_type = 'soil_road'
+                note = 'ดินโล่ง/ถนน'
+                yield_ton = 0
+
+            # 4. ข้าวระยะเริ่มต้น: NDVI ปานกลาง (0.3 - 0.45)
+            elif 0.3 <= val_ndvi < 0.45:
+                result_type = 'young_rice'
+                note = 'ข้าวระยะแตกกอ (ยังไม่สามารถประเมินผลผลิตได้แม่นยำ)'
+                # อาจจะยังไม่คำนวณผลผลิต หรือคำนวณแบบขั้นต่ำ
                 yield_ton = 0
             else:
                 a = 6.5
                 b = -1.2
+                divider = 6.25
 
-                yield_ton = max(
-                    ((a * val_ndvi + b) * rice_field.area_rai) / 6.25,
-                    0
-                )
+                predicted_yield_per_rai = (a * val_ndvi + b) / divider
+
+                if predicted_yield_per_rai < 0:
+                    predicted_yield_per_rai = 0
+
+                yield_ton = predicted_yield_per_rai * rice_field.area_rai
+
                 est_price = 14000 if rice_field.variety == 'KDML105' else 12000
                 revenue = yield_ton * est_price
             
