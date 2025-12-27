@@ -11,10 +11,10 @@
 
     <style>
         :root {
-            --primary-color: #059669; /* Emerald Green */
-            --primary-dark: #047857;
-            --accent-color: #10b981;
-            --bg-gradient: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            /* ใช้รหัสสีเดียวกับ Dashboard (Green-600) */
+            --primary-color: #16a34a; 
+            --primary-hover: #15803d; /* Green-700 */
+            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); /* Green-50 to Green-100 */
         }
 
         body {
@@ -28,91 +28,98 @@
             padding: 15px;
         }
 
-        /* เอฟเฟกต์พื้นหลังแบบจางๆ สื่อถึงโครงข่าย/แผนที่ */
+        /* ลาย Pattern พื้นหลังจางๆ ให้ดูมีมิติเหมือนแผนที่ */
         body::before {
             content: "";
             position: absolute;
             width: 100%;
             height: 100%;
-            background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
-            opacity: 0.05;
+            background-image: radial-gradient(#16a34a 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+            opacity: 0.1;
             z-index: -1;
         }
 
         .login-card {
             width: 100%;
-            max-width: 420px;
-            background: rgba(255, 255, 255, 0.9);
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 28px;
+            border-radius: 16px; /* ความโค้งเท่ากับ Card ใน Dashboard */
             border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            animation: fadeIn 0.6s ease-out;
+            animation: slideUp 0.5s ease-out;
         }
 
-        @keyframes fadeIn {
+        @keyframes slideUp {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .login-header {
-            background: var(--primary-color);
-            padding: 45px 20px;
+            background: white;
+            padding: 30px 20px 10px;
             text-align: center;
-            color: white;
-            position: relative;
+            color: var(--primary-color);
         }
 
-        .login-header i.main-icon {
-            font-size: 3.5rem;
-            margin-bottom: 15px;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: #f0fdf4; /* Green-50 */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            box-shadow: inset 0 0 0 4px white, 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        .login-header h2 {
+        .login-header h3 {
             font-weight: 700;
-            letter-spacing: 0.5px;
+            color: #1f2937; /* Gray-800 */
             margin-bottom: 5px;
         }
 
         .login-body {
-            padding: 40px 35px;
+            padding: 20px 30px 40px;
         }
 
         .form-label {
             font-weight: 600;
-            color: #374151;
+            color: #4b5563; /* Gray-600 */
             font-size: 0.9rem;
-            margin-left: 5px;
+            margin-left: 4px;
         }
 
         .input-group {
-            background: #f9fafb;
-            border: 1.5px solid #e5e7eb;
-            border-radius: 16px;
-            transition: all 0.3s ease;
+            background: white;
+            border: 1px solid #e5e7eb; /* Gray-200 */
+            border-radius: 12px;
+            transition: all 0.2s ease;
             overflow: hidden;
         }
 
         .input-group:focus-within {
             border-color: var(--primary-color);
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15); /* Green Ring */
         }
 
         .input-group-text {
             background: transparent;
             border: none;
             color: #9ca3af;
-            padding-left: 18px;
+            padding-left: 15px;
         }
 
         .form-control {
             border: none;
             background: transparent;
-            padding: 14px 15px;
-            font-size: 16px !important; /* ป้องกัน iOS zoom */
+            padding: 12px 10px;
+            font-size: 16px !important; 
             color: #1f2937;
         }
 
@@ -125,27 +132,26 @@
             background: transparent;
             border: none;
             color: #9ca3af;
-            padding-right: 18px;
+            padding-right: 15px;
         }
 
         .btn-login {
             background: var(--primary-color);
             border: none;
-            border-radius: 16px;
-            padding: 16px;
+            border-radius: 12px;
+            padding: 14px;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: white;
-            margin-top: 15px;
-            transition: all 0.3s;
-            box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
+            margin-top: 20px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.2);
         }
 
         .btn-login:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 20px 25px -5px rgba(5, 150, 105, 0.4);
-            color: white;
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(22, 163, 74, 0.3);
         }
 
         .btn-login:active {
@@ -153,24 +159,23 @@
         }
 
         .alert-error {
-            background-color: #fef2f2;
-            color: #dc2626;
-            border: 1px solid #fee2e2;
-            border-radius: 12px;
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: none;
+            border-radius: 10px;
             font-size: 0.85rem;
             padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .footer-brand {
             text-align: center;
             margin-top: 25px;
-            color: #6b7280;
-            font-size: 0.8rem;
-        }
-
-        .brand-dot {
-            color: var(--primary-color);
-            font-weight: bold;
+            color: #9ca3af;
+            font-size: 0.75rem;
         }
     </style>
 </head>
@@ -178,9 +183,11 @@
 
 <div class="login-card">
     <div class="login-header">
-        <i class="fa-solid fa-wheat-awn main-icon"></i>
-        <h2>Rice Supply Chain</h2>
-        <p class="small opacity-80 m-0">Phayao Smart Agriculture Platform</p>
+        <div class="icon-circle">
+            <i class="fa-solid fa-leaf"></i>
+        </div>
+        <h3>Rice Chain Phayao</h3>
+        <p class="text-muted small mb-0">ระบบบคำนวณผลผลิตข้าวด้วยภาพถ่ายดาวเทียม Sentinel-2</p>
     </div>
 
     <div class="login-body">
@@ -189,19 +196,19 @@
 
             {% if form.errors %}
                 <div class="alert alert-error text-center mb-4">
-                    <i class="fa-solid fa-circle-exclamation me-2"></i> ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง
+                    <i class="fa-solid fa-circle-xmark"></i> ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง
                 </div>
             {% endif %}
 
-            <div class="mb-4">
+            <div class="mb-3">
                 <label class="form-label">ชื่อผู้ใช้งาน</label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="fa-solid fa-user-astronaut"></i></span>
+                    <span class="input-group-text"><i class="fa-regular fa-user"></i></span>
                     <input
                         type="text"
                         name="username"
                         class="form-control"
-                        placeholder="กรอกชื่อผู้ใช้"
+                        placeholder="Username"
                         required
                         autofocus
                         autocapitalize="none"
@@ -210,36 +217,34 @@
                 </div>
             </div>
 
-            <div class="mb-4">
+            <div class="mb-2">
                 <label class="form-label">รหัสผ่าน</label>
                 <div class="input-group">
-                    <span class="input-group-text"><i class="fa-solid fa-shield-halved"></i></span>
+                    <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
                     <input
                         type="password"
                         name="password"
                         id="id_password"
                         class="form-control"
-                        placeholder="กรอกรหัสผ่าน"
+                        placeholder="Password"
                         required
                         autocomplete="current-password"
                     >
                     <button class="btn btn-toggle-pw" type="button" onclick="togglePassword()">
-                        <i id="toggleIcon" class="fa-solid fa-eye"></i>
+                        <i id="toggleIcon" class="fa-regular fa-eye"></i>
                     </button>
                 </div>
             </div>
 
             <button type="submit" class="btn btn-login w-100">
-                เข้าสู่ระบบ <i class="fa-solid fa-arrow-right-long ms-2"></i>
+                เข้าสู่ระบบ <i class="fa-solid fa-arrow-right ms-1"></i>
             </button>
 
             <input type="hidden" name="next" value="{{ next }}">
         </form>
 
         <div class="footer-brand">
-            <span class="fw-bold">RICE CHAIN</span> <span class="brand-dot">•</span> PHAYAO PROJECT
-            <br>
-            <span class="opacity-50">© 2025 All Rights Reserved</span>
+            © 2025 Provincial Agriculture Office Phayao
         </div>
     </div>
 </div>
