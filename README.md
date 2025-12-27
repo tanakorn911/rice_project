@@ -91,7 +91,6 @@ Yield (Ton) = \left( \frac{6.5 \times NDVI - 1.2}{6.25} \right) \times Area_{rai
     *ระบบจะสร้าง Database, Run Migration, และ Start Server ให้เองอัตโนมัติ*
     
 4. **เข้าใช้งาน**
-
     - Web: http://localhost:8000
     - PGAdmin: http://localhost:5050
 
@@ -110,7 +109,6 @@ Yield (Ton) = \left( \frac{6.5 \times NDVI - 1.2}{6.25} \right) \times Area_{rai
     pip install -r requirements.txt
 
 3. **ตั้งค่า Database**
-
     - แก้ไข backend/rice_core/settings.py ให้ตรงกับ Database ในเครื่องของคุณ
 
 4. **Run Server**
