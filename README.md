@@ -117,7 +117,7 @@ Yield (Ton) = \left( \frac{6.5 \times NDVI - 1.2}{6.25} \right) \times Area_{rai
     python manage.py migrate
     python manage.py runserver
 
-👨‍💻 ผู้จัดทำโครงงาน
+### 👨‍💻 ผู้จัดทำโครงงาน
 
 **นายธนกร แก้วใหม่** นิสิตชั้นปีที่ 2 สาขาวิทยาการคอมพิวเตอร์
 
