@@ -63,7 +63,15 @@ DATABASES = {
 
 
 AUTH_USER_MODEL = 'users.User'
+
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # เมื่อ Login สำเร็จ ให้เด้งไปที่ URL name ที่ชื่อว่า 'dashboard'
