@@ -117,6 +117,13 @@ Yield (Ton) = \left( \frac{6.5 \times NDVI - 1.2}{6.25} \right) \times Area_{rai
     python manage.py migrate
     python manage.py runserver
 
+5. **สร้าง User ทดลอง**
+    ```bash
+    docker-compose exec web python manage.py createsuperuser #admin
+    
+    1. mv backend/users/anagement backend/users/management # User
+    2. docker compose exec web python manage.py create_test_users # User
+
 ### 👨‍💻 ผู้จัดทำโครงงาน
 
 **นายธนกร แก้วใหม่** นิสิตชั้นปีที่ 2 สาขาวิทยาการคอมพิวเตอร์
