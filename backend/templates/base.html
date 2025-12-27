@@ -9,114 +9,207 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
     <style>
         body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
-        .nav-link { @apply flex items-center gap-2 px-3 py-2 rounded-lg transition text-white/90 hover:text-white hover:bg-white/10; }
-        .nav-link.active { @apply bg-white/20 text-white font-bold; }
         
-        #mobile-menu { transition: all 0.3s ease-in-out; }
-        #mobile-menu.hidden { opacity: 0; transform: translateY(-10px); display: none; }
-        #mobile-menu:not(.hidden) { opacity: 1; transform: translateY(0); display: block; }
+        /* Navbar Styling */
+        .nav-link { 
+            @apply flex items-center gap-2.5 px-5 py-2.5 rounded-full transition-all duration-200 text-white/90 hover:text-white hover:bg-white/10 font-medium tracking-wide; 
+        }
+        .nav-link.active { 
+            @apply bg-white text-green-700 font-bold shadow-lg shadow-green-900/10; 
+        }
+        
+        /* Mobile Menu Animation */
+        #mobile-menu { 
+            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            max-height: 0; opacity: 0; overflow: hidden;
+        }
+        #mobile-menu:not(.hidden) { max-height: 600px; opacity: 1; }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Notification Animation */
+        @keyframes pulse-ring { 
+            0% { transform: scale(0.8); opacity: 0.5; } 
+            100% { transform: scale(2); opacity: 0; } 
+        }
+        .notification-dot::before { 
+            content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; 
+            background-color: #ef4444; border-radius: 50%; z-index: -1; animation: pulse-ring 2s infinite; 
+        }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
 
-<body class="flex flex-col min-h-screen text-gray-700">
+<body class="flex flex-col min-h-screen text-gray-700 bg-slate-50">
 
-<nav class="bg-gradient-to-r from-green-700 to-green-600 text-white shadow-lg sticky top-0 z-[1000]">
-    <div class="container mx-auto px-4 py-3">
-        <div class="flex justify-between items-center">
+<nav class="bg-gradient-to-r from-green-800 to-green-600 text-white shadow-xl sticky top-0 z-[1000] backdrop-blur-md bg-opacity-95 border-b border-white/10">
+    <div class="container mx-auto px-6 lg:px-10">
+        <div class="flex justify-between items-center h-20">
             
-            <a href="/" class="flex items-center gap-3 hover:opacity-90 transition group">
-                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition">
-                    <i class="fa-solid fa-seedling text-xl text-yellow-300"></i>
+            <a href="/" class="flex items-center gap-4 hover:opacity-90 transition-opacity group">
+                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300">
+                    <i class="fa-solid fa-seedling text-2xl text-green-700"></i>
                 </div>
-                <div>
-                    <h1 class="text-lg font-bold leading-tight">Rice Chain</h1>
-                    <p class="text-[10px] text-green-100 uppercase tracking-wider">Phayao Province</p>
+                <div class="flex flex-col">
+                    <h1 class="text-xl font-bold leading-none tracking-wide font-sans">Rice Chain</h1>
+                    <span class="text-[11px] text-green-100 uppercase tracking-[0.15em] font-medium mt-1 opacity-80">Phayao Province</span>
                 </div>
             </a>
 
-            <div class="hidden md:flex items-center gap-2">
+            <div class="hidden md:flex items-center gap-8">
                 {% if request.user.is_authenticated %}
-                    <a href="/" class="nav-link {% if request.path == '/' or 'dashboard' in request.path %}active{% endif %}">
-                        <i class="fa-solid fa-house"></i> หน้าหลัก
-                    </a>
-                    <a href="{% url 'history' %}" class="nav-link {% if 'history' in request.path %}active{% endif %}">
-                        <i class="fa-solid fa-clock-rotate-left"></i> ประวัติ
-                    </a>
-                    <div class="h-6 w-px bg-white/20 mx-2"></div>
-                    <a href="{% url 'profile' %}" class="flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full bg-black/10 hover:bg-black/20 transition border border-white/10">
-                        <div class="w-7 h-7 bg-white text-green-700 rounded-full flex items-center justify-center text-xs font-bold">
-                            {{ request.user.username|make_list|first|upper }}
+                    
+                    <div class="flex items-center gap-4">
+                        <a href="/" class="nav-link {% if request.path == '/' or 'dashboard' in request.path %}active{% endif %}">
+                            <i class="fa-solid fa-chart-pie text-sm"></i> <span>หน้าหลัก</span>
+                        </a>
+                        <a href="{% url 'history' %}" class="nav-link {% if 'history' in request.path %}active{% endif %}">
+                            <i class="fa-solid fa-file-invoice text-sm"></i> <span>ประวัติ</span>
+                        </a>
+                    </div>
+                    
+                    <div class="h-8 w-px bg-white/20"></div>
+
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <button onclick="toggleNotif()" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition relative group focus:outline-none" title="การแจ้งเตือน">
+                                <i class="fa-regular fa-bell text-xl group-hover:animate-swing"></i>
+                                <span id="notif-badge" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-green-700 notification-dot hidden"></span>
+                            </button>
+
+                            <div id="notif-dropdown" class="hidden absolute right-0 mt-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 origin-top-right animate-fadeIn text-gray-700">
+                                <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                                    <span class="text-sm font-bold text-gray-700"><i class="fa-solid fa-bell text-green-600"></i> การแจ้งเตือน</span>
+                                    <span class="text-xs text-blue-500 cursor-pointer hover:text-blue-700 hover:underline" onclick="markAllRead()">อ่านทั้งหมด</span>
+                                </div>
+                                <div id="notif-list" class="max-h-80 overflow-y-auto custom-scrollbar bg-white">
+                                    <div class="p-8 text-center text-gray-400 text-sm">
+                                        <i class="fa-regular fa-bell-slash text-2xl mb-2 opacity-50"></i><br>ไม่มีการแจ้งเตือนใหม่
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold leading-none">{{ request.user.username }}</span>
-                            <span class="text-[9px] text-green-100 leading-none mt-0.5">{{ request.user.get_role_display }}</span>
-                        </div>
-                    </a>
-                    <form id="logout-form-desktop" action="{% url 'logout' %}" method="post" class="ml-2">
-                        {% csrf_token %}
-                        <button type="button" onclick="confirmLogout('logout-form-desktop')" class="w-9 h-9 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center transition shadow-sm" title="ออกจากระบบ">
-                            <i class="fa-solid fa-power-off"></i>
+
+                        <button class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition" title="คู่มือการใช้งาน">
+                            <i class="fa-regular fa-circle-question text-xl"></i>
                         </button>
-                    </form>
+                    </div>
+
+                    <div class="relative group py-2 pl-2">
+                        <button class="flex items-center gap-3 px-1 py-1 rounded-full hover:bg-white/10 transition-all focus:outline-none border border-transparent hover:border-white/20">
+                            <div class="text-right hidden lg:block mr-1">
+                                <p class="text-sm font-bold leading-none">{{ request.user.username }}</p>
+                                <p class="text-[10px] text-green-100 mt-1 opacity-80 bg-black/20 px-2 py-0.5 rounded-full inline-block">{{ request.user.get_role_display }}</p>
+                            </div>
+                            <div class="w-11 h-11 bg-white text-green-800 rounded-full flex items-center justify-center text-lg font-bold shadow-md ring-2 ring-white/30">
+                                {{ request.user.username|make_list|first|upper }}
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-xs text-white/50 group-hover:text-white transition-colors ml-1 mr-2"></i>
+                        </button>
+
+                        <div class="absolute right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl py-2 hidden group-hover:block border border-gray-100 text-gray-700 origin-top-right animate-fadeIn">
+                            <div class="absolute -top-2 right-6 w-4 h-4 bg-white transform rotate-45 border-t border-l border-gray-100"></div>
+                            
+                            <div class="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-2xl">
+                                <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Signed in as</p>
+                                <p class="text-sm font-bold text-gray-800 truncate">{{ request.user.email|default:request.user.username }}</p>
+                            </div>
+                            
+                            <div class="p-2 space-y-1">
+                                <a href="{% url 'profile' %}" class="flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-green-50 hover:text-green-700 transition-colors group/item">
+                                    <div class="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center group-hover/item:bg-green-600 group-hover/item:text-white transition-colors">
+                                        <i class="fa-solid fa-user-gear"></i>
+                                    </div>
+                                    <span class="font-medium">แก้ไขโปรไฟล์</span>
+                                </a>
+                                <button onclick="confirmLogout('logout-form-desktop')" class="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors group/item text-gray-600">
+                                    <div class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center group-hover/item:bg-red-500 group-hover/item:text-white transition-colors">
+                                        <i class="fa-solid fa-right-from-bracket"></i>
+                                    </div>
+                                    <span class="font-medium">ออกจากระบบ</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="logout-form-desktop" action="{% url 'logout' %}" method="post" class="hidden">{% csrf_token %}</form>
+
                 {% else %}
-                    <a href="{% url 'login' %}" class="bg-white text-green-700 hover:bg-green-50 px-5 py-2 rounded-full text-sm font-bold shadow-sm transition flex items-center gap-2">
-                        <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ
+                    <a href="{% url 'login' %}" class="bg-white text-green-800 hover:bg-green-50 px-7 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-black/10 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
+                        <i class="fa-solid fa-right-to-bracket"></i> <span>เข้าสู่ระบบ</span>
                     </a>
                 {% endif %}
             </div>
 
-            <button onclick="toggleMobileMenu()" class="md:hidden text-white p-2 rounded-lg hover:bg-white/10 transition focus:outline-none">
+            <button onclick="toggleMobileMenu()" class="md:hidden w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition focus:outline-none">
                 <i class="fa-solid fa-bars text-xl"></i>
             </button>
         </div>
 
-        <div id="mobile-menu" class="hidden md:hidden pt-4 pb-2 border-t border-white/10 mt-3 space-y-2">
+        <div id="mobile-menu" class="hidden md:hidden border-t border-white/10 overflow-hidden bg-black/5 mx-[-1rem] px-4">
+            <div class="py-4 space-y-3">
             {% if request.user.is_authenticated %}
-                <div class="flex items-center gap-3 px-2 pb-3 mb-2 border-b border-white/10">
-                    <div class="w-10 h-10 bg-white text-green-700 rounded-full flex items-center justify-center font-bold text-lg">
+                <div class="flex items-center gap-4 px-4 pb-4 mb-2 border-b border-white/10">
+                    <div class="w-14 h-14 bg-white text-green-800 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg">
                         {{ request.user.username|make_list|first|upper }}
                     </div>
                     <div>
-                        <p class="font-bold">{{ request.user.username }}</p>
-                        <p class="text-xs text-green-200">{{ request.user.get_role_display }}</p>
+                        <p class="font-bold text-lg text-white">{{ request.user.username }}</p>
+                        <span class="text-xs bg-black/20 px-3 py-1 rounded-full text-white/90 backdrop-blur-sm border border-white/10">{{ request.user.get_role_display }}</span>
                     </div>
                 </div>
-                <a href="/" class="block px-3 py-2 rounded-lg hover:bg-white/10"><i class="fa-solid fa-house w-6 text-center"></i> หน้าหลัก</a>
-                <a href="{% url 'history' %}" class="block px-3 py-2 rounded-lg hover:bg-white/10"><i class="fa-solid fa-clock-rotate-left w-6 text-center"></i> ประวัติการทำรายการ</a>
-                <a href="{% url 'profile' %}" class="block px-3 py-2 rounded-lg hover:bg-white/10"><i class="fa-solid fa-user-gear w-6 text-center"></i> แก้ไขโปรไฟล์</a>
-                <form id="logout-form-mobile" action="{% url 'logout' %}" method="post" class="pt-2">
+
+                <div class="grid grid-cols-2 gap-3 mb-2">
+                    <a href="/" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center">
+                        <i class="fa-solid fa-chart-pie text-2xl mb-1"></i><span class="text-sm font-bold">หน้าหลัก</span>
+                    </a>
+                    <a href="{% url 'history' %}" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center">
+                        <i class="fa-solid fa-file-invoice text-2xl mb-1"></i><span class="text-sm font-bold">ประวัติ</span>
+                    </a>
+                </div>
+
+                <a href="{% url 'profile' %}" class="flex items-center gap-4 px-5 py-3.5 rounded-xl hover:bg-white/10 transition border border-white/5 bg-white/5">
+                    <i class="fa-solid fa-user-gear text-lg w-6 text-center"></i> <span class="font-medium">แก้ไขข้อมูลส่วนตัว</span>
+                </a>
+                
+                <form id="logout-form-mobile" action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
-                    <button type="button" onclick="confirmLogout('logout-form-mobile')" class="w-full text-left px-3 py-2 rounded-lg bg-red-500/20 text-red-100 hover:bg-red-500 hover:text-white transition font-bold">
-                        <i class="fa-solid fa-power-off w-6 text-center"></i> ออกจากระบบ
+                    <button type="button" onclick="confirmLogout('logout-form-mobile')" class="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl bg-red-500/20 text-red-100 hover:bg-red-600 hover:text-white transition font-bold border border-red-500/30 mt-4">
+                        <i class="fa-solid fa-power-off"></i> ออกจากระบบ
                     </button>
                 </form>
             {% else %}
-                <a href="{% url 'login' %}" class="block w-full text-center bg-white text-green-700 py-2.5 rounded-lg font-bold">เข้าสู่ระบบ</a>
+                <div class="px-2 pt-2 pb-4">
+                    <a href="{% url 'login' %}" class="block w-full text-center bg-white text-green-800 py-3.5 rounded-xl font-bold shadow-lg text-lg">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i> เข้าสู่ระบบ
+                    </a>
+                </div>
             {% endif %}
+            </div>
         </div>
     </div>
 </nav>
 
-<main class="container mx-auto px-4 py-6 flex-grow">
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow animate-fade-in">
     {% block content %}{% endblock %}
 </main>
 
-<footer class="bg-white text-gray-500 py-6 border-t border-gray-100 mt-auto">
+<footer class="bg-white text-gray-500 py-10 border-t border-gray-100 mt-auto">
     <div class="container mx-auto px-4 text-center">
-        <p class="text-sm font-medium">© 2025 Rice Supply Chain Project (Phayao).</p>
-        <p class="text-xs mt-1 text-gray-400">พัฒนาโดย สาขาวิทยาการคอมพิวเตอร์ มหาวิทยาลัยพะเยา</p>
+        <p class="text-sm font-medium text-gray-600">© 2025 Rice Supply Chain Project (Phayao)</p>
+        <p class="text-xs mt-2 text-gray-400">พัฒนาโดย สาขาวิทยาการคอมพิวเตอร์ มหาวิทยาลัยพะเยา</p>
     </div>
 </footer>
 
@@ -129,26 +222,46 @@
         const menu = document.getElementById('mobile-menu');
         menu.classList.toggle('hidden');
     }
+    
+    // ฟังก์ชันเปิด/ปิด Notification Dropdown (ใช้ร่วมกันทุกหน้า)
+    function toggleNotif() {
+        const dd = document.getElementById('notif-dropdown');
+        if (dd) dd.classList.toggle('hidden');
+    }
+
+    // ปิด Dropdown เมื่อคลิกที่อื่น
+    document.addEventListener('click', function(e) { 
+        const dd = document.getElementById('notif-dropdown'); 
+        if (dd && !dd.contains(e.target) && !e.target.closest('button[onclick="toggleNotif()"]')) {
+            dd.classList.add('hidden');
+        }
+    });
+
+    // ✅ 6. Confirm Logout Script
     function confirmLogout(formId) {
         Swal.fire({
-            title: 'ออกจากระบบ?',
-            text: "คุณต้องการออกจากระบบใช่หรือไม่",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#94a3b8',
-            confirmButtonText: 'ออกจากระบบ',
-            cancelButtonText: 'ยกเลิก',
-            customClass: { popup: 'rounded-2xl', confirmButton: 'rounded-lg px-4 py-2', cancelButton: 'rounded-lg px-4 py-2' }
-        }).then((result) => {
-            if (result.isConfirmed) { document.getElementById(formId).submit(); }
-        })
+            title: 'ยืนยันการออก?', text: "คุณต้องการออกจากระบบใช่หรือไม่", icon: 'warning',
+            showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#e5e7eb',
+            confirmButtonText: 'ใช่, ออกเลย', cancelButtonText: '<span class="text-gray-600">ยกเลิก</span>',
+            reverseButtons: true, width: '320px',
+            customClass: {
+                popup: 'rounded-2xl shadow-xl border border-gray-100 pb-8',
+                confirmButton: 'rounded-xl px-6 py-2.5 shadow-lg shadow-red-200 text-sm font-bold',
+                cancelButton: 'rounded-xl px-6 py-2.5 hover:bg-gray-200 text-sm font-bold',
+                title: 'text-xl font-bold text-gray-800', htmlContainer: 'text-sm text-gray-500'
+            }
+        }).then((result) => { if (result.isConfirmed) document.getElementById(formId).submit(); })
     }
+    
+    // Placeholder function (จะถูก override โดย script ของ dashboard)
+    window.markAllRead = function() { console.log('Mark read clicked'); }
 </script>
 
 <style>
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-    .animate-fade-in { animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes swing { 20% { transform: rotate(15deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(5deg); } 80% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
+    .group:hover .animate-swing { animation: swing 1s ease-in-out; }
 </style>
 
 {% block scripts %}{% endblock %}
