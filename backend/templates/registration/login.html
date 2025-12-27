@@ -2,92 +2,262 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+    <title>เข้าสู่ระบบ | Rice Chain Phayao</title>
 
-    <!-- สำคัญมากสำหรับมือถือ -->
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>เข้าสู่ระบบ (Login)</title>
-
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
+        :root {
+            --primary-color: #059669; /* Emerald Green */
+            --primary-dark: #047857;
+            --accent-color: #10b981;
+            --bg-gradient: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+
         body {
-            background-color: #f8f9fa;
+            font-family: 'Sarabun', sans-serif;
+            background: var(--bg-gradient);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0;
             padding: 15px;
         }
 
-        .login-box {
+        /* เอฟเฟกต์พื้นหลังแบบจางๆ สื่อถึงโครงข่าย/แผนที่ */
+        body::before {
+            content: "";
+            position: absolute;
             width: 100%;
-            max-width: 380px;
-            padding: 25px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
+            opacity: 0.05;
+            z-index: -1;
         }
 
-        /* ปรับสำหรับจอเล็ก */
-        @media (max-width: 576px) {
-            .login-box {
-                padding: 20px;
-            }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: fadeIn 0.6s ease-out;
+        }
 
-            h3 {
-                font-size: 1.4rem;
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-            button {
-                font-size: 1rem;
-                padding: 12px;
-            }
+        .login-header {
+            background: var(--primary-color);
+            padding: 45px 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .login-header i.main-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        .login-header h2 {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .login-body {
+            padding: 40px 35px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+
+        .input-group {
+            background: #f9fafb;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .input-group:focus-within {
+            border-color: var(--primary-color);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+        }
+
+        .input-group-text {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            padding-left: 18px;
+        }
+
+        .form-control {
+            border: none;
+            background: transparent;
+            padding: 14px 15px;
+            font-size: 16px !important; /* ป้องกัน iOS zoom */
+            color: #1f2937;
+        }
+
+        .form-control:focus {
+            box-shadow: none;
+            background: transparent;
+        }
+
+        .btn-toggle-pw {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            padding-right: 18px;
+        }
+
+        .btn-login {
+            background: var(--primary-color);
+            border: none;
+            border-radius: 16px;
+            padding: 16px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+            margin-top: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
+        }
+
+        .btn-login:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(5, 150, 105, 0.4);
+            color: white;
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .alert-error {
+            background-color: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fee2e2;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            padding: 12px;
+        }
+
+        .footer-brand {
+            text-align: center;
+            margin-top: 25px;
+            color: #6b7280;
+            font-size: 0.8rem;
+        }
+
+        .brand-dot {
+            color: var(--primary-color);
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<div class="login-box">
-    <h3 class="text-center mb-4 text-primary">🌾 เข้าสู่ระบบ</h3>
+<div class="login-card">
+    <div class="login-header">
+        <i class="fa-solid fa-wheat-awn main-icon"></i>
+        <h2>Rice Supply Chain</h2>
+        <p class="small opacity-80 m-0">Phayao Smart Agriculture Platform</p>
+    </div>
 
-    <form method="post">
-        {% csrf_token %}
+    <div class="login-body">
+        <form method="post">
+            {% csrf_token %}
 
-        {% if form.errors %}
-            <div class="alert alert-danger text-center">
-                ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง
+            {% if form.errors %}
+                <div class="alert alert-error text-center mb-4">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i> ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง
+                </div>
+            {% endif %}
+
+            <div class="mb-4">
+                <label class="form-label">ชื่อผู้ใช้งาน</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-user-astronaut"></i></span>
+                    <input
+                        type="text"
+                        name="username"
+                        class="form-control"
+                        placeholder="กรอกชื่อผู้ใช้"
+                        required
+                        autofocus
+                        autocapitalize="none"
+                        autocomplete="username"
+                    >
+                </div>
             </div>
-        {% endif %}
 
-        <div class="mb-3">
-            <label class="form-label">ชื่อผู้ใช้</label>
-            <input
-                type="text"
-                name="username"
-                class="form-control form-control-lg"
-                required
-                autofocus
-            >
+            <div class="mb-4">
+                <label class="form-label">รหัสผ่าน</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fa-solid fa-shield-halved"></i></span>
+                    <input
+                        type="password"
+                        name="password"
+                        id="id_password"
+                        class="form-control"
+                        placeholder="กรอกรหัสผ่าน"
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button class="btn btn-toggle-pw" type="button" onclick="togglePassword()">
+                        <i id="toggleIcon" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-login w-100">
+                เข้าสู่ระบบ <i class="fa-solid fa-arrow-right-long ms-2"></i>
+            </button>
+
+            <input type="hidden" name="next" value="{{ next }}">
+        </form>
+
+        <div class="footer-brand">
+            <span class="fw-bold">RICE CHAIN</span> <span class="brand-dot">•</span> PHAYAO PROJECT
+            <br>
+            <span class="opacity-50">© 2025 All Rights Reserved</span>
         </div>
-
-        <div class="mb-3">
-            <label class="form-label">รหัสผ่าน</label>
-            <input
-                type="password"
-                name="password"
-                class="form-control form-control-lg"
-                required
-            >
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100">
-            เข้าสู่ระบบ
-        </button>
-
-        <input type="hidden" name="next" value="{{ next }}">
-    </form>
+    </div>
 </div>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('id_password');
+        const toggleIcon = document.getElementById('toggleIcon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+</script>
 
 </body>
 </html>

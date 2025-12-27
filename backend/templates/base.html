@@ -28,6 +28,18 @@
             @apply bg-white text-green-700 font-bold shadow-lg shadow-green-900/10; 
         }
         
+        .btn-primary {
+            @apply bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all duration-300 rounded-xl;
+        }
+
+        .card-rice {
+            @apply bg-white/80 backdrop-blur-md border border-slate-100 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow;
+        }
+
+        /* ปรับแต่ง Popup แผนที่ให้ดูอ่านง่าย */
+        .leaflet-popup-content-wrapper {
+            @apply rounded-xl border-0 shadow-2xl;
+        }
         /* Mobile Menu Animation */
         #mobile-menu { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 0; opacity: 0; overflow: hidden; transform-origin: top; }
         #mobile-menu:not(.hidden) { max-height: 100vh; opacity: 1; }
