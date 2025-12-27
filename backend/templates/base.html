@@ -1,23 +1,26 @@
+{% load i18n %}
+{% load static %}
 <!DOCTYPE html>
-<html lang="th">
+<html lang="{% get_current_language as LANGUAGE_CODE %}{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Rice Supply Chain{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    {% load static %}
     <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
     <style>
-        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Sarabun', sans-serif; background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
         
-        /* Navbar Styling */
         .nav-link { 
             @apply flex items-center gap-2.5 px-5 py-2.5 rounded-full transition-all duration-200 text-white/90 hover:text-white hover:bg-white/10 font-medium tracking-wide; 
         }
@@ -26,27 +29,16 @@
         }
         
         /* Mobile Menu Animation */
-        #mobile-menu { 
-            transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            max-height: 0; opacity: 0; overflow: hidden;
-        }
-        #mobile-menu:not(.hidden) { max-height: 600px; opacity: 1; }
-
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        #mobile-menu { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 0; opacity: 0; overflow: hidden; transform-origin: top; }
+        #mobile-menu:not(.hidden) { max-height: 100vh; opacity: 1; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-        /* Notification Animation */
-        @keyframes pulse-ring { 
-            0% { transform: scale(0.8); opacity: 0.5; } 
-            100% { transform: scale(2); opacity: 0; } 
-        }
-        .notification-dot::before { 
-            content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; 
-            background-color: #ef4444; border-radius: 50%; z-index: -1; animation: pulse-ring 2s infinite; 
-        }
+        
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(2); opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out; }
     </style>
 
     {% block extra_head %}{% endblock %}
@@ -55,54 +47,59 @@
 <body class="flex flex-col min-h-screen text-gray-700 bg-slate-50">
 
 <nav class="bg-gradient-to-r from-green-800 to-green-600 text-white shadow-xl sticky top-0 z-[1000] backdrop-blur-md bg-opacity-95 border-b border-white/10">
-    <div class="container mx-auto px-6 lg:px-10">
-        <div class="flex justify-between items-center h-20">
+    <div class="container mx-auto px-4 lg:px-10">
+        <div class="flex justify-between items-center h-16 lg:h-20">
             
-            <a href="/" class="flex items-center gap-4 hover:opacity-90 transition-opacity group">
-                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300">
-                    <i class="fa-solid fa-seedling text-2xl text-green-700"></i>
+            <a href="/" class="flex items-center gap-3 hover:opacity-90 transition-opacity group">
+                <div class="w-10 h-10 lg:w-12 lg:h-12 bg-white rounded-xl flex items-center justify-center shadow-lg transform group-hover:rotate-6 transition-transform duration-300">
+                    <i class="fa-solid fa-seedling text-xl lg:text-2xl text-green-700"></i>
                 </div>
                 <div class="flex flex-col">
-                    <h1 class="text-xl font-bold leading-none tracking-wide font-sans">Rice Chain</h1>
-                    <span class="text-[11px] text-green-100 uppercase tracking-[0.15em] font-medium mt-1 opacity-80">Phayao Province</span>
+                    <h1 class="text-lg lg:text-xl font-bold leading-none font-sans">Rice Chain</h1>
+                    <span class="text-[10px] lg:text-[11px] text-green-100 uppercase tracking-widest font-medium opacity-80">Phayao Province</span>
                 </div>
             </a>
 
-            <div class="hidden md:flex items-center gap-8">
+            <div class="hidden md:flex items-center gap-4 lg:gap-6">
                 {% if request.user.is_authenticated %}
                     
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
                         <a href="/" class="nav-link {% if request.path == '/' or 'dashboard' in request.path %}active{% endif %}">
-                            <i class="fa-solid fa-chart-pie text-sm"></i> <span>หน้าหลัก</span>
+                            <i class="fa-solid fa-chart-pie text-sm"></i> <span>{% trans "หน้าหลัก" %}</span>
                         </a>
-                        <a href="{% url 'history' %}" class="nav-link {% if 'history' in request.path %}active{% endif %}">
-                            <i class="fa-solid fa-file-invoice text-sm"></i> <span>ประวัติ</span>
-                        </a>
+                        {% if request.user.role == 'GOVT' %}
+                            <a href="{% url 'govt_stats' %}" class="nav-link {% if 'govt_stats' in request.path %}active{% endif %}">
+                                <i class="fa-solid fa-chart-line text-sm"></i> <span>{% trans "สถิติ" %}</span>
+                        {% else %}
+                            <a href="{% url 'history' %}" class="nav-link {% if 'history' in request.path %}active{% endif %}">
+                                <i class="fa-solid fa-file-invoice text-sm"></i> <span>{% trans "ประวัติ" %}</span>
+                            </a>
+                        {% endif %}
                     </div>
                     
                     <div class="h-8 w-px bg-white/20"></div>
 
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
                         <div class="relative">
-                            <button onclick="toggleNotif()" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition relative group focus:outline-none" title="การแจ้งเตือน">
+                            <button onclick="toggleGlobalNotif()" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition relative group focus:outline-none" title="การแจ้งเตือน">
                                 <i class="fa-regular fa-bell text-xl group-hover:animate-swing"></i>
-                                <span id="notif-badge" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-green-700 notification-dot hidden"></span>
+                                <span id="base-notif-badge" class="absolute top-0 right-0 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-green-700 hidden transform translate-x-1 -translate-y-1 shadow-sm"></span>
                             </button>
 
-                            <div id="notif-dropdown" class="hidden absolute right-0 mt-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 origin-top-right animate-fadeIn text-gray-700">
+                            <div id="base-notif-dropdown" class="hidden absolute right-0 mt-4 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 origin-top-right animate-fade-in text-gray-700">
                                 <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                                    <span class="text-sm font-bold text-gray-700"><i class="fa-solid fa-bell text-green-600"></i> การแจ้งเตือน</span>
-                                    <span class="text-xs text-blue-500 cursor-pointer hover:text-blue-700 hover:underline" onclick="markAllRead()">อ่านทั้งหมด</span>
+                                    <span class="text-sm font-bold text-gray-700"><i class="fa-solid fa-bell text-green-600"></i> {% trans "การแจ้งเตือน" %}</span>
+                                    <span class="text-xs text-blue-500 cursor-pointer hover:text-blue-700 hover:underline" onclick="markAllGlobalRead()">{% trans "อ่านทั้งหมด" %}</span>
                                 </div>
-                                <div id="notif-list" class="max-h-80 overflow-y-auto custom-scrollbar bg-white">
+                                <div id="base-notif-list" class="max-h-80 overflow-y-auto custom-scrollbar bg-white">
                                     <div class="p-8 text-center text-gray-400 text-sm">
-                                        <i class="fa-regular fa-bell-slash text-2xl mb-2 opacity-50"></i><br>ไม่มีการแจ้งเตือนใหม่
+                                        <i class="fa-solid fa-circle-notch fa-spin"></i> Loading...
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <button class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition" title="คู่มือการใช้งาน">
+                        <button onclick="showManual()" class="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center transition" title="{% trans 'คู่มือการใช้งาน' %}">
                             <i class="fa-regular fa-circle-question text-xl"></i>
                         </button>
                     </div>
@@ -110,7 +107,7 @@
                     <div class="relative group py-2 pl-2">
                         <button class="flex items-center gap-3 px-1 py-1 rounded-full hover:bg-white/10 transition-all focus:outline-none border border-transparent hover:border-white/20">
                             <div class="text-right hidden lg:block mr-1">
-                                <p class="text-sm font-bold leading-none">{{ request.user.username }}</p>
+                                <p class="text-sm font-bold leading-none">{{ request.user.first_name|default:request.user.username }}</p>
                                 <p class="text-[10px] text-green-100 mt-1 opacity-80 bg-black/20 px-2 py-0.5 rounded-full inline-block">{{ request.user.get_role_display }}</p>
                             </div>
                             <div class="w-11 h-11 bg-white text-green-800 rounded-full flex items-center justify-center text-lg font-bold shadow-md ring-2 ring-white/30">
@@ -119,9 +116,7 @@
                             <i class="fa-solid fa-chevron-down text-xs text-white/50 group-hover:text-white transition-colors ml-1 mr-2"></i>
                         </button>
 
-                        <div class="absolute right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl py-2 hidden group-hover:block border border-gray-100 text-gray-700 origin-top-right animate-fadeIn">
-                            <div class="absolute -top-2 right-6 w-4 h-4 bg-white transform rotate-45 border-t border-l border-gray-100"></div>
-                            
+                        <div class="absolute right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl py-2 hidden group-hover:block border border-gray-100 text-gray-700 origin-top-right animate-fade-in">
                             <div class="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white rounded-t-2xl">
                                 <p class="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Signed in as</p>
                                 <p class="text-sm font-bold text-gray-800 truncate">{{ request.user.email|default:request.user.username }}</p>
@@ -132,36 +127,36 @@
                                     <div class="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center group-hover/item:bg-green-600 group-hover/item:text-white transition-colors">
                                         <i class="fa-solid fa-user-gear"></i>
                                     </div>
-                                    <span class="font-medium">แก้ไขโปรไฟล์</span>
+                                    <span class="font-medium">{% trans "แก้ไขข้อมูลส่วนตัว" %}</span>
                                 </a>
                                 <button onclick="confirmLogout('logout-form-desktop')" class="w-full text-left flex items-center gap-3 px-4 py-2.5 rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors group/item text-gray-600">
                                     <div class="w-8 h-8 rounded-lg bg-red-50 text-red-500 flex items-center justify-center group-hover/item:bg-red-500 group-hover/item:text-white transition-colors">
                                         <i class="fa-solid fa-right-from-bracket"></i>
                                     </div>
-                                    <span class="font-medium">ออกจากระบบ</span>
+                                    <span class="font-medium">{% trans "ออกจากระบบ" %}</span>
                                 </button>
                             </div>
                         </div>
                     </div>
-
                     <form id="logout-form-desktop" action="{% url 'logout' %}" method="post" class="hidden">{% csrf_token %}</form>
 
                 {% else %}
                     <a href="{% url 'login' %}" class="bg-white text-green-800 hover:bg-green-50 px-7 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-black/10 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2">
-                        <i class="fa-solid fa-right-to-bracket"></i> <span>เข้าสู่ระบบ</span>
+                        <i class="fa-solid fa-right-to-bracket"></i> <span>{% trans "เข้าสู่ระบบ" %}</span>
                     </a>
                 {% endif %}
             </div>
 
-            <button onclick="toggleMobileMenu()" class="md:hidden w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition focus:outline-none">
+            <button onclick="toggleMobileMenu()" class="md:hidden w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition focus:outline-none relative">
                 <i class="fa-solid fa-bars text-xl"></i>
+                <span id="mobile-menu-badge" class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-green-700 hidden"></span>
             </button>
         </div>
 
-        <div id="mobile-menu" class="hidden md:hidden border-t border-white/10 overflow-hidden bg-black/5 mx-[-1rem] px-4">
-            <div class="py-4 space-y-3">
+        <div id="mobile-menu" class="hidden md:hidden border-t border-white/10 bg-green-800/95 backdrop-blur-xl absolute left-0 w-full shadow-2xl z-[1001]">
+            <div class="py-4 px-4 space-y-3">
             {% if request.user.is_authenticated %}
-                <div class="flex items-center gap-4 px-4 pb-4 mb-2 border-b border-white/10">
+                <div class="flex items-center gap-4 pb-4 mb-2 border-b border-white/10">
                     <div class="w-14 h-14 bg-white text-green-800 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg">
                         {{ request.user.username|make_list|first|upper }}
                     </div>
@@ -172,28 +167,51 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 mb-2">
-                    <a href="/" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center">
-                        <i class="fa-solid fa-chart-pie text-2xl mb-1"></i><span class="text-sm font-bold">หน้าหลัก</span>
+                    <a href="/" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center text-white">
+                        <i class="fa-solid fa-chart-pie text-2xl mb-1"></i><span class="text-sm font-bold">{% trans "หน้าหลัก" %}</span>
                     </a>
-                    <a href="{% url 'history' %}" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center">
-                        <i class="fa-solid fa-file-invoice text-2xl mb-1"></i><span class="text-sm font-bold">ประวัติ</span>
-                    </a>
+                    {% if request.user.role == 'GOVT' %}
+                        <a href="/govt/stats" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center text-white">
+                            <i class="fa-solid fa-chart-line text-2xl mb-1"></i><span class="text-sm font-bold">{% trans "สถิติ" %}</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'history' %}" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center text-white">
+                            <i class="fa-solid fa-file-invoice text-2xl mb-1"></i><span class="text-sm font-bold">{% trans "ประวัติ" %}</span>
+                        </a>
+                    {% endif %}
                 </div>
 
-                <a href="{% url 'profile' %}" class="flex items-center gap-4 px-5 py-3.5 rounded-xl hover:bg-white/10 transition border border-white/5 bg-white/5">
-                    <i class="fa-solid fa-user-gear text-lg w-6 text-center"></i> <span class="font-medium">แก้ไขข้อมูลส่วนตัว</span>
+                <button onclick="toggleGlobalNotifMobile()" class="w-full flex items-center gap-4 px-5 py-3.5 rounded-xl hover:bg-white/10 transition border border-white/5 bg-white/5 text-left text-white relative">
+                    <div class="relative">
+                        <i class="fa-solid fa-bell text-lg w-6 text-center"></i>
+                        <span id="mobile-inner-badge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-green-800 hidden"></span>
+                    </div>
+                    <span class="font-medium">{% trans "การแจ้งเตือน" %}</span>
+                    <span id="mobile-count-text" class="ml-auto text-xs bg-red-500 px-2 py-0.5 rounded-full hidden">0 ใหม่</span>
+                </button>
+                
+                <div id="mobile-notif-list" class="hidden bg-white/90 rounded-xl p-2 mx-2 space-y-2 max-h-60 overflow-y-auto text-gray-800 shadow-inner">
+                     <p class="text-center text-sm py-4 text-gray-500">Loading...</p>
+                </div>
+
+                <a href="{% url 'profile' %}" class="flex items-center gap-4 px-5 py-3.5 rounded-xl hover:bg-white/10 transition border border-white/5 bg-white/5 text-white">
+                    <i class="fa-solid fa-user-gear text-lg w-6 text-center"></i> <span class="font-medium">{% trans "แก้ไขข้อมูลส่วนตัว" %}</span>
                 </a>
                 
+                <button onclick="showManual()" class="w-full flex items-center gap-4 px-5 py-3.5 rounded-xl hover:bg-white/10 transition border border-white/5 bg-white/5 text-left text-white">
+                    <i class="fa-solid fa-circle-question text-lg w-6 text-center"></i> <span class="font-medium">{% trans "คู่มือการใช้งาน" %}</span>
+                </button>
+
                 <form id="logout-form-mobile" action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
-                    <button type="button" onclick="confirmLogout('logout-form-mobile')" class="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl bg-red-500/20 text-red-100 hover:bg-red-600 hover:text-white transition font-bold border border-red-500/30 mt-4">
-                        <i class="fa-solid fa-power-off"></i> ออกจากระบบ
+                    <button type="button" onclick="confirmLogout('logout-form-mobile')" class="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-xl bg-red-500/80 text-white hover:bg-red-600 transition font-bold border border-red-500/50 mt-4 shadow-lg">
+                        <i class="fa-solid fa-power-off"></i> {% trans "ออกจากระบบ" %}
                     </button>
                 </form>
             {% else %}
                 <div class="px-2 pt-2 pb-4">
                     <a href="{% url 'login' %}" class="block w-full text-center bg-white text-green-800 py-3.5 rounded-xl font-bold shadow-lg text-lg">
-                        <i class="fa-solid fa-right-to-bracket mr-2"></i> เข้าสู่ระบบ
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i> {% trans "เข้าสู่ระบบ" %}
                     </a>
                 </div>
             {% endif %}
@@ -202,14 +220,70 @@
     </div>
 </nav>
 
-<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow animate-fade-in">
+<main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow animate-fade-in relative">
     {% block content %}{% endblock %}
 </main>
 
-<footer class="bg-white text-gray-500 py-10 border-t border-gray-100 mt-auto">
-    <div class="container mx-auto px-4 text-center">
-        <p class="text-sm font-medium text-gray-600">© 2025 Rice Supply Chain Project (Phayao)</p>
-        <p class="text-xs mt-2 text-gray-400">พัฒนาโดย สาขาวิทยาการคอมพิวเตอร์ มหาวิทยาลัยพะเยา</p>
+<footer class="bg-slate-900 text-slate-300 py-10 border-t border-slate-800 mt-auto relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-600 via-green-400 to-blue-500"></div>
+    
+    <div class="absolute -bottom-10 -right-10 text-9xl text-white opacity-[0.03] pointer-events-none rotate-12">
+        <i class="fa-solid fa-seedling"></i>
+    </div>
+
+    <div class="container mx-auto px-6 lg:px-10 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12 mb-8">
+            
+            <div class="text-center md:text-left">
+                <div class="flex items-center justify-center md:justify-start gap-3 mb-4">
+                    <div class="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-900/20">
+                        <i class="fa-solid fa-seedling text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white leading-none font-sans">Rice Chain</h3>
+                        <span class="text-[10px] text-green-400 uppercase tracking-widest">Phayao Province</span>
+                    </div>
+                </div>
+                <p class="text-sm text-slate-400 leading-relaxed">
+                    ระบบบริหารจัดการห่วงโซ่อุปทานข้าวอัจฉริยะ เชื่อมโยงเกษตรกรและโรงสี เพื่อยกระดับคุณภาพชีวิตและเศรษฐกิจจังหวัดพะเยา
+                </p>
+            </div>
+
+            <div class="text-center md:text-left">
+                <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider">เมนูหลัก</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="/" class="hover:text-green-400 transition-colors flex items-center justify-center md:justify-start gap-2"><i class="fa-solid fa-chart-pie text-xs"></i> หน้าหลัก (Dashboard)</a></li>
+                    <li><a href="{% url 'history' %}" class="hover:text-green-400 transition-colors flex items-center justify-center md:justify-start gap-2"><i class="fa-solid fa-file-invoice text-xs"></i> ประวัติการซื้อขาย</a></li>
+                    {% if request.user.is_authenticated %}
+                    <li><a href="{% url 'profile' %}" class="hover:text-green-400 transition-colors flex items-center justify-center md:justify-start gap-2"><i class="fa-solid fa-user-gear text-xs"></i> ข้อมูลส่วนตัว</a></li>
+                    {% else %}
+                    <li><a href="{% url 'login' %}" class="hover:text-green-400 transition-colors flex items-center justify-center md:justify-start gap-2"><i class="fa-solid fa-right-to-bracket text-xs"></i> เข้าสู่ระบบ</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="text-center md:text-left">
+                <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider">พัฒนาโดย</h4>
+                <div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700/50">
+                    <p class="text-xs text-slate-300 font-bold mb-1">
+                        <i class="fa-solid fa-university text-green-500 mr-1"></i> สาขาวิทยาการคอมพิวเตอร์
+                    </p>
+                    <p class="text-[10px] text-slate-500 mb-2">คณะเทคโนโลยีสารสนเทศและการสื่อสาร</p>
+                    <p class="text-xs text-slate-400">มหาวิทยาลัยพะเยา</p>
+                    <div class="flex justify-center md:justify-start gap-3 mt-3">
+                        <a href="#" class="w-8 h-8 rounded-full bg-blue-600/20 text-blue-500 hover:bg-blue-600 hover:text-white flex items-center justify-center transition"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="w-8 h-8 rounded-full bg-sky-500/20 text-sky-400 hover:bg-sky-500 hover:text-white flex items-center justify-center transition"><i class="fa-solid fa-globe"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-t border-slate-800 pt-6 mt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
+            <p>&copy; 2025 Rice Supply Chain Project. All rights reserved.</p>
+            <div class="flex gap-4">
+                <span class="flex items-center gap-1"><i class="fa-solid fa-code text-green-600"></i> with Django & Leaflet</span>
+            </div>
+        </div>
     </div>
 </footer>
 
@@ -218,43 +292,153 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    const CURRENT_USER_ROLE = "{{ request.user.role|default:'GUEST' }}";
+    
+    // ใช้ Logic การจำ ID เพื่อไม่ให้หายเวลากด
+    let readNotifIds = JSON.parse(localStorage.getItem('read_notif_ids') || '[]');
+    let lastGlobalRead = new Date(localStorage.getItem('globalLastRead') || 0);
+
     function toggleMobileMenu() {
         const menu = document.getElementById('mobile-menu');
         menu.classList.toggle('hidden');
     }
     
-    // ฟังก์ชันเปิด/ปิด Notification Dropdown (ใช้ร่วมกันทุกหน้า)
-    function toggleNotif() {
-        const dd = document.getElementById('notif-dropdown');
+    function toggleGlobalNotif() {
+        const dd = document.getElementById('base-notif-dropdown');
         if (dd) dd.classList.toggle('hidden');
     }
 
-    // ปิด Dropdown เมื่อคลิกที่อื่น
+    function toggleGlobalNotifMobile() {
+        const list = document.getElementById('mobile-notif-list');
+        list.classList.toggle('hidden');
+    }
+
     document.addEventListener('click', function(e) { 
-        const dd = document.getElementById('notif-dropdown'); 
-        if (dd && !dd.contains(e.target) && !e.target.closest('button[onclick="toggleNotif()"]')) {
+        const dd = document.getElementById('base-notif-dropdown'); 
+        if (dd && !dd.contains(e.target) && !e.target.closest('button[onclick="toggleGlobalNotif()"]')) {
             dd.classList.add('hidden');
         }
     });
 
-    // ✅ 6. Confirm Logout Script
     function confirmLogout(formId) {
         Swal.fire({
-            title: 'ยืนยันการออก?', text: "คุณต้องการออกจากระบบใช่หรือไม่", icon: 'warning',
+            title: '{% trans "ยืนยันการออก?" %}', text: "{% trans "คุณต้องการออกจากระบบใช่หรือไม่" %}", icon: 'warning',
             showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#e5e7eb',
-            confirmButtonText: 'ใช่, ออกเลย', cancelButtonText: '<span class="text-gray-600">ยกเลิก</span>',
+            confirmButtonText: '{% trans "ใช่, ออกเลย" %}', cancelButtonText: '<span class="text-gray-600">{% trans "ยกเลิก" %}</span>',
             reverseButtons: true, width: '320px',
-            customClass: {
-                popup: 'rounded-2xl shadow-xl border border-gray-100 pb-8',
-                confirmButton: 'rounded-xl px-6 py-2.5 shadow-lg shadow-red-200 text-sm font-bold',
-                cancelButton: 'rounded-xl px-6 py-2.5 hover:bg-gray-200 text-sm font-bold',
-                title: 'text-xl font-bold text-gray-800', htmlContainer: 'text-sm text-gray-500'
-            }
+            customClass: { popup: 'rounded-2xl shadow-xl border border-gray-100 pb-8', confirmButton: 'rounded-xl px-6 py-2.5 shadow-lg shadow-red-200 text-sm font-bold', cancelButton: 'rounded-xl px-6 py-2.5 hover:bg-gray-200 text-sm font-bold', title: 'text-xl font-bold text-gray-800', htmlContainer: 'text-sm text-gray-500' }
         }).then((result) => { if (result.isConfirmed) document.getElementById(formId).submit(); })
     }
-    
-    // Placeholder function (จะถูก override โดย script ของ dashboard)
-    window.markAllRead = function() { console.log('Mark read clicked'); }
+
+    // --- Core Notification Logic ---
+    async function loadGlobalNotifications() {
+        if (CURRENT_USER_ROLE === 'GUEST') return;
+        try {
+            const res = await fetch('/api/sales/');
+            if (!res.ok) return;
+            const sales = await res.json();
+            
+            let unreadCount = 0;
+            const listDiv = document.getElementById('base-notif-list');
+            const mobileListDiv = document.getElementById('mobile-notif-list');
+            const badge = document.getElementById('base-notif-badge');
+            const mobileMenuBadge = document.getElementById('mobile-menu-badge');
+            const mobileInnerBadge = document.getElementById('mobile-inner-badge');
+            const mobileCountText = document.getElementById('mobile-count-text');
+
+            let itemsHTML = '';
+            
+            sales.sort((a,b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
+
+            sales.forEach(s => {
+                const actionDate = s.sold_at ? new Date(s.sold_at) : new Date(s.updated_at || s.created_at);
+                const isRead = readNotifIds.includes(s.id);
+                const isNew = !isRead; 
+
+                let relevant = false, msg = '', subMsg = '', icon = '', colorClass = '';
+
+                if (CURRENT_USER_ROLE === 'FARMER') {
+                    if (s.status === 'REQUESTED') { relevant = true; msg = `📢 มีคนขอซื้อข้าว!`; subMsg = `คุณ ${s.buyer_name || 'ไม่ระบุ'} สนใจข้าวของคุณ`; icon = 'fa-bell'; colorClass = 'bg-yellow-100 text-yellow-600'; }
+                    else if (s.status === 'SOLD' && isNew) { relevant = true; msg = `🎉 ขายสำเร็จแล้ว`; subMsg = `ปิดการขาย ${s.quantity_ton} ตัน เรียบร้อย`; icon = 'fa-check-circle'; colorClass = 'bg-green-100 text-green-600'; }
+                } else if (CURRENT_USER_ROLE === 'MILLER') {
+                    if (s.status === 'OPEN' && isNew) { relevant = true; msg = `🌾 มีประกาศขายข้าวใหม่`; subMsg = `${s.quantity_ton} ตัน โดย ${s.farmer_name}`; icon = 'fa-bullhorn'; colorClass = 'bg-blue-100 text-blue-600'; }
+                    else if (s.status === 'SOLD' && isNew) { relevant = true; msg = `✅ คำขอซื้อได้รับการอนุมัติ`; subMsg = `เกษตรกรตกลงขายข้าวให้คุณแล้ว`; icon = 'fa-handshake'; colorClass = 'bg-green-100 text-green-600'; }
+                } else if (CURRENT_USER_ROLE === 'GOVT') {
+                    if (isNew && s.quantity_ton > 50) { relevant = true; msg = `⚠️ ธุรกรรมขนาดใหญ่`; subMsg = `${s.quantity_ton} ตัน ในพื้นที่`; icon='fa-triangle-exclamation'; colorClass='bg-purple-100 text-purple-600'; }
+                }
+
+                if (relevant) {
+                    if (isNew) unreadCount++;
+                    itemsHTML += `
+                        <div onclick="markOneRead(${s.id})" class="px-4 py-3 border-b border-gray-50 ${isNew ? 'bg-white' : 'bg-gray-50 opacity-60'} hover:bg-gray-100 transition cursor-pointer flex gap-3 items-start relative group">
+                            <div class="w-9 h-9 rounded-full ${colorClass} flex items-center justify-center shrink-0 mt-0.5 shadow-sm"><i class="fa-solid ${icon}"></i></div>
+                            <div class="flex-grow">
+                                <p class="text-sm font-bold text-gray-800 leading-tight">${msg}</p>
+                                <p class="text-xs text-gray-500 mt-0.5">${subMsg}</p>
+                                <p class="text-[10px] text-gray-400 mt-1"><i class="fa-regular fa-clock"></i> ${actionDate.toLocaleDateString('th-TH', {hour:'2-digit', minute:'2-digit'})}</p>
+                            </div>
+                            ${isNew ? '<span class="absolute top-4 right-4 w-2 h-2 bg-red-500 rounded-full shrink-0 shadow-sm animate-pulse"></span>' : ''}
+                        </div>`;
+                }
+            });
+
+            if (!itemsHTML) itemsHTML = `<div class="p-8 text-center text-gray-400 text-sm"><i class="fa-regular fa-bell-slash text-2xl mb-2 opacity-50"></i><br>{% trans "ไม่มีการแจ้งเตือน" %}</div>`;
+
+            if (listDiv) listDiv.innerHTML = itemsHTML;
+            if (mobileListDiv) mobileListDiv.innerHTML = itemsHTML;
+
+            const hasUnread = unreadCount > 0;
+            const countStr = unreadCount > 9 ? '9+' : unreadCount;
+
+            if (badge) { badge.innerText = countStr; hasUnread ? badge.classList.remove('hidden') : badge.classList.add('hidden'); }
+            if (mobileMenuBadge) hasUnread ? mobileMenuBadge.classList.remove('hidden') : mobileMenuBadge.classList.add('hidden');
+            if (mobileInnerBadge) hasUnread ? mobileInnerBadge.classList.remove('hidden') : mobileInnerBadge.classList.add('hidden');
+            if (mobileCountText) { if (hasUnread) { mobileCountText.innerText = `${countStr} ใหม่`; mobileCountText.classList.remove('hidden'); } else { mobileCountText.classList.add('hidden'); } }
+
+        } catch (e) { console.error("Notif Error:", e); }
+    }
+
+    window.markOneRead = function(id) {
+        if (!readNotifIds.includes(id)) {
+            readNotifIds.push(id);
+            localStorage.setItem('read_notif_ids', JSON.stringify(readNotifIds));
+            loadGlobalNotifications(); 
+        }
+    }
+
+    window.markAllGlobalRead = async function() {
+        try {
+            const res = await fetch('/api/sales/');
+            const sales = await res.json();
+            sales.forEach(s => { if(!readNotifIds.includes(s.id)) readNotifIds.push(s.id); });
+            localStorage.setItem('read_notif_ids', JSON.stringify(readNotifIds));
+            loadGlobalNotifications();
+            document.getElementById('base-notif-dropdown').classList.add('hidden');
+        } catch(e) {}
+    }
+
+    window.showManual = function() {
+        let title = "{% trans 'คู่มือการใช้งาน' %}";
+        let content = "";
+        if (CURRENT_USER_ROLE === 'FARMER') {
+            title += " {% trans '(สำหรับเกษตรกร)' %}";
+            content = `<ul class="text-left space-y-3 text-sm text-gray-600"><li><i class="fa-solid fa-1 text-green-500 w-5"></i> <b>{% trans "วาดแปลงนา" %}:</b> {% trans "ใช้เครื่องมือขวาบนวาดพื้นที่นาของคุณบนแผนที่" %}</li><li><i class="fa-solid fa-2 text-green-500 w-5"></i> <b>{% trans "วิเคราะห์ผลผลิต" %}:</b> {% trans "กดปุ่ม 'วิเคราะห์' เพื่อดูค่า NDVI และปริมาณคาดการณ์" %}</li><li><i class="fa-solid fa-3 text-green-500 w-5"></i> <b>{% trans "ประกาศขาย" %}:</b> {% trans "เมื่อพร้อมขาย กดปุ่ม 'ประกาศขาย' และระบุราคา" %}</li><li><i class="fa-solid fa-4 text-green-500 w-5"></i> <b>{% trans "ต่อรองราคา" %}:</b> {% trans "หากโรงสีกดซื้อ คุณสามารถกด 'ยอมรับ' หรือ 'ต่อราคา' ได้" %}</li></ul>`;
+        } else if (CURRENT_USER_ROLE === 'MILLER') {
+            title += " {% trans '(สำหรับโรงสี)' %}";
+            content = `<ul class="text-left space-y-3 text-sm text-gray-600"><li><i class="fa-solid fa-1 text-blue-500 w-5"></i> <b>{% trans "ค้นหาข้าว" %}:</b> {% trans "ดูรายการประกาศขายทางด้านซ้าย หรือบนแผนที่" %}</li><li><i class="fa-solid fa-2 text-blue-500 w-5"></i> <b>{% trans "ขอซื้อ" %}:</b> {% trans "กดปุ่ม 'ส่งคำขอซื้อ' และระบุราคาที่ต้องการ" %}</li><li><i class="fa-solid fa-3 text-blue-500 w-5"></i> <b>{% trans "เจรจา" %}:</b> {% trans "รอเกษตรกรตอบกลับ หากเขาต่อราคามา คุณสามารถตกลงหรือต่อกลับได้" %}</li><li><i class="fa-solid fa-4 text-blue-500 w-5"></i> <b>{% trans "นำทาง" %}:</b> {% trans "กดปุ่ม 'นำทาง' ในรายละเอียดเพื่อเปิด Google Maps ไปยังแปลงนา" %}</li></ul>`;
+        } else if (CURRENT_USER_ROLE === 'GOVT') {
+            title += " {% trans '(สำหรับเจ้าหน้าที่)' %}";
+            content = `<ul class="text-left space-y-3 text-sm text-gray-600"><li><i class="fa-solid fa-chart-line text-purple-500 w-5"></i> <b>ตรวจสอบภาพรวม:</b> ดูยอดขายและปริมาณผลผลิตทั้งจังหวัด</li><li><i class="fa-solid fa-map text-purple-500 w-5"></i> <b>แผนที่:</b> ติดตามพื้นที่เพาะปลูกและการซื้อขายในแต่ละพื้นที่</li></ul>`;
+        } else {
+            content = "<p class='text-center'>{% trans 'กรุณาเข้าสู่ระบบเพื่อดูคู่มือที่เหมาะสมกับคุณ' %}</p>";
+        }
+        Swal.fire({ title: title, html: content, confirmButtonText: "{% trans 'เข้าใจแล้ว' %}", confirmButtonColor: '#16a34a' });
+    }
+
+    if (CURRENT_USER_ROLE !== 'GUEST') {
+        loadGlobalNotifications();
+        setInterval(loadGlobalNotifications, 5000);
+    }
 </script>
 
 <style>
@@ -262,6 +446,7 @@
     .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     @keyframes swing { 20% { transform: rotate(15deg); } 40% { transform: rotate(-10deg); } 60% { transform: rotate(5deg); } 80% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
     .group:hover .animate-swing { animation: swing 1s ease-in-out; }
+    .swal2-popup { border-radius: 16px !important; padding: 1.5rem !important; font-family: 'Sarabun', sans-serif; }
 </style>
 
 {% block scripts %}{% endblock %}

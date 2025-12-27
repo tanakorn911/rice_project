@@ -10,6 +10,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard_redirect, name='dashboard_router'),
     path('miller/', views.miller_dashboard, name='miller_dashboard'),
     path('govt/', views.govt_dashboard, name='govt_dashboard'),
+    path('govt/stats/', views.govt_stats, name='govt_stats'),
     path('history/', views.history_view, name='history'),
     path('api/stats/', views.dashboard_stats, name='api_stats'),
     path('api/', include(router.urls)),

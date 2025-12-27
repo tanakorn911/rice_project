@@ -1,28 +1,24 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="max-w-5xl mx-auto mt-6">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div class="flex justify-between items-center mb-6">
+<div class="max-w-5xl mx-auto mt-2 lg:mt-6 pb-20">
+    <div class="bg-white p-4 lg:p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div class="flex justify-between items-center mb-4 lg:mb-6">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> ประวัติการทำรายการ
+                <h1 class="text-xl lg:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-blue-600"></i> ประวัติรายการ
                 </h1>
-                <p class="text-sm text-gray-500 mt-1">
-                    {% if role == 'FARMER' %}รายการข้าวที่คุณขายสำเร็จแล้ว
-                    {% elif role == 'MILLER' %}รายการข้าวที่คุณรับซื้อแล้ว
-                    {% else %}ประวัติการซื้อขายทั้งหมดในระบบ{% endif %}
-                </p>
+                <p class="text-xs text-gray-500 mt-1">รายการที่สำเร็จแล้วทั้งหมด</p>
             </div>
-            <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-bold">
-                รวม {{ transactions|length }} รายการ
+            <div class="bg-blue-50 text-blue-700 px-3 py-1 lg:px-4 lg:py-2 rounded-lg font-bold text-xs lg:text-sm">
+                {{ transactions|length }} รายการ
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
-                        <th class="px-4 py-3 rounded-tl-lg">วันที่สำเร็จ</th>
+                        <th class="px-4 py-3 rounded-tl-lg">วันที่</th>
                         <th class="px-4 py-3">สินค้า</th>
                         <th class="px-4 py-3 text-right">ปริมาณ (ตัน)</th>
                         <th class="px-4 py-3 text-right">ราคา/ตัน</th>
@@ -34,47 +30,70 @@
                 <tbody class="text-sm divide-y divide-gray-100">
                     {% for t in transactions %}
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="px-4 py-3 text-gray-600">
-                            {{ t.sold_at|date:"d M Y" }} <span class="text-xs text-gray-400">{{ t.sold_at|date:"H:i" }}</span>
-                        </td>
+                        <td class="px-4 py-3 text-gray-600">{{ t.sold_at|date:"d M Y" }}</td>
                         <td class="px-4 py-3">
                             <span class="font-bold text-gray-800">{{ t.rice_field.get_variety_display }}</span><br>
                             <span class="text-xs text-gray-400">{{ t.rice_field.name }}</span>
                         </td>
-                        <td class="px-4 py-3 text-right font-medium">{{ t.quantity_ton }}</td>
+                        <td class="px-4 py-3 text-right">{{ t.quantity_ton }}</td>
                         <td class="px-4 py-3 text-right text-gray-500">{{ t.price_per_ton|floatformat:0 }}</td>
-                        <td class="px-4 py-3 text-right font-bold text-green-600">
-                            {% widthratio t.quantity_ton 1 t.price_per_ton %}
+                        <td class="px-4 py-3 text-right font-bold text-green-600">{% widthratio t.quantity_ton 1 t.price_per_ton %}</td>
+                        <td class="px-4 py-3 text-gray-600">
+                            {% if role == 'FARMER' %}{{ t.buyer.username }}{% else %}{{ t.farmer.username }}{% endif %}
                         </td>
-                        <td class="px-4 py-3">
-                            {% if role == 'FARMER' %}
-                                <span class="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded-full">
-                                    <i class="fa-solid fa-truck-fast"></i> 
-                                    {{ t.buyer.get_full_name|default:t.buyer.username|default:"-" }}
-                                </span>
-                            {% else %}
-                                <span class="text-xs bg-green-50 text-green-600 px-2 py-1 rounded-full">
-                                    <i class="fa-solid fa-user"></i> 
-                                    {{ t.farmer.get_full_name|default:t.farmer.username }}
-                                </span>
-                            {% endif %}
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <i class="fa-solid fa-check-circle mr-1"></i> สำเร็จ
-                            </span>
-                        </td>
+                        <td class="px-4 py-3 text-center"><span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">สำเร็จ</span></td>
                     </tr>
                     {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center py-10 text-gray-400">
-                            <i class="fa-solid fa-box-open text-4xl mb-2 opacity-50"></i><br>ยังไม่มีประวัติการซื้อขาย
-                        </td>
-                    </tr>
+                    <tr><td colspan="7" class="text-center py-10 text-gray-400">ไม่มีประวัติ</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <div class="md:hidden space-y-3">
+            {% for t in transactions %}
+            <div class="bg-white border border-gray-100 rounded-xl p-4 shadow-sm relative overflow-hidden">
+                <div class="absolute top-0 right-0 bg-green-500 w-16 h-16 transform translate-x-8 -translate-y-8 rotate-45 opacity-10"></div>
+                
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">วันที่ทำรายการ</span>
+                        <p class="text-sm text-gray-700 font-medium">{{ t.sold_at|date:"d M Y, H:i" }} น.</p>
+                    </div>
+                    <span class="bg-green-50 text-green-700 px-2 py-1 rounded text-[10px] font-bold border border-green-100">สำเร็จ</span>
+                </div>
+
+                <div class="flex items-center gap-3 mb-3 pb-3 border-b border-gray-50">
+                    <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-box-open"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-gray-800 text-sm">{{ t.rice_field.get_variety_display }}</p>
+                        <p class="text-xs text-gray-500">{{ t.rice_field.name }} ({{ t.quantity_ton }} ตัน)</p>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-end">
+                    <div>
+                        <p class="text-[10px] text-gray-400">คู่ค้า</p>
+                        <p class="text-xs font-bold text-gray-600">
+                            <i class="fa-solid fa-user-circle mr-1"></i>
+                            {% if role == 'FARMER' %}{{ t.buyer.get_full_name|default:t.buyer.username }}{% else %}{{ t.farmer.get_full_name|default:t.farmer.username }}{% endif %}
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-gray-400">ยอดสุทธิ</p>
+                        <p class="text-xl font-bold text-green-600">{% widthratio t.quantity_ton 1 t.price_per_ton %} <span class="text-xs text-gray-500 font-normal">บาท</span></p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-10 text-gray-400 opacity-60">
+                <i class="fa-solid fa-folder-open text-4xl mb-2"></i><br>ไม่มีประวัติรายการ
+            </div>
+            {% endfor %}
+        </div>
+
     </div>
 </div>
 {% endblock %}

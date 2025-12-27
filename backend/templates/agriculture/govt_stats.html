@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="h-[calc(100vh-80px)] flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 relative">
+    
+    <div id="view-overview" class="flex-grow lg:col-span-5 flex flex-col gap-4 h-full overflow-hidden transition-all duration-300">
+        
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 shrink-0">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-building-columns text-purple-600"></i> Command Center
+                    </h1>
+                    <p class="text-[10px] text-gray-500 mt-1">ศูนย์บัญชาการข้อมูลข้าว จ.พะเยา</p>
+                </div>
+                <div class="flex gap-2">
+                    <select id="filter-variety" onchange="updateData()" class="bg-gray-50 border border-gray-200 text-gray-700 text-[10px] rounded-lg p-1.5 focus:ring-purple-500">
+                        <option value="all">ทั้งหมด</option>
+                        <option value="KDML105">หอมมะลิ 105</option>
+                        <option value="RD6">กข 6</option>
+                    </select>
+                    <button onclick="updateData()" class="bg-purple-50 text-purple-600 hover:bg-purple-100 w-8 h-8 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex-grow overflow-y-auto custom-scrollbar pb-20 lg:pb-0 space-y-4 p-1">
+            
+            <div class="grid grid-cols-3 gap-2">
+                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                    <p class="text-[9px] text-gray-400 uppercase">ผลผลิตรวม (ตัน)</p>
+                    <p class="text-lg font-bold text-blue-600" id="kpi-supply">0</p>
+                </div>
+                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                    <p class="text-[9px] text-gray-400 uppercase">ขายแล้ว (ตัน)</p>
+                    <p class="text-lg font-bold text-green-600" id="kpi-demand">0</p>
+                </div>
+                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                    <p class="text-[9px] text-gray-400 uppercase">ค้างสต็อก (ตัน)</p>
+                    <p class="text-lg font-bold text-orange-500" id="kpi-stock">0</p>
+                </div>
+                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                    <p class="text-[9px] text-gray-400 uppercase">เกษตรกร (ราย)</p>
+                    <p class="text-lg font-bold text-gray-700" id="kpi-farmers">0</p>
+                </div>
+                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                    <p class="text-[9px] text-gray-400 uppercase">พื้นที่ (ไร่)</p>
+                    <p class="text-lg font-bold text-gray-700" id="kpi-area">0</p>
+                </div>
+                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+                    <p class="text-[9px] text-gray-400 uppercase">อัตราความสำเร็จ</p>
+                    <p class="text-lg font-bold text-purple-600" id="kpi-rate">0%</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xs font-bold text-gray-600"><i class="fa-solid fa-scale-balanced text-blue-500"></i> อุปสงค์ vs อุปทาน</h4>
+                    <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">Real-time</span>
+                </div>
+                <div class="h-[150px] relative"><canvas id="balanceChart"></canvas></div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-2">
+                    <h4 class="text-xs font-bold text-gray-600"><i class="fa-solid fa-heart-pulse text-red-500"></i> สุขภาพพืช (NDVI Analysis)</h4>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="h-[120px] w-[120px] relative"><canvas id="healthChart"></canvas></div>
+                    <div class="flex-1 space-y-2 text-[10px]">
+                        <div class="flex justify-between"><span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> สมบูรณ์ดี</span><span class="font-bold" id="txt-healthy">0</span></div>
+                        <div class="flex justify-between"><span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-400"></span> ปานกลาง</span><span class="font-bold" id="txt-moderate">0</span></div>
+                        <div class="flex justify-between"><span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> เสี่ยงภัยแล้ง/โรค</span><span class="font-bold text-red-600" id="txt-risk">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <h4 class="text-xs font-bold text-gray-600 mb-2"><i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> แนวโน้มราคาตลาด</h4>
+                <div class="h-[150px] relative"><canvas id="priceTrendChart"></canvas></div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="view-map" class="hidden lg:block lg:col-span-7 h-full bg-white rounded-2xl shadow-lg border border-gray-100 relative overflow-hidden group">
+        <div id="map" class="w-full h-full z-0 bg-slate-100"></div>
+        
+        <div class="absolute top-4 right-4 z-[500] bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-md border border-gray-200 pointer-events-none">
+            <span class="text-[10px] font-bold text-gray-500 block mb-1">สัญลักษณ์แผนที่</span>
+            <div class="space-y-1 text-[10px]">
+                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-500"></span> ขายแล้ว</div>
+                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-orange-500"></span> รอขาย</div>
+                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> พื้นที่เสี่ยง (NDVI ต่ำ)</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-list" class="hidden h-full flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:hidden">
+        <div class="p-3 border-b border-gray-100 bg-red-50 flex justify-between items-center">
+            <h3 class="font-bold text-red-700 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> พื้นที่เฝ้าระวัง (Watchlist)
+            </h3>
+            <span class="text-[10px] bg-white text-red-600 px-2 py-0.5 rounded border border-red-100 font-bold" id="risk-count">0 แปลง</span>
+        </div>
+        <div class="flex-grow overflow-auto custom-scrollbar pb-20">
+            <table class="w-full text-sm text-left whitespace-nowrap">
+                <thead class="bg-white text-gray-500 border-b text-[10px] uppercase sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th class="py-2 px-4">แปลง</th>
+                        <th class="py-2 px-4 text-center">NDVI</th>
+                        <th class="py-2 px-4 text-center">สถานะ</th>
+                        <th class="py-2 px-4 text-center">พิกัด</th>
+                    </tr>
+                </thead>
+                <tbody id="riskTableBody" class="divide-y divide-gray-50 text-gray-700 text-xs">
+                    <tr><td colspan="4" class="text-center py-8 text-gray-400">กำลังประมวลผล...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-[1002] lg:hidden flex justify-around items-center h-16 pb-safe">
+        <button onclick="switchTab('overview')" id="btn-tab-overview" class="flex flex-col items-center justify-center w-1/3 h-full text-purple-600 border-t-2 border-purple-600 bg-purple-50/50 transition-all">
+            <i class="fa-solid fa-chart-pie text-xl mb-1"></i><span class="text-[10px] font-bold">วิเคราะห์</span>
+        </button>
+        <button onclick="switchTab('map')" id="btn-tab-map" class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all">
+            <i class="fa-solid fa-map-location-dot text-xl mb-1"></i><span class="text-[10px] font-bold">แผนที่</span>
+        </button>
+        <button onclick="switchTab('list')" id="btn-tab-list" class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all">
+            <i class="fa-solid fa-triangle-exclamation text-xl mb-1"></i><span class="text-[10px] font-bold">เฝ้าระวัง</span>
+        </button>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // === Tab Switching ===
+    function switchTab(tab) {
+        const views = { overview: 'view-overview', map: 'view-map', list: 'view-list' };
+        const btns = { overview: 'btn-tab-overview', map: 'btn-tab-map', list: 'btn-tab-list' };
+        
+        Object.keys(views).forEach(k => {
+            const el = document.getElementById(views[k]);
+            if(k === tab) el.classList.remove('hidden'); else el.classList.add('hidden');
+        });
+
+        Object.keys(btns).forEach(k => {
+            const btn = document.getElementById(btns[k]);
+            if(k === tab) {
+                btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-purple-600 border-t-2 border-purple-600 bg-purple-50/50 transition-all";
+            } else {
+                btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all";
+            }
+        });
+
+        if (window.innerWidth >= 1024) { // Desktop Reset
+            document.getElementById('view-overview').classList.remove('hidden');
+            document.getElementById('view-map').classList.remove('hidden');
+            document.getElementById('view-list').classList.add('hidden'); // Watchlist can be hidden or put in a modal for desktop
+        } else if (tab === 'map') {
+            setTimeout(() => map.invalidateSize(), 300);
+        }
+    }
+
+    // === Map & Chart Init ===
+    const map = L.map('map', { center: [19.1667, 99.9000], zoom: 10, zoomControl: false });
+    L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']}).addTo(map);
+    const fieldLayer = L.featureGroup().addTo(map);
+    let layersMap = {};
+
+    const balanceChart = new Chart(document.getElementById('balanceChart').getContext('2d'), {
+        type: 'bar',
+        data: { labels: ['เป้าหมายผลผลิต', 'ขายแล้ว'], datasets: [{ label: 'ปริมาณ (ตัน)', data: [0, 0], backgroundColor: ['#3b82f6', '#22c55e'], borderRadius: 4 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
+    });
+
+    const healthChart = new Chart(document.getElementById('healthChart').getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: ['ปกติ', 'ปานกลาง', 'เสี่ยง'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#22c55e', '#fbbf24', '#ef4444'], borderWidth: 0 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+    });
+
+    const priceTrendChart = new Chart(document.getElementById('priceTrendChart').getContext('2d'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'ราคา', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+    });
+
+    // === Data Logic ===
+    async function updateData() {
+        try {
+            const [fieldsRes, salesRes] = await Promise.all([fetch('/api/rice-fields/'), fetch('/api/sales/')]);
+            const fields = await fieldsRes.json();
+            const sales = await salesRes.json();
+            
+            // --- Analysis Variables ---
+            let totalYield = 0, soldYield = 0, totalArea = 0, stock = 0;
+            let farmerSet = new Set();
+            let healthStats = { good: 0, mid: 0, bad: 0 };
+            let riskFields = [];
+            let priceData = [];
+            const varietyFilter = document.getElementById('filter-variety').value;
+
+            // 1. Process Fields (Supply & Health)
+            fields.forEach(f => {
+                if(varietyFilter !== 'all' && f.variety !== varietyFilter) return;
+
+                totalArea += parseFloat(f.area_rai || 0);
+                let y = f.latest_yield ? parseFloat(f.latest_yield.yield || 0) : 0;
+                let ndvi = f.latest_yield ? parseFloat(f.latest_yield.ndvi || 0) : 0;
+                
+                totalYield += y;
+
+                // Analyze Health
+                if (ndvi > 0.5) healthStats.good++;
+                else if (ndvi > 0.3) healthStats.mid++;
+                else {
+                    healthStats.bad++;
+                    riskFields.push(f); // Add to Watchlist
+                }
+            });
+
+            // 2. Process Sales (Demand & Economics)
+            sales.forEach(s => {
+                if(varietyFilter !== 'all' && s.variety !== varietyFilter) return;
+                
+                if (s.status === 'SOLD') {
+                    soldYield += parseFloat(s.quantity_ton);
+                    priceData.push({d: new Date(s.created_at), p: s.price_per_ton});
+                } else {
+                    stock += parseFloat(s.quantity_ton);
+                }
+                farmerSet.add(s.farmer_name);
+            });
+
+            // --- Update UI ---
+            
+            // KPIs
+            animateValue('kpi-supply', totalYield);
+            animateValue('kpi-demand', soldYield);
+            animateValue('kpi-stock', totalYield - soldYield); // Pending Stock (Theory)
+            animateValue('kpi-farmers', farmerSet.size);
+            animateValue('kpi-area', totalArea);
+            
+            let rate = totalYield > 0 ? ((soldYield / totalYield) * 100).toFixed(1) : 0;
+            document.getElementById('kpi-rate').innerText = rate + '%';
+
+            // Charts
+            balanceChart.data.datasets[0].data = [totalYield, soldYield];
+            balanceChart.update();
+
+            healthChart.data.datasets[0].data = [healthStats.good, healthStats.mid, healthStats.bad];
+            healthChart.update();
+            document.getElementById('txt-healthy').innerText = healthStats.good;
+            document.getElementById('txt-moderate').innerText = healthStats.mid;
+            document.getElementById('txt-risk').innerText = healthStats.bad;
+
+            priceData.sort((a,b)=>a.d-b.d);
+            const lp = priceData.slice(-15); // Last 15 transactions
+            priceTrendChart.data.labels = lp.map(x=>x.d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
+            priceTrendChart.data.datasets[0].data = lp.map(x=>x.p);
+            priceTrendChart.update();
+
+            // Watchlist Table (Risk Areas)
+            const riskBody = document.getElementById('riskTableBody');
+            riskBody.innerHTML = '';
+            document.getElementById('risk-count').innerText = `${riskFields.length} แปลง`;
+            
+            if(riskFields.length === 0) {
+                riskBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-400">ไม่พบพื้นที่เสี่ยง</td></tr>`;
+            } else {
+                riskFields.forEach(f => {
+                    let ndvi = f.latest_yield ? parseFloat(f.latest_yield.ndvi).toFixed(2) : 'N/A';
+                    riskBody.innerHTML += `
+                        <tr class="border-b border-gray-50 hover:bg-red-50 cursor-pointer" onclick="focusField(${f.id})">
+                            <td class="py-2 px-4 truncate max-w-[100px]">${f.name}</td>
+                            <td class="py-2 px-4 text-center font-bold text-red-600">${ndvi}</td>
+                            <td class="py-2 px-4 text-center"><span class="bg-red-100 text-red-700 px-2 rounded text-[10px]">เสี่ยง</span></td>
+                            <td class="py-2 px-4 text-center text-gray-400"><i class="fa-solid fa-location-crosshairs"></i></td>
+                        </tr>`;
+                });
+            }
+
+            // Map Update
+            fieldLayer.clearLayers(); layersMap = {};
+            fields.forEach(f => {
+                if(f.boundary) {
+                    try {
+                        const geo = JSON.parse(f.boundary);
+                        let ndvi = f.latest_yield ? parseFloat(f.latest_yield.ndvi) : 0;
+                        let color = '#22c55e'; // Green
+                        if (ndvi < 0.3) color = '#ef4444'; // Red (Risk)
+                        else if (ndvi < 0.5) color = '#eab308'; // Yellow
+
+                        const layer = L.geoJSON(geo, { style: { color: color, weight: 1, fillOpacity: 0.5 } })
+                            .bindPopup(`<div class="text-center"><b>${f.name}</b><br>NDVI: ${ndvi.toFixed(2)}<br>${f.area_rai} ไร่</div>`)
+                            .addTo(fieldLayer);
+                        layersMap[f.id] = layer;
+                    } catch(e){}
+                }
+            });
+
+        } catch(e) { console.error(e); }
+    }
+
+    function animateValue(id, val) {
+        document.getElementById(id).innerText = val.toLocaleString(undefined, {maximumFractionDigits:0});
+    }
+
+    // Go to Map & Zoom
+    window.focusField = function(id) {
+        if(window.innerWidth < 1024) switchTab('map');
+        const layer = layersMap[id];
+        if(layer) {
+            map.flyToBounds(layer.getBounds(), {padding:[50,50], maxZoom:16, duration:1.5});
+            setTimeout(()=>layer.openPopup(), 1500);
+        } else {
+            Swal.fire('ไม่พบพิกัด', '', 'info');
+        }
+    }
+
+    updateData(); setInterval(updateData, 15000);
+</script>
+{% endblock %}

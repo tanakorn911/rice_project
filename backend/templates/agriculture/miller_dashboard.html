@@ -1,43 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="flex flex-col gap-6 lg:h-[calc(100vh-100px)] h-auto pb-10 lg:pb-0">
+<div class="flex flex-col gap-6 lg:h-[calc(100vh-100px)] h-[calc(100vh-60px)] pb-0">
     
+    <!-- Header -->
     <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative z-20">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <i class="fa-solid fa-industry text-blue-600"></i> แผงควบคุมโรงสี (รับซื้อข้าว)
+            <h1 class="text-xl lg:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <i class="fa-solid fa-industry text-blue-600"></i> 
+                <span class="hidden sm:inline">แผงควบคุมโรงสี (รับซื้อข้าว)</span>
+                <span class="sm:hidden">โรงสี</span>
             </h1>
-            <p class="text-sm text-gray-500 mt-1">จัดการการรับซื้อและดูพิกัดแปลงนาเกษตรกร</p>
+            <p class="text-xs lg:text-sm text-gray-500 mt-1 hidden sm:block">จัดการการรับซื้อและดูพิกัดแปลงนาเกษตรกร</p>
         </div>
         
-        <div class="flex items-center gap-4">
-            <div class="relative">
-                <button onclick="toggleNotif()" class="p-2.5 rounded-full hover:bg-gray-100 transition relative focus:outline-none group">
-                    <i class="fa-solid fa-bell text-gray-500 text-xl group-hover:text-blue-600 transition-colors"></i>
-                    <span id="notif-badge" class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden border-2 border-white transform translate-x-1 -translate-y-1 shadow-sm animate-pulse">0</span>
-                </button>
-
-                <div id="notif-dropdown" class="hidden absolute right-0 mt-4 w-96 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-fade-in-up origin-top-right">
-                    <div class="bg-gradient-to-r from-blue-50 to-white px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                        <span class="text-sm font-bold text-gray-700">การแจ้งเตือน</span>
-                        <span class="text-xs text-blue-500 cursor-pointer hover:text-blue-700" onclick="markAllRead()">อ่านทั้งหมด</span>
-                    </div>
-                    <div id="notif-list-container" class="max-h-80 overflow-y-auto custom-scrollbar bg-white p-0">
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 shadow-sm flex items-center">
-                <span class="text-sm font-bold mr-2">🛒 รอรับซื้อ:</span>
-                <span id="sale-count" class="text-xl font-bold">0</span> 
-                <span class="text-xs ml-1">รายการ</span>
+        <div class="flex items-center gap-2 lg:gap-4">
+            <div class="bg-blue-50 text-blue-700 px-3 lg:px-4 py-2 rounded-lg border border-blue-100 shadow-sm flex items-center">
+                <span class="text-xs lg:text-sm font-bold mr-1 lg:mr-2">🛒</span>
+                <span id="sale-count" class="text-lg lg:text-xl font-bold">0</span> 
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow lg:overflow-hidden h-auto">
+    <!-- Main Content Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow lg:overflow-hidden h-full relative">
         
-        <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-[500px] lg:h-full overflow-hidden relative z-10 order-2 lg:order-1">
+        <!-- Sales List (Hidden on mobile, shown via tab) -->
+        <div id="sales-list-section" class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex-col h-full overflow-hidden relative z-10 hidden lg:flex">
             <div class="p-4 border-b border-gray-100 bg-gray-50/50 backdrop-blur flex justify-between items-center">
                 <h3 class="font-bold text-gray-700 flex items-center">
                     <i class="fa-solid fa-bullhorn text-orange-500 mr-2"></i> ตลาดซื้อขายข้าว
@@ -57,13 +45,28 @@
             <div class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
         </div>
 
-        <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-gray-100 h-[400px] lg:h-full relative flex flex-col group overflow-hidden order-1 lg:order-2">
+        <!-- Map Section -->
+        <div id="map-section" class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-gray-100 h-full relative flex flex-col group overflow-hidden">
             <div class="absolute top-4 left-4 z-[400] bg-white/95 backdrop-blur px-4 py-2 rounded-xl shadow-md border border-gray-200 pointer-events-none">
                 <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
                     <i class="fa-solid fa-map-location-dot text-blue-600"></i> พิกัดแปลงนา
                 </h2>
             </div>
             <div id="map" class="w-full h-full rounded-2xl z-0 bg-slate-100"></div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation (Fixed at bottom) -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 safe-area-bottom">
+        <div class="grid grid-cols-2 h-16">
+            <button id="tab-list" class="flex flex-col items-center justify-center gap-1 text-blue-600 border-t-2 border-blue-600 transition-all">
+                <i class="fa-solid fa-list text-lg"></i>
+                <span class="text-xs font-bold">รายการ</span>
+            </button>
+            <button id="tab-map" class="flex flex-col items-center justify-center gap-1 text-gray-400 transition-all">
+                <i class="fa-solid fa-map text-lg"></i>
+                <span class="text-xs font-bold">แผนที่</span>
+            </button>
         </div>
     </div>
 </div>
@@ -73,10 +76,58 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    
+    @keyframes fadeInUp { 
+        from { opacity: 0; transform: translateY(10px) scale(0.95); } 
+        to { opacity: 1; transform: translateY(0) scale(1); } 
+    }
     .animate-fade-in-up { animation: fadeInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+    
+    .swal2-popup { 
+        border-radius: 16px !important; 
+        padding: 1.5rem !important; 
+        font-family: 'Sarabun', sans-serif; 
+    }
 
-    .swal2-popup { border-radius: 16px !important; padding: 1.5rem !important; font-family: 'Sarabun', sans-serif; }
+    /* Mobile specific styles */
+    @media (max-width: 1023px) {
+        #sales-list-section, #map-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 0;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #sales-list-section {
+            transform: translateX(0);
+        }
+
+        #sales-list-section.hidden-mobile {
+            transform: translateX(-100%);
+        }
+
+        #map-section {
+            transform: translateX(100%);
+        }
+
+        #map-section.active-mobile {
+            transform: translateX(0);
+        }
+
+        .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    }
+
+    /* Desktop - original layout */
+    @media (min-width: 1024px) {
+        #sales-list-section {
+            display: flex !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -92,10 +143,56 @@
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     var markers = L.featureGroup().addTo(map);
-    let lastReadTime = new Date(localStorage.getItem('millerLastRead') || 0);
-    let allSalesData = []; // เก็บข้อมูลไว้ใช้ตอนกดดูรายละเอียด
+    let lastReadTime = new Date(localStorage.getItem('globalLastRead') || 0);
+    let allSalesData = []; 
 
     window.addEventListener('resize', function() { setTimeout(function(){ map.invalidateSize(); }, 300); });
+
+    // ==========================================
+    // Mobile Tab Switching
+    // ==========================================
+    const tabList = document.getElementById('tab-list');
+    const tabMap = document.getElementById('tab-map');
+    const salesListSection = document.getElementById('sales-list-section');
+    const mapSection = document.getElementById('map-section');
+
+    function switchToList() {
+        // UI Update
+        tabList.classList.add('text-blue-600', 'border-t-2', 'border-blue-600');
+        tabList.classList.remove('text-gray-400');
+        tabMap.classList.remove('text-blue-600', 'border-t-2', 'border-blue-600');
+        tabMap.classList.add('text-gray-400');
+
+        // Show list, hide map (mobile only)
+        salesListSection.classList.remove('hidden', 'hidden-mobile');
+        salesListSection.classList.add('flex');
+        mapSection.classList.remove('active-mobile');
+    }
+
+    function switchToMap() {
+        // UI Update
+        tabMap.classList.add('text-blue-600', 'border-t-2', 'border-blue-600');
+        tabMap.classList.remove('text-gray-400');
+        tabList.classList.remove('text-blue-600', 'border-t-2', 'border-blue-600');
+        tabList.classList.add('text-gray-400');
+
+        // Show map, hide list (mobile only)
+        salesListSection.classList.add('hidden-mobile');
+        mapSection.classList.add('active-mobile');
+        
+        // Refresh map size after animation
+        setTimeout(() => map.invalidateSize(), 350);
+    }
+
+    if (tabList && tabMap) {
+        tabList.addEventListener('click', switchToList);
+        tabMap.addEventListener('click', switchToMap);
+    }
+
+    // Start with list view on mobile
+    if (window.innerWidth < 1024) {
+        switchToList();
+    }
 
     // ==========================================
     // 1. Main Data Loop
@@ -104,7 +201,7 @@
         try {
             const res = await fetch('/api/sales/');
             const sales = await res.json();
-            allSalesData = sales; // เก็บเข้าตัวแปร Global
+            allSalesData = sales;
             
             const listDiv = document.getElementById('saleList');
             const countSpan = document.getElementById('sale-count');
@@ -114,11 +211,6 @@
             const soldSales = sales.filter(s => s.status === 'SOLD').sort((a,b) => new Date(b.sold_at || b.created_at) - new Date(a.sold_at || a.created_at));
 
             const displayList = [...myRequests, ...openSales, ...soldSales];
-
-            // Notification Logic
-            const newOpenItems = openSales.filter(s => new Date(s.created_at) > lastReadTime);
-            const newApprovedItems = soldSales.filter(s => s.sold_at && new Date(s.sold_at) > lastReadTime);
-            updateNotificationUI(newOpenItems, newApprovedItems);
 
             listDiv.innerHTML = '';
             markers.clearLayers();
@@ -137,7 +229,6 @@
                 const datePost = new Date(s.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
                 const fieldArea = s.field_area ? s.field_area : '-';
 
-                // สร้าง Google Maps Link
                 let mapsLink = '#';
                 if (s.field_lat && s.field_lng) {
                     mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${s.field_lat},${s.field_lng}`;
@@ -237,13 +328,11 @@
         const s = allSalesData.find(item => item.id === saleId);
         if(!s) return;
 
-        // ข้อมูลส่วนตัว
         const farmerPhone = s.farmer_phone || '-';
         const farmerLine = s.farmer_line || '-';
         const farmerAddress = s.farmer_address || 'ไม่ระบุที่อยู่';
         const farmerBio = s.farmer_bio || 'ไม่มีข้อมูลแนะนำตัว';
         
-        // Google Maps Link
         let mapsLink = '#';
         let mapsBtnClass = 'bg-gray-300 text-gray-500 cursor-not-allowed';
         if (s.field_lat && s.field_lng) {
@@ -426,38 +515,17 @@
     };
 
     window.focusMap = function(saleId) {
+        // Switch to map view on mobile
+        if (window.innerWidth < 1024) {
+            switchToMap();
+        }
+        
         markers.eachLayer(function(layer) {
             if (layer.saleId === saleId) {
                 map.flyToBounds(layer.getBounds().pad(1.5), { duration: 1 });
                 layer.openPopup();
             }
         });
-    }
-
-    window.toggleNotif = function() { document.getElementById('notif-dropdown').classList.toggle('hidden'); }
-    window.markAllRead = function() { lastReadTime = new Date(); localStorage.setItem('millerLastRead', lastReadTime); loadData(); document.getElementById('notif-dropdown').classList.add('hidden'); }
-    document.addEventListener('click', function(e) { const dd = document.getElementById('notif-dropdown'); if (!dd.contains(e.target) && !e.target.closest('button[onclick="toggleNotif()"]')) dd.classList.add('hidden'); });
-
-    // Shared Functions
-    function updateNotificationUI(newOpenItems, newApprovedItems) {
-        const badge = document.getElementById('notif-badge');
-        const listContainer = document.getElementById('notif-list-container');
-        const totalNotif = newOpenItems.length + newApprovedItems.length;
-
-        if (totalNotif > 0) { badge.innerText = totalNotif; badge.classList.remove('hidden'); } 
-        else { badge.classList.add('hidden'); }
-
-        if (totalNotif === 0) {
-            listContainer.innerHTML = `<div class="p-8 text-center text-gray-400 text-sm"><i class="fa-regular fa-bell-slash text-2xl mb-2 opacity-50"></i><br>ไม่มีการแจ้งเตือนใหม่</div>`;
-        } else {
-            listContainer.innerHTML = '';
-            newApprovedItems.forEach(s => {
-                listContainer.innerHTML += `<div class="p-3 border-b border-gray-50 bg-green-50 hover:bg-green-100 cursor-pointer transition-colors" onclick="focusMap(${s.id})"><div class="flex items-start gap-3"><div class="bg-green-500 text-white p-2 rounded-full h-8 w-8 flex items-center justify-center shrink-0"><i class="fa-solid fa-check"></i></div><div><p class="text-sm font-bold text-gray-800">คำขอซื้อสำเร็จ! 🎉</p><p class="text-xs text-gray-600">ชาวนา <b>${s.farmer_name}</b> ยอมรับคำขอแล้ว</p></div></div></div>`;
-            });
-            newOpenItems.forEach(s => {
-                listContainer.innerHTML += `<div class="p-3 border-b border-gray-50 hover:bg-blue-50 cursor-pointer transition-colors" onclick="focusMap(${s.id})"><div class="flex items-start gap-3"><div class="bg-blue-100 text-blue-600 p-2 rounded-full h-8 w-8 flex items-center justify-center font-bold text-xs shrink-0">NEW</div><div><p class="text-sm font-bold text-gray-800">มีข้าวขายใหม่ 🌾</p><p class="text-xs text-gray-600">${s.quantity_ton} ตัน • ${s.variety_display}</p><p class="text-[10px] text-gray-400 mt-1">โดย ${s.farmer_name}</p></div></div></div>`;
-            });
-        }
     }
 
     loadData();

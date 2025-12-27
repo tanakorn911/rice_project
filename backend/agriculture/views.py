@@ -373,3 +373,10 @@ def history_view(request):
         transactions = [] 
 
     return render(request, 'agriculture/history.html', {'transactions': transactions, 'role': role})
+
+@login_required
+def govt_stats(request):
+    if not request.user.is_superuser and getattr(request.user, 'role', '') != 'GOVT':
+        return redirect('dashboard_router')
+
+    return render(request, 'agriculture/govt_stats.html')
