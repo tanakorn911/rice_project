@@ -3,132 +3,300 @@
 {% block content %}
 <div class="h-[calc(100vh-80px)] flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 relative">
     
+    <!-- Left Panel: Analytics Overview -->
     <div id="view-overview" class="flex-grow lg:col-span-5 flex flex-col gap-4 h-full overflow-hidden transition-all duration-300">
         
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 shrink-0">
+        <!-- Header Card -->
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 p-4 rounded-2xl shadow-lg text-white shrink-0">
             <div class="flex justify-between items-start">
                 <div>
-                    <h1 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                        <i class="fa-solid fa-building-columns text-purple-600"></i> Command Center
+                    <!-- This h1 already has the text-green-300 from previous revision, which should look good on the new green background -->
+                    <h1 class="text-lg font-bold flex items-center gap-2"> 
+                        <i class="fa-solid fa-building-columns"></i> Command Center
                     </h1>
-                    <p class="text-[10px] text-gray-500 mt-1">ศูนย์บัญชาการข้อมูลข้าว จ.พะเยา</p>
+                    <p class="text-[10px] opacity-90 mt-1">ศูนย์บัญชาการข้อมูลข้าว จ.พะเยา</p>
+                    <p class="text-[9px] opacity-75 mt-1">
+                        <i class="fa-solid fa-clock"></i> 
+                        อัปเดต: <span id="last-update">-</span>
+                    </p>
                 </div>
                 <div class="flex gap-2">
-                    <select id="filter-variety" onchange="updateData()" class="bg-gray-50 border border-gray-200 text-gray-700 text-[10px] rounded-lg p-1.5 focus:ring-purple-500">
+                    <select id="filter-variety" onchange="applyFilter()" 
+                        class="bg-white/20 backdrop-blur border border-white/30 text-white text-[10px] rounded-lg p-1.5 focus:ring-2 focus:ring-white/50 outline-none">
                         <option value="all">ทั้งหมด</option>
                         <option value="KDML105">หอมมะลิ 105</option>
                         <option value="RD6">กข 6</option>
                     </select>
-                    <button onclick="updateData()" class="bg-purple-50 text-purple-600 hover:bg-purple-100 w-8 h-8 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-rotate"></i></button>
+                    <button onclick="forceUpdate()" id="btn-refresh"
+                        class="bg-white/20 backdrop-blur text-white hover:bg-white/30 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-all"
+                        aria-label="รีเฟรชข้อมูล">
+                        <i class="fa-solid fa-rotate" id="refresh-icon"></i>
+                    </button>
                 </div>
             </div>
         </div>
         
+        <!-- Scrollable Content -->
         <div class="flex-grow overflow-y-auto custom-scrollbar pb-20 lg:pb-0 space-y-4 p-1">
             
+            <!-- KPI Cards Grid -->
             <div class="grid grid-cols-3 gap-2">
-                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                    <p class="text-[9px] text-gray-400 uppercase">ผลผลิตรวม (ตัน)</p>
+                <!-- Supply KPI -->
+                <div class="bg-white p-2.5 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[9px] text-gray-500 uppercase font-bold">ผลผลิตรวม</p>
+                        <i class="fa-solid fa-boxes-stacked text-blue-500 text-xs"></i>
+                    </div>
                     <p class="text-lg font-bold text-blue-600" id="kpi-supply">0</p>
+                    <p class="text-[8px] text-gray-400">ตัน</p>
                 </div>
-                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                    <p class="text-[9px] text-gray-400 uppercase">ขายแล้ว (ตัน)</p>
+
+                <!-- Demand KPI -->
+                <div class="bg-white p-2.5 rounded-xl border border-green-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[9px] text-gray-500 uppercase font-bold">ขายแล้ว</p>
+                        <i class="fa-solid fa-check-circle text-green-500 text-xs"></i>
+                    </div>
                     <p class="text-lg font-bold text-green-600" id="kpi-demand">0</p>
+                    <p class="text-[8px] text-gray-400">ตัน</p>
                 </div>
-                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                    <p class="text-[9px] text-gray-400 uppercase">ค้างสต็อก (ตัน)</p>
+
+                <!-- Stock KPI -->
+                <div class="bg-white p-2.5 rounded-xl border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[9px] text-gray-500 uppercase font-bold">รอขาย</p>
+                        <i class="fa-solid fa-hourglass-half text-orange-500 text-xs"></i>
+                    </div>
                     <p class="text-lg font-bold text-orange-500" id="kpi-stock">0</p>
+                    <p class="text-[8px] text-gray-400">ตัน</p>
                 </div>
-                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                    <p class="text-[9px] text-gray-400 uppercase">เกษตรกร (ราย)</p>
+
+                <!-- Farmers KPI -->
+                <div class="bg-white p-2.5 rounded-xl border border-purple-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[9px] text-gray-500 uppercase font-bold">เกษตรกร</p>
+                        <i class="fa-solid fa-users text-purple-500 text-xs"></i>
+                    </div>
                     <p class="text-lg font-bold text-gray-700" id="kpi-farmers">0</p>
+                    <p class="text-[8px] text-gray-400">ราย</p>
                 </div>
-                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                    <p class="text-[9px] text-gray-400 uppercase">พื้นที่ (ไร่)</p>
+
+                <!-- Area KPI -->
+                <div class="bg-white p-2.5 rounded-xl border border-indigo-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[9px] text-gray-500 uppercase font-bold">พื้นที่</p>
+                        <i class="fa-solid fa-map text-indigo-500 text-xs"></i>
+                    </div>
                     <p class="text-lg font-bold text-gray-700" id="kpi-area">0</p>
+                    <p class="text-[8px] text-gray-400">ไร่</p>
                 </div>
-                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
-                    <p class="text-[9px] text-gray-400 uppercase">อัตราความสำเร็จ</p>
-                    <p class="text-lg font-bold text-purple-600" id="kpi-rate">0%</p>
+
+                <!-- Success Rate KPI -->
+                <div class="bg-gradient-to-br from-purple-500 to-blue-500 p-2.5 rounded-xl shadow-sm text-white hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[9px] uppercase font-bold opacity-90">อัตราสำเร็จ</p>
+                        <i class="fa-solid fa-chart-line text-xs"></i>
+                    </div>
+                    <p class="text-lg font-bold" id="kpi-rate">0%</p>
+                    <p class="text-[8px] opacity-75">เป้าหมาย: 85%</p>
                 </div>
             </div>
 
+            <!-- Balance Chart -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="text-xs font-bold text-gray-600"><i class="fa-solid fa-scale-balanced text-blue-500"></i> อุปสงค์ vs อุปทาน</h4>
-                    <span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">Real-time</span>
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced text-blue-500"></i> 
+                        อุปสงค์ vs อุปทาน
+                    </h4>
+                    <span class="text-[9px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-semibold">
+                        Real-time
+                    </span>
                 </div>
-                <div class="h-[150px] relative"><canvas id="balanceChart"></canvas></div>
+                <div class="h-[150px] relative">
+                    <canvas id="balanceChart"></canvas>
+                </div>
             </div>
 
+            <!-- Health Analysis Chart -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div class="flex justify-between items-center mb-2">
-                    <h4 class="text-xs font-bold text-gray-600"><i class="fa-solid fa-heart-pulse text-red-500"></i> สุขภาพพืช (NDVI Analysis)</h4>
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-heart-pulse text-red-500"></i> 
+                        สุขภาพพืช (NDVI Analysis)
+                    </h4>
+                    <button onclick="showNDVIInfo()" class="text-[9px] text-gray-400 hover:text-blue-600">
+                        <i class="fa-solid fa-circle-info"></i> คำอธิบาย
+                    </button>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div class="h-[120px] w-[120px] relative"><canvas id="healthChart"></canvas></div>
+                    <div class="h-[120px] w-[120px] relative flex-shrink-0">
+                        <canvas id="healthChart"></canvas>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div class="text-center">
+                                <p class="text-xs text-gray-400">รวม</p>
+                                <p class="text-lg font-bold text-gray-700" id="total-fields">0</p>
+                            </div>
+                        </div>
+                    </div>
                     <div class="flex-1 space-y-2 text-[10px]">
-                        <div class="flex justify-between"><span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-500"></span> สมบูรณ์ดี</span><span class="font-bold" id="txt-healthy">0</span></div>
-                        <div class="flex justify-between"><span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-yellow-400"></span> ปานกลาง</span><span class="font-bold" id="txt-moderate">0</span></div>
-                        <div class="flex justify-between"><span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-500"></span> เสี่ยงภัยแล้ง/โรค</span><span class="font-bold text-red-600" id="txt-risk">0</span></div>
+                        <div class="flex justify-between items-center p-2 rounded bg-green-50 hover:bg-green-100 transition-colors">
+                            <span class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-green-500"></span> 
+                                <span class="font-medium">สมบูรณ์ดี</span>
+                                <span class="text-[8px] text-gray-400">(NDVI > 0.5)</span>
+                            </span>
+                            <span class="font-bold text-green-700" id="txt-healthy">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded bg-yellow-50 hover:bg-yellow-100 transition-colors">
+                            <span class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-yellow-400"></span> 
+                                <span class="font-medium">ปานกลาง</span>
+                                <span class="text-[8px] text-gray-400">(0.3-0.5)</span>
+                            </span>
+                            <span class="font-bold text-yellow-700" id="txt-moderate">0</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
+                             onclick="switchTab('list')">
+                            <span class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span> 
+                                <span class="font-medium">เสี่ยง</span>
+                                <span class="text-[8px] text-gray-400">(< 0.3)</span>
+                            </span>
+                            <span class="font-bold text-red-700 flex items-center gap-1">
+                                <span id="txt-risk">0</span>
+                                <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Price Trend Chart -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <h4 class="text-xs font-bold text-gray-600 mb-2"><i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> แนวโน้มราคาตลาด</h4>
-                <div class="h-[150px] relative"><canvas id="priceTrendChart"></canvas></div>
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> 
+                        แนวโน้มราคาตลาด
+                    </h4>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[9px] text-gray-400">ราคาเฉลี่ย:</span>
+                        <span class="text-[10px] font-bold text-emerald-600" id="avg-price">0 บ./ตัน</span>
+                    </div>
+                </div>
+                <div class="h-[150px] relative">
+                    <canvas id="priceTrendChart"></canvas>
+                </div>
+                <p class="text-[8px] text-gray-400 text-center mt-2">
+                    <i class="fa-solid fa-info-circle"></i> 
+                    แสดง 15 รายการล่าสุด
+                </p>
             </div>
 
         </div>
     </div>
 
+    <!-- Right Panel: Interactive Map -->
     <div id="view-map" class="hidden lg:block lg:col-span-7 h-full bg-white rounded-2xl shadow-lg border border-gray-100 relative overflow-hidden group">
         <div id="map" class="w-full h-full z-0 bg-slate-100"></div>
         
-        <div class="absolute top-4 right-4 z-[500] bg-white/90 backdrop-blur px-3 py-2 rounded-lg shadow-md border border-gray-200 pointer-events-none">
-            <span class="text-[10px] font-bold text-gray-500 block mb-1">สัญลักษณ์แผนที่</span>
-            <div class="space-y-1 text-[10px]">
-                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-green-500"></span> ขายแล้ว</div>
-                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-orange-500"></span> รอขาย</div>
-                <div class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> พื้นที่เสี่ยง (NDVI ต่ำ)</div>
+        <!-- Map Legend -->
+        <div class="absolute top-4 right-4 z-[500] bg-white/95 backdrop-blur px-3 py-2 rounded-lg shadow-lg border border-gray-200">
+            <span class="text-[10px] font-bold text-gray-700 block mb-2">สัญลักษณ์แผนที่</span>
+            <div class="space-y-1.5 text-[10px]">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-green-500 shadow-sm"></span> 
+                    <span class="text-gray-600">ขายแล้ว</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-yellow-400 shadow-sm"></span> 
+                    <span class="text-gray-600">สุขภาพปานกลาง</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-orange-500 shadow-sm"></span> 
+                    <span class="text-gray-600">รอขาย</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-sm"></span> 
+                    <span class="text-red-600 font-semibold">พื้นที่เสี่ยง</span>
+                </div>
             </div>
+        </div>
+
+        <!-- Map Controls -->
+        <div class="absolute bottom-4 left-4 z-[500] flex gap-2">
+            <button onclick="map.setView([19.1667, 99.9000], 10)" 
+                class="bg-white/95 backdrop-blur px-3 py-2 rounded-lg shadow-md hover:bg-white transition-colors text-xs font-semibold text-gray-700"
+                aria-label="รีเซ็ตแผนที่">
+                <i class="fa-solid fa-location-crosshairs"></i> รีเซ็ต
+            </button>
         </div>
     </div>
 
+    <!-- Mobile View: Watchlist Table -->
     <div id="view-list" class="hidden h-full flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:hidden">
-        <div class="p-3 border-b border-gray-100 bg-red-50 flex justify-between items-center">
+        <!-- Header -->
+        <div class="p-3 border-b border-gray-100 bg-gradient-to-r from-red-50 to-orange-50 flex justify-between items-center">
             <h3 class="font-bold text-red-700 text-sm flex items-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation"></i> พื้นที่เฝ้าระวัง (Watchlist)
+                <i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 
+                พื้นที่เฝ้าระวัง
             </h3>
-            <span class="text-[10px] bg-white text-red-600 px-2 py-0.5 rounded border border-red-100 font-bold" id="risk-count">0 แปลง</span>
+            <span class="text-[10px] bg-white text-red-600 px-2 py-1 rounded-full border border-red-200 font-bold shadow-sm" 
+                  id="risk-count">
+                0 แปลง
+            </span>
         </div>
+
+        <!-- Info Banner -->
+        <div class="bg-blue-50 px-3 py-2 text-[10px] text-blue-700 border-b border-blue-100">
+            <i class="fa-solid fa-info-circle"></i> 
+            พื้นที่ที่มีค่า NDVI ต่ำกว่า 0.3 แนะนำให้ตรวจสอบและดูแลเป็นพิเศษ
+        </div>
+        
+        <!-- Table -->
         <div class="flex-grow overflow-auto custom-scrollbar pb-20">
             <table class="w-full text-sm text-left whitespace-nowrap">
-                <thead class="bg-white text-gray-500 border-b text-[10px] uppercase sticky top-0 z-10 shadow-sm">
+                <thead class="bg-gray-50 text-gray-600 border-b text-[10px] uppercase sticky top-0 z-10 shadow-sm">
                     <tr>
-                        <th class="py-2 px-4">แปลง</th>
-                        <th class="py-2 px-4 text-center">NDVI</th>
-                        <th class="py-2 px-4 text-center">สถานะ</th>
-                        <th class="py-2 px-4 text-center">พิกัด</th>
+                        <th class="py-3 px-4 font-bold">แปลง</th>
+                        <th class="py-3 px-4 text-center font-bold">NDVI</th>
+                        <th class="py-3 px-4 text-center font-bold">พื้นที่</th>
+                        <th class="py-3 px-4 text-center font-bold">การกระทำ</th>
                     </tr>
                 </thead>
-                <tbody id="riskTableBody" class="divide-y divide-gray-50 text-gray-700 text-xs">
-                    <tr><td colspan="4" class="text-center py-8 text-gray-400">กำลังประมวลผล...</td></tr>
+                <tbody id="riskTableBody" class="divide-y divide-gray-100 text-gray-700 text-xs">
+                    <tr>
+                        <td colspan="4" class="text-center py-12 text-gray-400">
+                            <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p class="text-sm">กำลังโหลดข้อมูล...</p>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
 
+    <!-- Mobile Bottom Navigation -->
     <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-[1002] lg:hidden flex justify-around items-center h-16 pb-safe">
-        <button onclick="switchTab('overview')" id="btn-tab-overview" class="flex flex-col items-center justify-center w-1/3 h-full text-purple-600 border-t-2 border-purple-600 bg-purple-50/50 transition-all">
-            <i class="fa-solid fa-chart-pie text-xl mb-1"></i><span class="text-[10px] font-bold">วิเคราะห์</span>
+        <button onclick="switchTab('overview')" id="btn-tab-overview" 
+            class="flex flex-col items-center justify-center w-1/3 h-full text-purple-600 border-t-2 border-purple-600 bg-purple-50/50 transition-all"
+            aria-label="แท็บวิเคราะห์">
+            <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">วิเคราะห์</span>
         </button>
-        <button onclick="switchTab('map')" id="btn-tab-map" class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all">
-            <i class="fa-solid fa-map-location-dot text-xl mb-1"></i><span class="text-[10px] font-bold">แผนที่</span>
+        <button onclick="switchTab('map')" id="btn-tab-map" 
+            class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all"
+            aria-label="แท็บแผนที่">
+            <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">แผนที่</span>
         </button>
-        <button onclick="switchTab('list')" id="btn-tab-list" class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all">
-            <i class="fa-solid fa-triangle-exclamation text-xl mb-1"></i><span class="text-[10px] font-bold">เฝ้าระวัง</span>
+        <button onclick="switchTab('list')" id="btn-tab-list" 
+            class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all relative"
+            aria-label="แท็บเฝ้าระวัง">
+            <span class="absolute top-1 right-6 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full" 
+                  id="risk-badge" style="display:none;">0</span>
+            <i class="fa-solid fa-triangle-exclamation text-xl mb-1"></i>
+            <span class="text-[10px] font-bold">เฝ้าระวัง</span>
         </button>
     </div>
 
@@ -138,191 +306,725 @@
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // === Tab Switching ===
-    function switchTab(tab) {
-        const views = { overview: 'view-overview', map: 'view-map', list: 'view-list' };
-        const btns = { overview: 'btn-tab-overview', map: 'btn-tab-map', list: 'btn-tab-list' };
-        
-        Object.keys(views).forEach(k => {
-            const el = document.getElementById(views[k]);
-            if(k === tab) el.classList.remove('hidden'); else el.classList.add('hidden');
-        });
+    // ==================== CONSTANTS ====================
+    const NDVI_THRESHOLDS = {
+        GOOD: 0.5,
+        MODERATE: 0.3,
+        RISK: 0.3
+    };
 
-        Object.keys(btns).forEach(k => {
-            const btn = document.getElementById(btns[k]);
-            if(k === tab) {
-                btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-purple-600 border-t-2 border-purple-600 bg-purple-50/50 transition-all";
-            } else {
-                btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all";
-            }
-        });
+    const UPDATE_INTERVAL = 30000; // 30 seconds
+    const ANIMATION_DURATION = 1000; // 1 second
 
-        if (window.innerWidth >= 1024) { // Desktop Reset
-            document.getElementById('view-overview').classList.remove('hidden');
-            document.getElementById('view-map').classList.remove('hidden');
-            document.getElementById('view-list').classList.add('hidden'); // Watchlist can be hidden or put in a modal for desktop
-        } else if (tab === 'map') {
-            setTimeout(() => map.invalidateSize(), 300);
-        }
-    }
+    // ==================== GLOBAL STATE ====================
+    let globalFields = [];
+    let globalSales = [];
+    let currentFilter = 'all';
+    let updateTimer = null;
+    let isUpdating = false;
 
-    // === Map & Chart Init ===
-    const map = L.map('map', { center: [19.1667, 99.9000], zoom: 10, zoomControl: false });
-    L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']}).addTo(map);
+    // ==================== MAP INITIALIZATION ====================
+    const map = L.map('map', { 
+        center: [19.1667, 99.9000], 
+        zoom: 12, 
+        zoomControl: false 
+    });
+
+    const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+    }).addTo(map);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     const fieldLayer = L.featureGroup().addTo(map);
     let layersMap = {};
 
+    // ==================== CHARTS INITIALIZATION ====================
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 10,
+                cornerRadius: 6,
+                titleFont: { size: 11, weight: 'bold' },
+                bodyFont: { size: 10 }
+            }
+        }
+    };
+
     const balanceChart = new Chart(document.getElementById('balanceChart').getContext('2d'), {
         type: 'bar',
-        data: { labels: ['เป้าหมายผลผลิต', 'ขายแล้ว'], datasets: [{ label: 'ปริมาณ (ตัน)', data: [0, 0], backgroundColor: ['#3b82f6', '#22c55e'], borderRadius: 4 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } } } }
+        data: {
+            labels: ['ผลผลิตรวม', 'ขายแล้ว', 'รอขาย'],
+            datasets: [{
+                label: 'ปริมาณ (ตัน)',
+                data: [0, 0, 0],
+                backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b'],
+                borderRadius: 6,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            ...chartOptions,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 9 }, color: '#6b7280' }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { size: 9 }, color: '#6b7280' }
+                }
+            }
+        }
     });
 
     const healthChart = new Chart(document.getElementById('healthChart').getContext('2d'), {
         type: 'doughnut',
-        data: { labels: ['ปกติ', 'ปานกลาง', 'เสี่ยง'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#22c55e', '#fbbf24', '#ef4444'], borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
+        data: {
+            labels: ['สมบูรณ์ดี', 'ปานกลาง', 'เสี่ยง'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: ['#22c55e', '#fbbf24', '#ef4444'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            ...chartOptions,
+            cutout: '75%'
+        }
     });
 
     const priceTrendChart = new Chart(document.getElementById('priceTrendChart').getContext('2d'), {
         type: 'line',
-        data: { labels: [], datasets: [{ label: 'ราคา', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'ราคา (บาท/ตัน)',
+                data: [],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                pointBackgroundColor: '#10b981'
+            }]
+        },
+        options: {
+            ...chartOptions,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: { color: '#f3f4f6' },
+                    ticks: { font: { size: 9 }, color: '#6b7280' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 8 }, color: '#6b7280', maxRotation: 45 }
+                }
+            }
+        }
     });
 
-    // === Data Logic ===
-    async function updateData() {
-        try {
-            const [fieldsRes, salesRes] = await Promise.all([fetch('/api/rice-fields/'), fetch('/api/sales/')]);
-            const fields = await fieldsRes.json();
-            const sales = await salesRes.json();
-            
-            // --- Analysis Variables ---
-            let totalYield = 0, soldYield = 0, totalArea = 0, stock = 0;
-            let farmerSet = new Set();
-            let healthStats = { good: 0, mid: 0, bad: 0 };
-            let riskFields = [];
-            let priceData = [];
-            const varietyFilter = document.getElementById('filter-variety').value;
+    // ==================== UI FUNCTIONS ====================
+    
+    /**
+     * Switch between mobile tabs
+     */
+    function switchTab(tab) {
+        const views = { overview: 'view-overview', map: 'view-map', list: 'view-list' };
+        const btns = { overview: 'btn-tab-overview', map: 'btn-tab-map', list: 'btn-tab-list' };
+        
+        const isMobile = window.innerWidth < 1024;
 
-            // 1. Process Fields (Supply & Health)
-            fields.forEach(f => {
-                if(varietyFilter !== 'all' && f.variety !== varietyFilter) return;
-
-                totalArea += parseFloat(f.area_rai || 0);
-                let y = f.latest_yield ? parseFloat(f.latest_yield.yield || 0) : 0;
-                let ndvi = f.latest_yield ? parseFloat(f.latest_yield.ndvi || 0) : 0;
-                
-                totalYield += y;
-
-                // Analyze Health
-                if (ndvi > 0.5) healthStats.good++;
-                else if (ndvi > 0.3) healthStats.mid++;
-                else {
-                    healthStats.bad++;
-                    riskFields.push(f); // Add to Watchlist
-                }
+        if (isMobile) {
+            Object.keys(views).forEach(k => {
+                document.getElementById(views[k]).classList.toggle('hidden', k !== tab);
             });
 
-            // 2. Process Sales (Demand & Economics)
-            sales.forEach(s => {
-                if(varietyFilter !== 'all' && s.variety !== varietyFilter) return;
-                
-                if (s.status === 'SOLD') {
-                    soldYield += parseFloat(s.quantity_ton);
-                    priceData.push({d: new Date(s.created_at), p: s.price_per_ton});
+            Object.keys(btns).forEach(k => {
+                const btn = document.getElementById(btns[k]);
+                if (k === tab) {
+                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-purple-600 border-t-2 border-purple-600 bg-purple-50/50 transition-all";
                 } else {
-                    stock += parseFloat(s.quantity_ton);
-                }
-                farmerSet.add(s.farmer_name);
-            });
-
-            // --- Update UI ---
-            
-            // KPIs
-            animateValue('kpi-supply', totalYield);
-            animateValue('kpi-demand', soldYield);
-            animateValue('kpi-stock', totalYield - soldYield); // Pending Stock (Theory)
-            animateValue('kpi-farmers', farmerSet.size);
-            animateValue('kpi-area', totalArea);
-            
-            let rate = totalYield > 0 ? ((soldYield / totalYield) * 100).toFixed(1) : 0;
-            document.getElementById('kpi-rate').innerText = rate + '%';
-
-            // Charts
-            balanceChart.data.datasets[0].data = [totalYield, soldYield];
-            balanceChart.update();
-
-            healthChart.data.datasets[0].data = [healthStats.good, healthStats.mid, healthStats.bad];
-            healthChart.update();
-            document.getElementById('txt-healthy').innerText = healthStats.good;
-            document.getElementById('txt-moderate').innerText = healthStats.mid;
-            document.getElementById('txt-risk').innerText = healthStats.bad;
-
-            priceData.sort((a,b)=>a.d-b.d);
-            const lp = priceData.slice(-15); // Last 15 transactions
-            priceTrendChart.data.labels = lp.map(x=>x.d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
-            priceTrendChart.data.datasets[0].data = lp.map(x=>x.p);
-            priceTrendChart.update();
-
-            // Watchlist Table (Risk Areas)
-            const riskBody = document.getElementById('riskTableBody');
-            riskBody.innerHTML = '';
-            document.getElementById('risk-count').innerText = `${riskFields.length} แปลง`;
-            
-            if(riskFields.length === 0) {
-                riskBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-400">ไม่พบพื้นที่เสี่ยง</td></tr>`;
-            } else {
-                riskFields.forEach(f => {
-                    let ndvi = f.latest_yield ? parseFloat(f.latest_yield.ndvi).toFixed(2) : 'N/A';
-                    riskBody.innerHTML += `
-                        <tr class="border-b border-gray-50 hover:bg-red-50 cursor-pointer" onclick="focusField(${f.id})">
-                            <td class="py-2 px-4 truncate max-w-[100px]">${f.name}</td>
-                            <td class="py-2 px-4 text-center font-bold text-red-600">${ndvi}</td>
-                            <td class="py-2 px-4 text-center"><span class="bg-red-100 text-red-700 px-2 rounded text-[10px]">เสี่ยง</span></td>
-                            <td class="py-2 px-4 text-center text-gray-400"><i class="fa-solid fa-location-crosshairs"></i></td>
-                        </tr>`;
-                });
-            }
-
-            // Map Update
-            fieldLayer.clearLayers(); layersMap = {};
-            fields.forEach(f => {
-                if(f.boundary) {
-                    try {
-                        const geo = JSON.parse(f.boundary);
-                        let ndvi = f.latest_yield ? parseFloat(f.latest_yield.ndvi) : 0;
-                        let color = '#22c55e'; // Green
-                        if (ndvi < 0.3) color = '#ef4444'; // Red (Risk)
-                        else if (ndvi < 0.5) color = '#eab308'; // Yellow
-
-                        const layer = L.geoJSON(geo, { style: { color: color, weight: 1, fillOpacity: 0.5 } })
-                            .bindPopup(`<div class="text-center"><b>${f.name}</b><br>NDVI: ${ndvi.toFixed(2)}<br>${f.area_rai} ไร่</div>`)
-                            .addTo(fieldLayer);
-                        layersMap[f.id] = layer;
-                    } catch(e){}
+                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all";
                 }
             });
-
-        } catch(e) { console.error(e); }
-    }
-
-    function animateValue(id, val) {
-        document.getElementById(id).innerText = val.toLocaleString(undefined, {maximumFractionDigits:0});
-    }
-
-    // Go to Map & Zoom
-    window.focusField = function(id) {
-        if(window.innerWidth < 1024) switchTab('map');
-        const layer = layersMap[id];
-        if(layer) {
-            map.flyToBounds(layer.getBounds(), {padding:[50,50], maxZoom:16, duration:1.5});
-            setTimeout(()=>layer.openPopup(), 1500);
         } else {
-            Swal.fire('ไม่พบพิกัด', '', 'info');
+            // Desktop: Always show overview and map
+            document.getElementById('view-overview').classList.remove('hidden');
+            document.getElementById('view-map').classList.remove('hidden');
+            document.getElementById('view-list').classList.add('hidden');
+        }
+
+        if (tab === 'map') {
+            setTimeout(() => map.invalidateSize(), 100);
         }
     }
 
-    updateData(); setInterval(updateData, 15000);
+    /**
+     * Apply variety filter
+     */
+    function applyFilter() {
+        currentFilter = document.getElementById('filter-variety').value;
+        processData();
+    }
+
+    /**
+     * Force update data
+     */
+    function forceUpdate() {
+        if (isUpdating) return;
+        
+        const icon = document.getElementById('refresh-icon');
+        icon.classList.add('fa-spin');
+        
+        updateData().finally(() => {
+            icon.classList.remove('fa-spin');
+        });
+    }
+
+    /**
+     * Show NDVI information
+     */
+    function showNDVIInfo() {
+        Swal.fire({
+            title: 'ค่า NDVI คืออะไร?',
+            html: `
+                <div class="text-left text-sm space-y-2">
+                    <p><strong>NDVI (Normalized Difference Vegetation Index)</strong> คือดัชนีวัดความสมบูรณ์ของพืช</p>
+                    <hr>
+                    <div class="space-y-1">
+                        <p class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                            <strong>NDVI > 0.5:</strong> พืชสมบูรณ์ดี เจริญเติบโตปกติ
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+                            <strong>NDVI 0.3-0.5:</strong> พืชมีสุขภาพปานกลาง ควรติดตาม
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                            <strong>NDVI < 0.3:</strong> พืชมีปัญหา อาจเกิดจากภัยแล้ง โรค หรือแมลง
+                        </p>
+                    </div>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonColor: '#3b82f6',
+            confirmButtonText: 'เข้าใจแล้ว'
+        });
+    }
+
+    // ==================== DATA FUNCTIONS ====================
+
+    /**
+     * Fetch data from API
+     */
+    async function updateData() {
+        if (isUpdating) return;
+        isUpdating = true;
+
+        try {
+            const [fieldsRes, salesRes] = await Promise.all([
+                fetch('/api/rice-fields/'),
+                fetch('/api/sales/')
+            ]);
+
+            if (!fieldsRes.ok || !salesRes.ok) {
+                throw new Error('Failed to fetch data');
+            }
+
+            globalFields = await fieldsRes.json();
+            globalSales = await salesRes.json();
+
+            processData();
+            updateTimestamp();
+
+        } catch (error) {
+            console.error('Update error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+                confirmButtonColor: '#3b82f6'
+            });
+        } finally {
+            isUpdating = false;
+        }
+    }
+
+    /**
+     * Process and analyze data
+     */
+    function processData() {
+        // Filter data
+        const filteredFields = currentFilter === 'all' 
+            ? globalFields 
+            : globalFields.filter(f => f.variety === currentFilter);
+        
+        const filteredSales = currentFilter === 'all'
+            ? globalSales
+            : globalSales.filter(s => s.variety === currentFilter);
+
+        // Initialize analytics
+        let analytics = {
+            totalYield: 0,
+            soldYield: 0,
+            pendingYield: 0,
+            totalArea: 0,
+            farmers: new Set(),
+            health: { good: 0, moderate: 0, risk: 0 },
+            riskFields: [],
+            priceData: []
+        };
+
+        // Process Fields
+        filteredFields.forEach(field => {
+            const area = parseFloat(field.area_rai || 0);
+            const yieldVal = field.latest_yield ? parseFloat(field.latest_yield.yield || 0) : 0;
+            const ndvi = field.latest_yield ? parseFloat(field.latest_yield.ndvi || 0) : 0;
+
+            analytics.totalArea += area;
+            analytics.totalYield += yieldVal;
+
+            // Categorize health
+            if (ndvi > NDVI_THRESHOLDS.GOOD) {
+                analytics.health.good++;
+            } else if (ndvi >= NDVI_THRESHOLDS.MODERATE) {
+                analytics.health.moderate++;
+            } else {
+                analytics.health.risk++;
+                analytics.riskFields.push({ ...field, ndvi });
+            }
+        });
+
+        // Process Sales
+        filteredSales.forEach(sale => {
+            analytics.farmers.add(sale.farmer_name);
+            
+            const qty = parseFloat(sale.quantity_ton || 0);
+            const price = parseFloat(sale.price_per_ton || 0);
+
+            if (sale.status === 'SOLD') {
+                analytics.soldYield += qty;
+                if (price > 0) {
+                    analytics.priceData.push({
+                        date: new Date(sale.created_at),
+                        price: price
+                    });
+                }
+            } else {
+                analytics.pendingYield += qty;
+            }
+        });
+
+        // Update UI
+        updateKPIs(analytics);
+        updateCharts(analytics);
+        updateMap(filteredFields, filteredSales);
+        updateWatchlist(analytics.riskFields);
+    }
+
+    /**
+     * Update KPI cards with animation
+     */
+    function updateKPIs(analytics) {
+        animateValue('kpi-supply', analytics.totalYield);
+        animateValue('kpi-demand', analytics.soldYield);
+        animateValue('kpi-stock', analytics.pendingYield);
+        animateValue('kpi-farmers', analytics.farmers.size);
+        animateValue('kpi-area', analytics.totalArea);
+
+        // Success rate
+        const rate = analytics.totalYield > 0 
+            ? ((analytics.soldYield / analytics.totalYield) * 100).toFixed(1) 
+            : 0;
+        
+        const rateEl = document.getElementById('kpi-rate');
+        rateEl.innerText = rate + '%';
+        
+        // Color coding
+        if (rate >= 85) {
+            rateEl.classList.remove('text-yellow-600', 'text-red-600');
+            rateEl.classList.add('text-white');
+            rateEl.parentElement.className = 'bg-gradient-to-br from-green-500 to-emerald-500 p-2.5 rounded-xl shadow-sm text-white hover:shadow-md transition-shadow';
+        } else if (rate >= 50) {
+            rateEl.classList.remove('text-white', 'text-red-600');
+            rateEl.parentElement.className = 'bg-gradient-to-br from-yellow-400 to-orange-400 p-2.5 rounded-xl shadow-sm text-white hover:shadow-md transition-shadow';
+        } else {
+            rateEl.classList.remove('text-white', 'text-yellow-600');
+            rateEl.parentElement.className = 'bg-gradient-to-br from-red-500 to-pink-500 p-2.5 rounded-xl shadow-sm text-white hover:shadow-md transition-shadow';
+        }
+    }
+
+    /**
+     * Animate number changes
+     */
+    function animateValue(elementId, targetValue) {
+        const element = document.getElementById(elementId);
+        const currentValue = parseFloat(element.innerText.replace(/,/g, '')) || 0;
+        const difference = targetValue - currentValue;
+        const steps = 30;
+        const stepValue = difference / steps;
+        let currentStep = 0;
+
+        const interval = setInterval(() => {
+            currentStep++;
+            const newValue = currentValue + (stepValue * currentStep);
+            
+            if (currentStep >= steps) {
+                element.innerText = targetValue.toLocaleString(undefined, { 
+                    maximumFractionDigits: 0 
+                });
+                clearInterval(interval);
+            } else {
+                element.innerText = Math.round(newValue).toLocaleString();
+            }
+        }, ANIMATION_DURATION / steps);
+    }
+
+    /**
+     * Update all charts
+     */
+    function updateCharts(analytics) {
+        // Balance Chart
+        balanceChart.data.datasets[0].data = [
+            analytics.totalYield,
+            analytics.soldYield,
+            analytics.pendingYield
+        ];
+        balanceChart.update('none');
+
+        // Health Chart
+        const totalFields = analytics.health.good + analytics.health.moderate + analytics.health.risk;
+        document.getElementById('total-fields').innerText = totalFields;
+        
+        healthChart.data.datasets[0].data = [
+            analytics.health.good,
+            analytics.health.moderate,
+            analytics.health.risk
+        ];
+        healthChart.update('none');
+
+        document.getElementById('txt-healthy').innerText = analytics.health.good;
+        document.getElementById('txt-moderate').innerText = analytics.health.moderate;
+        document.getElementById('txt-risk').innerText = analytics.health.risk;
+
+        // Update risk badge
+        const riskBadge = document.getElementById('risk-badge');
+        if (analytics.health.risk > 0) {
+            riskBadge.innerText = analytics.health.risk;
+            riskBadge.style.display = 'block';
+        } else {
+            riskBadge.style.display = 'none';
+        }
+
+        // Price Trend Chart
+        analytics.priceData.sort((a, b) => a.date - b.date);
+        const recentPrices = analytics.priceData.slice(-15);
+
+        priceTrendChart.data.labels = recentPrices.map(p => 
+            p.date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+        );
+        priceTrendChart.data.datasets[0].data = recentPrices.map(p => p.price);
+        priceTrendChart.update('none');
+
+        // Average price
+        if (recentPrices.length > 0) {
+            const avgPrice = recentPrices.reduce((sum, p) => sum + p.price, 0) / recentPrices.length;
+            document.getElementById('avg-price').innerText = 
+                avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' บ./ตัน';
+        } else {
+            document.getElementById('avg-price').innerText = '0 บ./ตัน';
+        }
+    }
+
+    /**
+     * Update map markers
+     */
+    function updateMap(fields, sales) {
+        fieldLayer.clearLayers();
+        layersMap = {};
+
+        // Create sales lookup
+        const salesMap = {};
+        sales.forEach(sale => {
+            if (!salesMap[sale.rice_field] || 
+                new Date(salesMap[sale.rice_field].created_at) < new Date(sale.created_at)) {
+                salesMap[sale.rice_field] = sale;
+            }
+        });
+
+        fields.forEach(field => {
+            if (!field.boundary) return;
+
+            try {
+                const geo = JSON.parse(field.boundary);
+                const ndvi = field.latest_yield ? parseFloat(field.latest_yield.ndvi || 0) : 0;
+                const sale = salesMap[field.id];
+
+                // Determine color based on NDVI and sale status
+                let color, fillOpacity, weight;
+                
+                if (ndvi < NDVI_THRESHOLDS.RISK) {
+                    color = '#ef4444'; // Red - Risk
+                    fillOpacity = 0.6;
+                    weight = 2;
+                } else if (sale && sale.status === 'SOLD') {
+                    color = '#22c55e'; // Green - Sold
+                    fillOpacity = 0.5;
+                    weight = 1;
+                } else if (ndvi < NDVI_THRESHOLDS.GOOD) {
+                    color = '#fbbf24'; // Yellow - Moderate
+                    fillOpacity = 0.5;
+                    weight = 1;
+                } else if (sale && sale.status !== 'SOLD') {
+                    color = '#f59e0b'; // Orange - Pending Sale
+                    fillOpacity = 0.5;
+                    weight = 1;
+                } else {
+                    color = '#94a3b8'; // Gray - No data
+                    fillOpacity = 0.3;
+                    weight = 1;
+                }
+
+                // Create popup content
+                let popupContent = `
+                    <div class="p-3 min-w-[180px]">
+                        <h4 class="font-bold text-gray-800 mb-2">${field.name}</h4>
+                        <div class="space-y-1 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">พื้นที่:</span>
+                                <span class="font-semibold">${field.area_rai} ไร่</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">NDVI:</span>
+                                <span class="font-semibold ${
+                                    ndvi > NDVI_THRESHOLDS.GOOD ? 'text-green-600' : 
+                                    ndvi >= NDVI_THRESHOLDS.MODERATE ? 'text-yellow-600' : 
+                                    'text-red-600'
+                                }">${ndvi.toFixed(2)}</span>
+                            </div>
+                            ${sale ? `
+                                <hr class="my-1">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">สถานะ:</span>
+                                    <span class="font-semibold ${
+                                        sale.status === 'SOLD' ? 'text-green-600' : 'text-orange-600'
+                                    }">${
+                                        sale.status === 'SOLD' ? 'ขายแล้ว' : 'รอขาย'
+                                    }</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+
+                const layer = L.geoJSON(geo, {
+                    style: {
+                        color: color,
+                        weight: weight,
+                        fillOpacity: fillOpacity
+                    }
+                }).bindPopup(popupContent).addTo(fieldLayer);
+
+                layersMap[field.id] = layer;
+
+            } catch (error) {
+                console.warn(`Failed to parse boundary for field ${field.id}:`, error);
+            }
+        });
+    }
+
+    /**
+     * Update watchlist table
+     */
+    function updateWatchlist(riskFields) {
+        const tbody = document.getElementById('riskTableBody');
+        const riskCount = document.getElementById('risk-count');
+        
+        riskCount.innerText = `${riskFields.length} แปลง`;
+
+        if (riskFields.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-12">
+                        <i class="fa-solid fa-check-circle text-4xl text-green-500 mb-2"></i>
+                        <p class="text-sm font-semibold text-green-600">ไม่พบพื้นที่เสี่ยง</p>
+                        <p class="text-xs text-gray-400 mt-1">พื้นที่ทั้งหมดมีสุขภาพพืชดี</p>
+                    </td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = riskFields.map(field => `
+                <tr class="border-b border-gray-100 hover:bg-red-50 cursor-pointer transition-colors" 
+                    onclick="focusField(${field.id})">
+                    <td class="py-3 px-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-location-dot text-red-500"></i>
+                            <span class="font-medium">${field.name}</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="font-mono font-bold text-red-600">
+                            ${field.ndvi.toFixed(2)}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-center text-gray-600">
+                        ${field.area_rai} ไร่
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <button class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-full text-xs font-semibold transition-colors">
+                            <i class="fa-solid fa-map-location-dot"></i> ดูพิกัด
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+
+    /**
+     * Focus on field in map
+     */
+    window.focusField = function(fieldId) {
+        if (window.innerWidth < 1024) {
+            switchTab('map');
+        }
+
+        const layer = layersMap[fieldId];
+        if (layer) {
+            map.invalidateSize();
+            setTimeout(() => {
+                map.flyToBounds(layer.getBounds(), {
+                    padding: [50, 50],
+                    maxZoom: 16,
+                    duration: 1.5
+                });
+                setTimeout(() => layer.openPopup(), 1600);
+            }, 100);
+        } else {
+            Swal.fire({
+                icon: 'info',
+                title: 'ไม่พบพิกัด',
+                text: 'ไม่สามารถแสดงตำแหน่งบนแผนที่ได้',
+                confirmButtonColor: '#3b82f6'
+            });
+        }
+    }
+
+    /**
+     * Update timestamp
+     */
+    function updateTimestamp() {
+        const now = new Date();
+        document.getElementById('last-update').innerText = now.toLocaleTimeString('th-TH', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // ==================== RESPONSIVE HANDLER ====================
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            map.invalidateSize();
+            
+            if (window.innerWidth >= 1024) {
+                document.getElementById('view-overview').classList.remove('hidden');
+                document.getElementById('view-map').classList.remove('hidden');
+                document.getElementById('view-list').classList.add('hidden');
+            }
+        }, 250);
+    });
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initial data load
+        updateData();
+
+        // Auto-refresh
+        updateTimer = setInterval(updateData, UPDATE_INTERVAL);
+
+        // Initialize proper view for screen size
+        if (window.innerWidth >= 1024) {
+            document.getElementById('view-overview').classList.remove('hidden');
+            document.getElementById('view-map').classList.remove('hidden');
+            setTimeout(() => map.invalidateSize(), 300);
+        }
+    });
+
+    // Cleanup
+    window.addEventListener('beforeunload', () => {
+        if (updateTimer) {
+            clearInterval(updateTimer);
+        }
+    });
+
 </script>
+
+<style>
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* Leaflet Popup */
+    .leaflet-popup-content-wrapper {
+        padding: 0;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .leaflet-popup-content {
+        margin: 0;
+    }
+
+    /* Animations */
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .fa-spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Mobile Safe Area */
+    .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+</style>
 {% endblock %}

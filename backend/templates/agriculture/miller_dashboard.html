@@ -1,131 +1,172 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="flex flex-col gap-6 lg:h-[calc(100vh-100px)] h-[calc(100vh-60px)] pb-0">
+<div class="flex flex-col h-screen bg-gray-50 overflow-hidden relative">
     
-    <!-- Header -->
-    <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative z-20">
+    <!-- Header Bar -->
+    <div class="flex-none bg-white px-4 py-3 shadow-sm border-b border-gray-100 z-30 flex justify-between items-center h-16">
         <div>
-            <h1 class="text-xl lg:text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <h1 class="text-lg lg:text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <i class="fa-solid fa-industry text-blue-600"></i> 
-                <span class="hidden sm:inline">แผงควบคุมโรงสี (รับซื้อข้าว)</span>
-                <span class="sm:hidden">โรงสี</span>
+                <span class="hidden sm:inline">แผงควบคุมโรงสี</span>
+                <span class="sm:hidden">โรงสี (รับซื้อ)</span>
             </h1>
-            <p class="text-xs lg:text-sm text-gray-500 mt-1 hidden sm:block">จัดการการรับซื้อและดูพิกัดแปลงนาเกษตรกร</p>
         </div>
-        
-        <div class="flex items-center gap-2 lg:gap-4">
-            <div class="bg-blue-50 text-blue-700 px-3 lg:px-4 py-2 rounded-lg border border-blue-100 shadow-sm flex items-center">
-                <span class="text-xs lg:text-sm font-bold mr-1 lg:mr-2">🛒</span>
-                <span id="sale-count" class="text-lg lg:text-xl font-bold">0</span> 
-            </div>
+        <div class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full border border-blue-100 flex items-center shadow-sm">
+            <span class="text-xs font-bold mr-1">🛒</span>
+            <span id="sale-count" class="text-base font-bold">0</span> 
+            <span class="text-xs ml-1 hidden sm:inline">รายการ</span>
         </div>
     </div>
 
-    <!-- Main Content Area -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow lg:overflow-hidden h-full relative">
+    <!-- Main Content: List + Map -->
+    <div class="flex-1 min-h-0 relative lg:grid lg:grid-cols-12 lg:gap-0">
         
-        <!-- Sales List (Hidden on mobile, shown via tab) -->
-        <div id="sales-list-section" class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-100 flex-col h-full overflow-hidden relative z-10 hidden lg:flex">
-            <div class="p-4 border-b border-gray-100 bg-gray-50/50 backdrop-blur flex justify-between items-center">
-                <h3 class="font-bold text-gray-700 flex items-center">
-                    <i class="fa-solid fa-bullhorn text-orange-500 mr-2"></i> ตลาดซื้อขายข้าว
-                </h3>
-                <div class="flex gap-2 text-[10px]">
-                    <span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">รอซื้อ</span>
-                    <span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">ขายแล้ว</span>
+        <!-- LEFT PANEL: Sales List (Desktop: Always visible, Mobile: Toggle) -->
+        <div id="view-list" 
+            class="lg:col-span-4 
+                h-[calc(100vh-64px-64px)]
+                lg:h-[calc(100vh-64px)]
+                flex flex-col bg-white border-r border-gray-200 
+                transition-opacity duration-200">
+            
+            <!-- List Header -->
+            <div class="flex-none p-3 bg-gradient-to-r from-blue-50 to-white backdrop-blur border-b border-gray-200 sticky top-0 z-20">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-basket-shopping"></i> 
+                        รายการประกาศขาย
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                        <span class="text-[10px] text-gray-400">Live</span>
+                    </div>
                 </div>
             </div>
-            
-            <div class="overflow-y-auto flex-grow p-4 space-y-3 custom-scrollbar relative" id="saleList">
-                <div class="flex flex-col items-center justify-center h-40 text-gray-400 space-y-2">
-                    <i class="fa-solid fa-circle-notch fa-spin text-2xl text-blue-200"></i>
+
+            <!-- Scrollable List Container -->
+            <div id="saleList" 
+                class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-3 pb-24 lg:pb-4 bg-slate-50">
+                <!-- Loading State -->
+                <div class="flex flex-col items-center justify-center h-64 text-gray-400 opacity-60">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-2"></i>
                     <p class="text-sm">กำลังโหลดข้อมูล...</p>
                 </div>
             </div>
-            <div class="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
         </div>
 
-        <!-- Map Section -->
-        <div id="map-section" class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-gray-100 h-full relative flex flex-col group overflow-hidden">
-            <div class="absolute top-4 left-4 z-[400] bg-white/95 backdrop-blur px-4 py-2 rounded-xl shadow-md border border-gray-200 pointer-events-none">
-                <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-map-location-dot text-blue-600"></i> พิกัดแปลงนา
-                </h2>
+        <!-- RIGHT PANEL: Map (Desktop: Always visible, Mobile: Toggle) -->
+        <div id="view-map" 
+            class="hidden lg:block lg:col-span-8 
+                h-[calc(100vh-64px-64px)]
+                lg:h-[calc(100vh-64px)]
+                bg-slate-100 relative">
+                
+            <div id="map" class="w-full h-full z-0"></div>
+            
+            <!-- Mobile Hint (Only on Mobile) -->
+            <div class="absolute top-4 left-0 right-0 z-[400] flex justify-center lg:hidden pointer-events-none">
+                <div class="bg-white/90 backdrop-blur px-4 py-1.5 rounded-full shadow-lg border border-gray-200">
+                    <span class="text-xs font-bold text-gray-600 flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-blue-500"></i> 
+                        แตะที่หมุดเพื่อดูข้อมูล
+                    </span>
+                </div>
             </div>
-            <div id="map" class="w-full h-full rounded-2xl z-0 bg-slate-100"></div>
+
+            <!-- Desktop Legend (Only on Desktop) -->
+            <div class="hidden lg:block absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200 p-3">
+                <h4 class="text-xs font-bold text-gray-700 mb-2">สัญลักษณ์</h4>
+                <div class="space-y-1.5 text-xs">
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded bg-orange-500"></div>
+                        <span>รอรับซื้อ</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded bg-yellow-400"></div>
+                        <span>รออนุมัติ</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded bg-green-500"></div>
+                        <span>ซื้อแล้ว</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-50 pb-[env(safe-area-inset-bottom)]">
+        <div class="grid grid-cols-2 h-16 relative">
+            
+            <button onclick="switchTab('list')" 
+                class="group flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden">
+                <div id="nav-icon-list" 
+                    class="bg-blue-50 text-blue-600 w-12 h-8 rounded-full flex items-center justify-center transition-all duration-300 scale-100">
+                    <i class="fa-solid fa-list-ul text-lg"></i>
+                </div>
+                <span id="nav-text-list" class="text-[10px] font-bold text-blue-600 transition-colors">รายการ</span>
+            </button>
+
+            <button onclick="switchTab('map')" 
+                class="group flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden">
+                <div id="nav-icon-map" 
+                    class="bg-transparent text-gray-400 w-12 h-8 rounded-full flex items-center justify-center transition-all duration-300 scale-90">
+                    <i class="fa-solid fa-map text-lg"></i>
+                </div>
+                <span id="nav-text-map" class="text-[10px] font-bold text-gray-400 transition-colors">แผนที่</span>
+            </button>
+
         </div>
     </div>
 
-    <!-- Mobile Bottom Navigation (Fixed at bottom) -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 safe-area-bottom">
-        <div class="grid grid-cols-2 h-16">
-            <button id="tab-list" class="flex flex-col items-center justify-center gap-1 text-blue-600 border-t-2 border-blue-600 transition-all">
-                <i class="fa-solid fa-list text-lg"></i>
-                <span class="text-xs font-bold">รายการ</span>
-            </button>
-            <button id="tab-map" class="flex flex-col items-center justify-center gap-1 text-gray-400 transition-all">
-                <i class="fa-solid fa-map text-lg"></i>
-                <span class="text-xs font-bold">แผนที่</span>
-            </button>
-        </div>
-    </div>
 </div>
 
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    
-    @keyframes fadeInUp { 
-        from { opacity: 0; transform: translateY(10px) scale(0.95); } 
-        to { opacity: 1; transform: translateY(0) scale(1); } 
+    /* Scrollbar สวยๆ */
+    .custom-scrollbar::-webkit-scrollbar { 
+        width: 6px; 
+        height: 6px; 
     }
-    .animate-fade-in-up { animation: fadeInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+    .custom-scrollbar::-webkit-scrollbar-track { 
+        background: #f1f5f9; 
+        border-radius: 10px; 
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb { 
+        background: #cbd5e1; 
+        border-radius: 10px; 
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+        background: #94a3b8; 
+    }
     
+    /* Animation พื้นฐาน */
+    .animate-fade-in-up { 
+        animation: fadeInUp 0.3s ease-out forwards; 
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ปรับแต่ง SweetAlert */
     .swal2-popup { 
-        border-radius: 16px !important; 
+        border-radius: 20px !important; 
         padding: 1.5rem !important; 
         font-family: 'Sarabun', sans-serif; 
     }
-
-    /* Mobile specific styles */
-    @media (max-width: 1023px) {
-        #sales-list-section, #map-section {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 0;
-            transition: transform 0.3s ease-in-out;
-        }
-
-        #sales-list-section {
-            transform: translateX(0);
-        }
-
-        #sales-list-section.hidden-mobile {
-            transform: translateX(-100%);
-        }
-
-        #map-section {
-            transform: translateX(100%);
-        }
-
-        #map-section.active-mobile {
-            transform: translateX(0);
-        }
-
-        .safe-area-bottom {
-            padding-bottom: env(safe-area-inset-bottom);
-        }
+    .swal2-actions { 
+        width: 100%; 
+        margin: 1rem 0 0 0 !important; 
     }
 
-    /* Desktop - original layout */
+    /* Desktop: Force both panels to show */
     @media (min-width: 1024px) {
-        #sales-list-section {
-            display: flex !important;
+        #view-list, #view-map {
+            display: flex !important; /* Override hidden class */
+        }
+        #view-map {
+            display: block !important;
         }
     }
 </style>
@@ -138,64 +179,91 @@
     // ==========================================
     const currentUserId = {{ request.user.id }}; 
     
-    var map = L.map('map', { center:[19.1667, 99.9000], zoom:13, zoomControl: false });
-    L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']}).addTo(map);
+    var map = L.map('map', { 
+        center: [19.1667, 99.9000], 
+        zoom: 13, 
+        zoomControl: false 
+    });
+    
+    L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+    }).addTo(map);
+    
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     var markers = L.featureGroup().addTo(map);
     let lastReadTime = new Date(localStorage.getItem('globalLastRead') || 0);
     let allSalesData = []; 
 
-    window.addEventListener('resize', function() { setTimeout(function(){ map.invalidateSize(); }, 300); });
+    // Handle window resize for map
+    window.addEventListener('resize', function() { 
+        setTimeout(function() { 
+            map.invalidateSize(); 
+        }, 300); 
+    });
 
     // ==========================================
-    // Mobile Tab Switching
+    // Mobile Tab Switching (ปรับปรุงแล้ว)
     // ==========================================
-    const tabList = document.getElementById('tab-list');
-    const tabMap = document.getElementById('tab-map');
-    const salesListSection = document.getElementById('sales-list-section');
-    const mapSection = document.getElementById('map-section');
-
-    function switchToList() {
-        // UI Update
-        tabList.classList.add('text-blue-600', 'border-t-2', 'border-blue-600');
-        tabList.classList.remove('text-gray-400');
-        tabMap.classList.remove('text-blue-600', 'border-t-2', 'border-blue-600');
-        tabMap.classList.add('text-gray-400');
-
-        // Show list, hide map (mobile only)
-        salesListSection.classList.remove('hidden', 'hidden-mobile');
-        salesListSection.classList.add('flex');
-        mapSection.classList.remove('active-mobile');
-    }
-
-    function switchToMap() {
-        // UI Update
-        tabMap.classList.add('text-blue-600', 'border-t-2', 'border-blue-600');
-        tabMap.classList.remove('text-gray-400');
-        tabList.classList.remove('text-blue-600', 'border-t-2', 'border-blue-600');
-        tabList.classList.add('text-gray-400');
-
-        // Show map, hide list (mobile only)
-        salesListSection.classList.add('hidden-mobile');
-        mapSection.classList.add('active-mobile');
+    function switchTab(mode) {
+        const viewList = document.getElementById('view-list');
+        const viewMap = document.getElementById('view-map');
         
-        // Refresh map size after animation
-        setTimeout(() => map.invalidateSize(), 350);
-    }
+        const iconList = document.getElementById('nav-icon-list');
+        const textList = document.getElementById('nav-text-list');
+        const iconMap = document.getElementById('nav-icon-map');
+        const textMap = document.getElementById('nav-text-map');
 
-    if (tabList && tabMap) {
-        tabList.addEventListener('click', switchToList);
-        tabMap.addEventListener('click', switchToMap);
-    }
+        // Check if mobile
+        const isMobile = window.innerWidth < 1024;
 
-    // Start with list view on mobile
-    if (window.innerWidth < 1024) {
-        switchToList();
+        if (!isMobile) {
+            // Desktop: Always show both panels
+            viewList.classList.remove('hidden');
+            viewMap.classList.remove('hidden');
+            return;
+        }
+
+        // Mobile: Toggle views
+        if (mode === 'list') {
+            viewList.classList.remove('hidden');
+            viewMap.classList.add('hidden');
+            
+            // Update Nav Styles (List Active)
+            iconList.classList.remove('bg-transparent', 'text-gray-400', 'scale-90');
+            iconList.classList.add('bg-blue-50', 'text-blue-600', 'scale-100');
+            textList.classList.remove('text-gray-400');
+            textList.classList.add('text-blue-600');
+
+            iconMap.classList.add('bg-transparent', 'text-gray-400', 'scale-90');
+            iconMap.classList.remove('bg-blue-50', 'text-blue-600', 'scale-100');
+            textMap.classList.add('text-gray-400');
+            textMap.classList.remove('text-blue-600');
+            
+        } else {
+            viewMap.classList.remove('hidden');
+            viewList.classList.add('hidden');
+
+            iconMap.classList.remove('bg-transparent', 'text-gray-400', 'scale-90');
+            iconMap.classList.add('bg-blue-50', 'text-blue-600', 'scale-100');
+            textMap.classList.remove('text-gray-400');
+            textMap.classList.add('text-blue-600');
+
+            iconList.classList.add('bg-transparent', 'text-gray-400', 'scale-90');
+            iconList.classList.remove('bg-blue-50', 'text-blue-600', 'scale-100');
+            textList.classList.add('text-gray-400');
+            textList.classList.remove('text-blue-600');
+
+            // Refresh Map
+            setTimeout(() => { 
+                map.invalidateSize(); 
+            }, 100);
+        }
     }
 
     // ==========================================
-    // 1. Main Data Loop
+    // 1. Main Data Loop (ปรับปรุงแล้ว)
     // ==========================================
     async function loadData() {
         try {
@@ -206,9 +274,13 @@
             const listDiv = document.getElementById('saleList');
             const countSpan = document.getElementById('sale-count');
             
-            const openSales = sales.filter(s => s.status === 'OPEN').sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-            const myRequests = sales.filter(s => s.status === 'REQUESTED').sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-            const soldSales = sales.filter(s => s.status === 'SOLD').sort((a,b) => new Date(b.sold_at || b.created_at) - new Date(a.sold_at || a.created_at));
+            // Sort sales
+            const openSales = sales.filter(s => s.status === 'OPEN')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const myRequests = sales.filter(s => s.status === 'REQUESTED')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const soldSales = sales.filter(s => s.status === 'SOLD')
+                .sort((a, b) => new Date(b.sold_at || b.created_at) - new Date(a.sold_at || a.created_at));
 
             const displayList = [...myRequests, ...openSales, ...soldSales];
 
@@ -217,7 +289,12 @@
             countSpan.innerText = openSales.length; 
 
             if (displayList.length === 0) {
-                listDiv.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-10"><i class="fa-solid fa-basket-shopping text-5xl mb-3"></i><p>ไม่มีข้อมูลการซื้อขาย</p></div>`;
+                listDiv.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-gray-400 opacity-60 mt-10">
+                        <i class="fa-solid fa-basket-shopping text-5xl mb-3"></i>
+                        <p class="font-semibold">ไม่มีข้อมูลการซื้อขาย</p>
+                        <p class="text-xs mt-2">รอเกษตรกรประกาศขายข้าว</p>
+                    </div>`;
                 return;
             }
 
@@ -226,7 +303,12 @@
                 const isSold = s.status === 'SOLD';
                 const totalPrice = (s.quantity_ton * s.price_per_ton).toLocaleString();
                 const pricePerTon = parseFloat(s.price_per_ton).toLocaleString();
-                const datePost = new Date(s.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' });
+                const datePost = new Date(s.created_at).toLocaleDateString('th-TH', { 
+                    day: 'numeric', 
+                    month: 'short', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
                 const fieldArea = s.field_area ? s.field_area : '-';
 
                 let mapsLink = '#';
@@ -238,8 +320,15 @@
                 let badgeStatus = `<span class="bg-orange-100 text-orange-700 text-[10px] px-2 py-0.5 rounded-full font-bold animate-pulse">รอรับซื้อ</span>`;
                 let actionBtn = `
                     <div class="grid grid-cols-5 gap-2">
-                        <button onclick="viewFullDetails(${s.id})" class="col-span-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center" title="ดูรายละเอียด"><i class="fa-solid fa-eye"></i></button>
-                        <button onclick="confirmBuy(event, ${s.id})" class="col-span-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg shadow transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-handshake"></i> ส่งคำขอซื้อ</button>
+                        <button onclick="viewFullDetails(${s.id})" 
+                            class="col-span-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg flex items-center justify-center py-2" 
+                            title="ดูรายละเอียด">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                        <button onclick="confirmBuy(event, ${s.id})" 
+                            class="col-span-4 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg shadow transition-colors flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-handshake"></i> ส่งคำขอซื้อ
+                        </button>
                     </div>`;
                 let mapColor = '#f97316'; 
                 let mapOpacity = 0.6;
@@ -249,15 +338,23 @@
                     badgeStatus = `<span class="bg-yellow-100 text-yellow-700 text-[10px] px-2 py-0.5 rounded-full font-bold"><i class="fa-solid fa-clock"></i> รออนุมัติ</span>`;
                     actionBtn = `
                         <div class="grid grid-cols-5 gap-2">
-                            <button onclick="viewFullDetails(${s.id})" class="col-span-1 bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 rounded-lg flex items-center justify-center"><i class="fa-solid fa-eye"></i></button>
-                            <button class="col-span-4 bg-yellow-100 text-yellow-600 font-bold py-2 rounded-lg cursor-not-allowed border border-yellow-200" disabled><i class="fa-solid fa-hourglass-half"></i> รอชาวนายืนยัน...</button>
+                            <button onclick="viewFullDetails(${s.id})" 
+                                class="col-span-1 bg-white hover:bg-gray-100 text-gray-600 border border-gray-200 rounded-lg flex items-center justify-center py-2">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button class="col-span-4 bg-yellow-100 text-yellow-600 font-bold py-2 rounded-lg cursor-not-allowed border border-yellow-200" disabled>
+                                <i class="fa-solid fa-hourglass-half"></i> รอชาวนายืนยัน...
+                            </button>
                         </div>`;
                     mapColor = '#eab308';
-                } 
-                else if (isSold) {
-                    borderClass = "border-gray-300 opacity-70 grayscale-[50%]";
+                } else if (isSold) {
+                    borderClass = "border-l-4 border-l-gray-300 opacity-70 grayscale-[50%]";
                     badgeStatus = `<span class="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-full font-bold"><i class="fa-solid fa-check"></i> ซื้อสำเร็จ</span>`;
-                    actionBtn = `<button onclick="viewFullDetails(${s.id})" class="w-full bg-gray-100 text-gray-500 font-bold py-2 rounded-lg hover:bg-gray-200 hover:text-gray-700 transition"><i class="fa-solid fa-file-invoice"></i> ดูประวัติการซื้อขาย</button>`;
+                    actionBtn = `
+                        <button onclick="viewFullDetails(${s.id})" 
+                            class="w-full bg-gray-100 text-gray-500 font-bold py-2 rounded-lg hover:bg-gray-200 hover:text-gray-700 transition">
+                            <i class="fa-solid fa-file-invoice"></i> ดูประวัติการซื้อขาย
+                        </button>`;
                     mapColor = '#22c55e';
                     mapOpacity = 0.4;
                 }
@@ -266,58 +363,100 @@
                 const newBadge = isNew ? `<span class="ml-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded font-bold animate-bounce shadow-sm">NEW</span>` : '';
 
                 listDiv.innerHTML += `
-                    <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group relative overflow-hidden ${borderClass} mb-3" onclick="focusMap(${s.id})">
+                    <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group relative overflow-hidden ${borderClass}" 
+                         onclick="focusMap(${s.id})">
                         <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-lg flex items-center gap-2">
-                                    <i class="fa-solid fa-user-circle text-gray-400"></i> ${s.farmer_name} ${newBadge}
+                            <div class="flex-1">
+                                <h4 class="font-bold text-gray-800 text-base flex items-center gap-2 mb-1">
+                                    <i class="fa-solid fa-user-circle text-gray-400"></i> 
+                                    ${s.farmer_name} 
+                                    ${newBadge}
                                 </h4>
-                                <p class="text-xs text-gray-500 flex items-center gap-1"><i class="fa-solid fa-clock"></i> ${datePost} ${badgeStatus}</p>
+                                <p class="text-xs text-gray-500 flex items-center gap-2">
+                                    <i class="fa-solid fa-clock"></i> ${datePost}
+                                </p>
                             </div>
-                            <span class="bg-green-50 text-green-700 border border-green-100 text-xs font-bold px-2 py-1 rounded-lg">${s.quantity_ton} ตัน</span>
+                            <div class="flex flex-col items-end gap-1">
+                                ${badgeStatus}
+                                <span class="bg-green-50 text-green-700 border border-green-100 text-xs font-bold px-2 py-1 rounded-lg">
+                                    ${s.quantity_ton} ตัน
+                                </span>
+                            </div>
                         </div>
+                        
                         <div class="bg-white p-3 rounded-lg border border-dashed border-gray-200 text-sm space-y-1 mb-3">
-                            <div class="flex justify-between"><span class="text-gray-500">พันธุ์ข้าว:</span><span class="font-semibold text-blue-600">${s.variety_display}</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">พื้นที่:</span><span class="font-semibold text-gray-700">${fieldArea} ไร่</span></div>
-                            <div class="flex justify-between"><span class="text-gray-500">ราคา/ตัน:</span><span class="font-semibold">${pricePerTon} บ.</span></div>
-                            <div class="flex justify-between border-t border-gray-100 pt-1 mt-1"><span class="text-gray-700 font-bold">ราคารวม:</span><span class="font-bold text-green-600 text-lg">${totalPrice} บ.</span></div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">พันธุ์ข้าว:</span>
+                                <span class="font-semibold text-blue-600">${s.variety_display}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">พื้นที่:</span>
+                                <span class="font-semibold text-gray-700">${fieldArea} ไร่</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">ราคา/ตัน:</span>
+                                <span class="font-semibold">${pricePerTon} บ.</span>
+                            </div>
+                            <div class="flex justify-between border-t border-gray-100 pt-1 mt-1">
+                                <span class="text-gray-700 font-bold">ราคารวม:</span>
+                                <span class="font-bold text-green-600 text-lg">${totalPrice} บ.</span>
+                            </div>
                         </div>
+                        
                         ${actionBtn}
                     </div>
                 `;
 
-                if(s.field_location) {
+                // Add to map
+                if (s.field_location) {
                     try {
                         const geoJson = JSON.parse(s.field_location);
-                        const layer = L.geoJSON(geoJson, { style:{color: mapColor, fillOpacity: mapOpacity, weight: 2} })
-                            .bindPopup(`
-                                <div class="text-center min-w-[160px] p-1 font-sans">
-                                    <b class="text-base text-gray-900 block mb-1">${s.farmer_name}</b>
-                                    <span class="font-black text-lg block mb-1" style="color:${mapColor}">
-                                        ${s.status === 'SOLD' ? 'ขายแล้ว' : (s.status === 'REQUESTED' ? 'รออนุมัติ' : s.quantity_ton + ' ตัน')}
-                                    </span>
-                                    <span class="text-xs text-gray-500 block mb-3">${s.variety_display} (${fieldArea} ไร่)</span>
+                        const layer = L.geoJSON(geoJson, { 
+                            style: {
+                                color: mapColor, 
+                                fillOpacity: mapOpacity, 
+                                weight: 2
+                            } 
+                        }).bindPopup(`
+                            <div class="text-center min-w-[180px] p-2 font-sans">
+                                <b class="text-base text-gray-900 block mb-1">${s.farmer_name}</b>
+                                <span class="font-black text-lg block mb-1" style="color:${mapColor}">
+                                    ${s.status === 'SOLD' ? 'ขายแล้ว' : (s.status === 'REQUESTED' ? 'รออนุมัติ' : s.quantity_ton + ' ตัน')}
+                                </span>
+                                <span class="text-xs text-gray-500 block mb-3">${s.variety_display} (${fieldArea} ไร่)</span>
+                                
+                                <div class="flex gap-2 mt-2">
+                                    <button onclick="viewFullDetails(${s.id})" 
+                                        class="flex-1 bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold py-2 rounded-lg shadow transition-colors">
+                                        ดูข้อมูล
+                                    </button>
                                     
-                                    <div class="flex gap-2 mt-1">
-                                        <button onclick="viewFullDetails(${s.id})" 
-                                            class="flex-1 bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold py-2 rounded-lg shadow transition-colors">
-                                            ดูข้อมูล
-                                        </button>
-                                        
-                                        <a href="${mapsLink}" target="_blank" 
-                                            class="flex-1 bg-blue-600 hover:bg-blue-700 !text-white text-xs font-bold py-2 rounded-lg shadow flex items-center justify-center gap-1 transition-transform hover:scale-105">
-                                            <i class="fa-solid fa-location-arrow"></i> นำทาง
-                                        </a>
-                                    </div>
+                                    <a href="${mapsLink}" target="_blank" 
+                                        class="flex-1 bg-blue-600 hover:bg-blue-700 !text-white text-xs font-bold py-2 rounded-lg shadow flex items-center justify-center gap-1 transition-transform hover:scale-105">
+                                        <i class="fa-solid fa-location-arrow"></i> นำทาง
+                                    </a>
                                 </div>
-                            `);
+                            </div>
+                        `);
                         layer.saleId = s.id;
                         markers.addLayer(layer);
-                    } catch(e){}
+                    } catch (e) {
+                        console.warn('Failed to parse field location:', e);
+                    }
                 }
             });
 
-        } catch(e) { console.error("Load Data Error:", e); }
+        } catch (e) { 
+            console.error("Load Data Error:", e); 
+            document.getElementById('saleList').innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-red-400 mt-10">
+                    <i class="fa-solid fa-exclamation-triangle text-4xl mb-2"></i>
+                    <p class="font-semibold">เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
+                    <button onclick="loadData()" class="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        ลองอีกครั้ง
+                    </button>
+                </div>`;
+        }
     }
 
     // ==========================================
@@ -326,7 +465,7 @@
     window.viewFullDetails = function(saleId) {
         event.stopPropagation();
         const s = allSalesData.find(item => item.id === saleId);
-        if(!s) return;
+        if (!s) return;
 
         const farmerPhone = s.farmer_phone || '-';
         const farmerLine = s.farmer_line || '-';
@@ -334,10 +473,13 @@
         const farmerBio = s.farmer_bio || 'ไม่มีข้อมูลแนะนำตัว';
         
         let mapsLink = '#';
-        let mapsBtnClass = 'bg-gray-300 text-gray-500 cursor-not-allowed';
+        let mapsBtnClass = 'bg-gray-100 text-gray-400 cursor-not-allowed';
+        let btnText = 'ไม่พบพิกัดแปลงนา';
+        
         if (s.field_lat && s.field_lng) {
             mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${s.field_lat},${s.field_lng}`;
-            mapsBtnClass = 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200';
+            mapsBtnClass = 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300 transform active:scale-95';
+            btnText = 'นำทางไปแปลงนา (Google Maps)';
         }
         
         Swal.fire({
@@ -345,91 +487,115 @@
             html: `
                 <div class="text-left">
                     <div class="flex items-center gap-4 border-b pb-4 mb-4">
-                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-3xl text-gray-400">
+                        <div class="w-14 h-14 bg-gradient-to-br from-blue-100 to-blue-50 rounded-full flex items-center justify-center text-2xl text-blue-600 shadow-inner">
                             <i class="fa-solid fa-user"></i>
                         </div>
                         <div>
-                            <h2 class="text-xl font-bold text-gray-800">${s.farmer_name}</h2>
-                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-lg border border-green-200 font-bold">เกษตรกร</span>
+                            <h2 class="text-xl font-bold text-gray-800 leading-tight">${s.farmer_name}</h2>
+                            <span class="bg-green-100 text-green-700 text-[10px] px-2 py-0.5 rounded-md border border-green-200 font-bold">เกษตรกร</span>
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <div class="flex border-b border-gray-200">
-                            <button id="tab-profile" class="flex-1 py-2 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-colors">ข้อมูลส่วนตัว</button>
-                            <button id="tab-field" class="flex-1 py-2 text-sm font-bold text-gray-400 hover:text-gray-600 transition-colors">ข้อมูลแปลงนา</button>
-                        </div>
+                    <div class="mb-5 bg-gray-100 p-1 rounded-xl flex">
+                        <button id="tab-profile" class="flex-1 py-2 rounded-lg text-sm font-bold bg-white text-blue-600 shadow-sm transition-all">
+                            ข้อมูลส่วนตัว
+                        </button>
+                        <button id="tab-field" class="flex-1 py-2 rounded-lg text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">
+                            ข้อมูลแปลงนา
+                        </button>
                     </div>
 
-                    <div id="content-profile" class="space-y-3 text-sm animate-fade-in-up">
-                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                            <p class="text-xs text-blue-500 font-bold mb-1 uppercase">เกี่ยวกับเกษตรกร</p>
-                            <p class="text-gray-700">${farmerBio}</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-gray-50 p-3 rounded-lg">
-                                <p class="text-xs text-gray-400">เบอร์โทรศัพท์</p>
-                                <p class="font-bold text-gray-800"><i class="fa-solid fa-phone text-green-500"></i> <a href="tel:${farmerPhone}">${farmerPhone}</a></p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-lg">
-                                <p class="text-xs text-gray-400">Line ID</p>
-                                <p class="font-bold text-gray-800"><i class="fa-brands fa-line text-green-500"></i> ${farmerLine}</p>
-                            </div>
-                        </div>
-                        <div class="bg-gray-50 p-3 rounded-lg">
-                            <p class="text-xs text-gray-400">ที่อยู่ / ที่ตั้งฟาร์ม</p>
-                            <p class="font-bold text-gray-800"><i class="fa-solid fa-location-dot text-red-500"></i> ${farmerAddress}</p>
-                        </div>
-                    </div>
-
-                    <div id="content-field" class="hidden space-y-3 text-sm animate-fade-in-up">
-                        <div class="bg-orange-50 p-3 rounded-lg border border-orange-100 mb-2">
-                             <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-xs text-orange-500 font-bold uppercase">ชื่อแปลงนา</p>
-                                    <p class="font-bold text-gray-800 text-lg">${s.field_name}</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-xs text-gray-500">ขนาดพื้นที่</p>
-                                    <p class="font-bold text-gray-800">${s.field_area} ไร่</p>
-                                </div>
-                             </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-white border p-3 rounded-lg text-center">
-                                <p class="text-xs text-gray-400">พันธุ์ข้าว</p>
-                                <p class="font-bold text-blue-600">${s.variety_display}</p>
-                            </div>
-                            <div class="bg-white border p-3 rounded-lg text-center">
-                                <p class="text-xs text-gray-400">ปริมาณขาย</p>
-                                <p class="font-bold text-green-600">${s.quantity_ton} ตัน</p>
-                            </div>
+                    <div id="content-profile" class="space-y-4 text-sm animate-fade-in-up">
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative">
+                            <i class="fa-solid fa-quote-left absolute top-2 left-2 text-blue-200 text-4xl -z-0"></i>
+                            <p class="text-gray-700 relative z-10 italic">"${farmerBio}"</p>
                         </div>
                         
-                        <a href="${mapsLink}" target="_blank" class="block w-full py-3 rounded-xl font-bold text-center transition ${mapsBtnClass} flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-location-arrow"></i> นำทางไปแปลงนา (Google Maps)
+                        <div class="space-y-3">
+                            <a href="tel:${farmerPhone}" 
+                                class="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-xl active:bg-gray-50 transition">
+                                <span class="text-gray-500 text-xs">เบอร์โทรศัพท์</span>
+                                <span class="font-bold text-gray-800 flex items-center gap-2">
+                                    <i class="fa-solid fa-phone text-green-500"></i> ${farmerPhone}
+                                </span>
+                            </a>
+                            <div class="flex items-center justify-between bg-white border border-gray-200 p-3 rounded-xl">
+                                <span class="text-gray-500 text-xs">Line ID</span>
+                                <span class="font-bold text-gray-800 flex items-center gap-2">
+                                    <i class="fa-brands fa-line text-green-500"></i> ${farmerLine}
+                                </span>
+                            </div>
+                            <div class="bg-white border border-gray-200 p-3 rounded-xl">
+                                <span class="text-gray-500 text-xs block mb-1">ที่อยู่</span>
+                                <span class="font-bold text-gray-800 flex items-start gap-2 text-xs leading-relaxed">
+                                    <i class="fa-solid fa-location-dot text-red-500 mt-0.5"></i> ${farmerAddress}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="content-field" class="hidden space-y-4 text-sm animate-fade-in-up">
+                        <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
+                            <div class="flex justify-between items-start mb-2 border-b border-gray-100 pb-2">
+                                <span class="text-gray-400 text-xs">ชื่อแปลงนา</span>
+                                <span class="font-bold text-gray-800 text-lg">${s.field_name}</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-center">
+                                <div>
+                                    <span class="text-xs text-gray-400 block">พันธุ์ข้าว</span>
+                                    <span class="text-blue-600 font-bold">${s.variety_display}</span>
+                                </div>
+                                <div class="border-l border-gray-100">
+                                    <span class="text-xs text-gray-400 block">ขนาดพื้นที่</span>
+                                    <span class="text-gray-800 font-bold">${s.field_area} ไร่</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 border border-green-100 p-4 rounded-xl flex justify-between items-center">
+                            <span class="font-bold text-green-800">ปริมาณเสนอขาย</span>
+                            <span class="text-2xl font-bold text-green-600">
+                                ${s.quantity_ton} <span class="text-sm text-gray-500">ตัน</span>
+                            </span>
+                        </div>
+                        
+                        <a href="${mapsLink}" target="_blank" 
+                            class="block w-full py-4 rounded-xl font-bold text-center transition ${mapsBtnClass} flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-location-arrow text-lg"></i> ${btnText}
                         </a>
-                        <p class="text-[10px] text-gray-400 text-center mt-1">กดเพื่อเปิดแอปแผนที่นำทางไปยังพิกัดแปลงนา</p>
                     </div>
                 </div>
             `,
             showCloseButton: true,
             showConfirmButton: false,
+            customClass: {
+                popup: 'rounded-2xl w-11/12 max-w-sm p-6'
+            },
             didOpen: () => {
                 const tabProfile = Swal.getHtmlContainer().querySelector('#tab-profile');
                 const tabField = Swal.getHtmlContainer().querySelector('#tab-field');
                 const contentProfile = Swal.getHtmlContainer().querySelector('#content-profile');
                 const contentField = Swal.getHtmlContainer().querySelector('#content-field');
 
+                const activeClass = ['bg-white', 'text-blue-600', 'shadow-sm'];
+                const inactiveClass = ['text-gray-500', 'hover:text-gray-700'];
+
                 tabProfile.onclick = () => {
-                    tabProfile.classList.add('text-blue-600', 'border-blue-600'); tabProfile.classList.remove('text-gray-400');
-                    tabField.classList.remove('text-blue-600', 'border-blue-600'); tabField.classList.add('text-gray-400');
-                    contentProfile.classList.remove('hidden'); contentField.classList.add('hidden');
+                    tabProfile.classList.add(...activeClass);
+                    tabProfile.classList.remove(...inactiveClass);
+                    tabField.classList.remove(...activeClass);
+                    tabField.classList.add(...inactiveClass);
+                    contentProfile.classList.remove('hidden');
+                    contentField.classList.add('hidden');
                 };
+                
                 tabField.onclick = () => {
-                    tabField.classList.add('text-blue-600', 'border-blue-600'); tabField.classList.remove('text-gray-400');
-                    tabProfile.classList.remove('text-blue-600', 'border-blue-600'); tabProfile.classList.add('text-gray-400');
-                    contentField.classList.remove('hidden'); contentProfile.classList.add('hidden');
+                    tabField.classList.add(...activeClass);
+                    tabField.classList.remove(...inactiveClass);
+                    tabProfile.classList.remove(...activeClass);
+                    tabProfile.classList.add(...inactiveClass);
+                    contentField.classList.remove('hidden');
+                    contentProfile.classList.add('hidden');
                 };
             }
         });
@@ -439,51 +605,75 @@
     // 3. Confirm Buy Action
     // ==========================================
     window.confirmBuy = async function(e, saleId) {
-        if(e) e.stopPropagation();
+        if (e) e.stopPropagation();
         const s = allSalesData.find(item => item.id === saleId);
-        if(!s) return;
+        if (!s) return;
 
         const totalPrice = (s.quantity_ton * s.price_per_ton).toLocaleString();
         let defaultPrice = s.price_per_ton;
 
         const { isConfirmed, value: formValues } = await Swal.fire({
+            title: '<span class="text-xl font-bold text-gray-800">🤝 ส่งคำขอซื้อ</span>',
             html: `
-            <div class="bg-white p-4 rounded-xl text-sm space-y-4">
-                <h2 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-hand-holding-dollar text-green-600"></i> เสนอราคาซื้อ
-                </h2>
-
-                <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 space-y-2 text-left">
-                    <div class="flex justify-between"><span class="text-gray-500">เกษตรกร:</span><span class="font-bold">${s.farmer_name}</span></div>
-                    <div class="flex justify-between"><span class="text-gray-500">สินค้า:</span><span class="font-bold text-blue-600">${s.variety_display} (${s.quantity_ton} ตัน)</span></div>
-                </div>
-
-                <div class="space-y-3 text-left">
-                    <div>
-                        <label class="block text-gray-700 font-bold text-xs mb-1">ราคาเสนอซื้อ (บาท/ตัน)</label>
-                        <input id="swal-price" type="number" class="swal2-input !m-0 w-full text-center font-bold text-lg text-green-700" 
-                            value="${defaultPrice}" placeholder="ระบุราคา">
-                        <p class="text-[10px] text-gray-400 mt-1">*สามารถแก้ไขเพื่อต่อรองราคาได้</p>
+                <div class="text-left space-y-4 px-1 pt-2">
+                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-2 text-sm">
+                        <div class="flex justify-between items-center border-b border-blue-200 pb-2 mb-2">
+                            <span class="text-gray-500">เกษตรกร</span>
+                            <span class="font-bold text-gray-800 text-base">${s.farmer_name}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">สินค้า</span>
+                            <span class="font-bold text-blue-700">${s.variety_display}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">ปริมาณ</span>
+                            <span class="font-bold text-gray-800">${s.quantity_ton} ตัน</span>
+                        </div>
                     </div>
 
                     <div>
-                        <label class="block text-gray-700 font-bold text-xs mb-1">เบอร์ติดต่อกลับ</label>
-                        <input id="swal-contact" class="swal2-input !m-0 w-full text-sm" 
-                            placeholder="08x-xxx-xxxx" value="{{ request.user.phone }}">
+                        <label class="block text-gray-700 font-bold text-sm mb-1">ราคาเสนอซื้อ (บาท/ตัน)</label>
+                        <div class="relative">
+                            <input id="swal-price" type="number" inputmode="decimal" 
+                                class="w-full pl-4 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-xl font-bold text-green-700 text-right shadow-sm" 
+                                value="${defaultPrice}" placeholder="0">
+                            <span class="absolute right-4 top-3.5 text-gray-400 font-bold text-sm">บาท</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1 text-right">*สามารถแก้ไขเพื่อต่อรองราคาได้</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-gray-700 font-bold text-sm mb-1">เบอร์ติดต่อกลับ (ของคุณ)</label>
+                        <div class="relative">
+                            <div class="absolute left-4 top-3.5 text-gray-400">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <input id="swal-contact" type="tel" inputmode="tel" 
+                                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-lg text-gray-800 shadow-sm" 
+                                placeholder="08x-xxx-xxxx" 
+                                value="{{ request.user.phone|default:'' }}">
+                        </div>
                     </div>
                 </div>
-            </div>
             `,
             showCancelButton: true,
-            confirmButtonText: '🚀 ส่งคำขอซื้อ',
-            confirmButtonColor: '#16a34a',
+            confirmButtonText: 'ยืนยันส่งคำขอ',
             cancelButtonText: 'ยกเลิก',
+            confirmButtonColor: '#16a34a',
+            cancelButtonColor: '#64748b',
+            reverseButtons: true,
             focusConfirm: false,
+            customClass: {
+                popup: 'rounded-2xl w-11/12 max-w-sm',
+                confirmButton: 'w-full py-3 rounded-xl text-lg font-bold shadow-md mb-2',
+                cancelButton: 'w-full py-3 rounded-xl text-lg font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 border border-transparent shadow-sm'
+            },
             preConfirm: () => {
                 const price = document.getElementById('swal-price').value;
                 const contact = document.getElementById('swal-contact').value;
+                
                 if (!price || !contact) {
-                    Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบ');
+                    Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
                 }
                 return { price, contact };
             }
@@ -491,12 +681,20 @@
 
         if (!isConfirmed) return;
 
-        Swal.fire({ title: 'กำลังส่งข้อมูล...', didOpen: () => Swal.showLoading() });
+        Swal.fire({ 
+            title: 'กำลังส่งข้อมูล...', 
+            text: 'กรุณารอสักครู่',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading() 
+        });
 
         try {
             const res = await fetch(`/api/sales/${saleId}/request_buy/`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'X-CSRFToken': '{{ csrf_token }}' 
+                },
                 body: JSON.stringify({ 
                     contact: formValues.contact,
                     negotiated_price: formValues.price 
@@ -504,31 +702,54 @@
             });
 
             if (res.ok) {
-                Swal.fire('สำเร็จ', 'ส่งคำขอและราคาเสนอซื้อแล้ว', 'success');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ส่งคำขอเรียบร้อย',
+                    text: 'ระบบได้แจ้งเตือนไปยังเกษตรกรแล้ว',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                 loadData();
             } else {
-                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถทำรายการได้', 'error');
+                const data = await res.json();
+                Swal.fire('เกิดข้อผิดพลาด', data.error || 'ไม่สามารถทำรายการได้', 'error');
             }
         } catch {
-            Swal.fire('Error', 'เชื่อมต่อล้มเหลว', 'error');
+            Swal.fire('Error', 'การเชื่อมต่อขัดข้อง', 'error');
         }
     };
 
+    // ==========================================
+    // 4. Focus Map Function
+    // ==========================================
     window.focusMap = function(saleId) {
-        // Switch to map view on mobile
+        // Auto-switch to map on mobile
         if (window.innerWidth < 1024) {
-            switchToMap();
+            switchTab('map');
         }
         
         markers.eachLayer(function(layer) {
             if (layer.saleId === saleId) {
                 map.flyToBounds(layer.getBounds().pad(1.5), { duration: 1 });
-                layer.openPopup();
+                setTimeout(() => {
+                    layer.openPopup();
+                }, 1000);
             }
         });
     }
 
+    // ==========================================
+    // 5. Initialize
+    // ==========================================
+    // Set initial tab for mobile
+    if (window.innerWidth < 1024) {
+        switchTab('list');
+    }
+
+    // Load initial data
     loadData();
+    
+    // Auto-refresh every 5 seconds
     setInterval(loadData, 5000); 
 </script>
 {% endblock %}

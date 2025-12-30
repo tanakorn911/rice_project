@@ -36,11 +36,7 @@
             @apply bg-white/80 backdrop-blur-md border border-slate-100 rounded-2xl shadow-xl hover:shadow-2xl transition-shadow;
         }
 
-        /* ปรับแต่ง Popup แผนที่ให้ดูอ่านง่าย */
-        .leaflet-popup-content-wrapper {
-            @apply rounded-xl border-0 shadow-2xl;
-        }
-        /* Mobile Menu Animation */
+        .leaflet-popup-content-wrapper { @apply rounded-xl border-0 shadow-2xl; }
         #mobile-menu { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); max-height: 0; opacity: 0; overflow: hidden; transform-origin: top; }
         #mobile-menu:not(.hidden) { max-height: 100vh; opacity: 1; }
         
@@ -82,6 +78,7 @@
                         {% if request.user.role == 'GOVT' %}
                             <a href="{% url 'govt_stats' %}" class="nav-link {% if 'govt_stats' in request.path %}active{% endif %}">
                                 <i class="fa-solid fa-chart-line text-sm"></i> <span>{% trans "สถิติ" %}</span>
+                            </a>
                         {% else %}
                             <a href="{% url 'history' %}" class="nav-link {% if 'history' in request.path %}active{% endif %}">
                                 <i class="fa-solid fa-file-invoice text-sm"></i> <span>{% trans "ประวัติ" %}</span>
@@ -169,11 +166,11 @@
             <div class="py-4 px-4 space-y-3">
             {% if request.user.is_authenticated %}
                 <div class="flex items-center gap-4 pb-4 mb-2 border-b border-white/10">
-                    <div class="w-14 h-14 bg-white text-green-800 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg">
+                    <div class="w-14 h-14 bg-white text-green-800 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg shrink-0">
                         {{ request.user.username|make_list|first|upper }}
                     </div>
-                    <div>
-                        <p class="font-bold text-lg text-white">{{ request.user.username }}</p>
+                    <div class="overflow-hidden">
+                        <p class="font-bold text-lg text-white truncate">{{ request.user.username }}</p>
                         <span class="text-xs bg-black/20 px-3 py-1 rounded-full text-white/90 backdrop-blur-sm border border-white/10">{{ request.user.get_role_display }}</span>
                     </div>
                 </div>
@@ -183,7 +180,7 @@
                         <i class="fa-solid fa-chart-pie text-2xl mb-1"></i><span class="text-sm font-bold">{% trans "หน้าหลัก" %}</span>
                     </a>
                     {% if request.user.role == 'GOVT' %}
-                        <a href="/govt/stats" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center text-white">
+                        <a href="{% url 'govt_stats' %}" class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center text-white">
                             <i class="fa-solid fa-chart-line text-2xl mb-1"></i><span class="text-sm font-bold">{% trans "สถิติ" %}</span>
                         </a>
                     {% else %}
@@ -194,8 +191,8 @@
                 </div>
 
                 <button onclick="toggleGlobalNotifMobile()" class="w-full flex items-center gap-4 px-5 py-3.5 rounded-xl hover:bg-white/10 transition border border-white/5 bg-white/5 text-left text-white relative">
-                    <div class="relative">
-                        <i class="fa-solid fa-bell text-lg w-6 text-center"></i>
+                    <div class="relative w-6 flex justify-center shrink-0">
+                        <i class="fa-solid fa-bell text-lg"></i>
                         <span id="mobile-inner-badge" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-green-800 hidden"></span>
                     </div>
                     <span class="font-medium">{% trans "การแจ้งเตือน" %}</span>
@@ -207,11 +204,13 @@
                 </div>
 
                 <a href="{% url 'profile' %}" class="flex items-center gap-4 px-5 py-3.5 rounded-xl hover:bg-white/10 transition border border-white/5 bg-white/5 text-white">
-                    <i class="fa-solid fa-user-gear text-lg w-6 text-center"></i> <span class="font-medium">{% trans "แก้ไขข้อมูลส่วนตัว" %}</span>
+                    <div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-user-gear text-lg"></i></div>
+                    <span class="font-medium">{% trans "แก้ไขข้อมูลส่วนตัว" %}</span>
                 </a>
                 
                 <button onclick="showManual()" class="w-full flex items-center gap-4 px-5 py-3.5 rounded-xl hover:bg-white/10 transition border border-white/5 bg-white/5 text-left text-white">
-                    <i class="fa-solid fa-circle-question text-lg w-6 text-center"></i> <span class="font-medium">{% trans "คู่มือการใช้งาน" %}</span>
+                    <div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-circle-question text-lg"></i></div>
+                    <span class="font-medium">{% trans "คู่มือการใช้งาน" %}</span>
                 </button>
 
                 <form id="logout-form-mobile" action="{% url 'logout' %}" method="post">
@@ -238,7 +237,6 @@
 
 <footer class="bg-slate-900 text-slate-300 py-10 border-t border-slate-800 mt-auto relative overflow-hidden">
     <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-600 via-green-400 to-blue-500"></div>
-    
     <div class="absolute -bottom-10 -right-10 text-9xl text-white opacity-[0.03] pointer-events-none rotate-12">
         <i class="fa-solid fa-seedling"></i>
     </div>
@@ -248,7 +246,7 @@
             
             <div class="text-center md:text-left">
                 <div class="flex items-center justify-center md:justify-start gap-3 mb-4">
-                    <div class="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-900/20">
+                    <div class="w-10 h-10 bg-green-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-green-900/20 shrink-0">
                         <i class="fa-solid fa-seedling text-xl"></i>
                     </div>
                     <div>
@@ -261,15 +259,46 @@
                 </p>
             </div>
 
-            <div class="text-center md:text-left">
+            <div class="flex flex-col items-center md:items-start text-center md:text-left">
                 <h4 class="text-white font-bold mb-4 uppercase text-xs tracking-wider">เมนูหลัก</h4>
                 <ul class="space-y-2 text-sm">
-                    <li><a href="/" class="hover:text-green-400 transition-colors flex items-center justify-center md:justify-start gap-2"><i class="fa-solid fa-chart-pie text-xs"></i> หน้าหลัก (Dashboard)</a></li>
-                    <li><a href="{% url 'history' %}" class="hover:text-green-400 transition-colors flex items-center justify-center md:justify-start gap-2"><i class="fa-solid fa-file-invoice text-xs"></i> ประวัติการซื้อขาย</a></li>
-                    {% if request.user.is_authenticated %}
-                    <li><a href="{% url 'profile' %}" class="hover:text-green-400 transition-colors flex items-center justify-center md:justify-start gap-2"><i class="fa-solid fa-user-gear text-xs"></i> ข้อมูลส่วนตัว</a></li>
+                    <li>
+                        <a href="/" class="hover:text-green-400 transition-colors flex items-center gap-3">
+                            <div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-chart-pie text-xs"></i></div>
+                            <span>หน้าหลัก (Dashboard)</span>
+                        </a>
+                    </li>
+                    
+                    {% if request.user.role == 'GOVT' %}
+                    <li>
+                        <a href="{% url 'govt_stats' %}" class="hover:text-green-400 transition-colors flex items-center gap-3">
+                            <div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-chart-line text-xs"></i></div>
+                            <span>สถิติภาพรวม</span>
+                        </a>
+                    </li>
                     {% else %}
-                    <li><a href="{% url 'login' %}" class="hover:text-green-400 transition-colors flex items-center justify-center md:justify-start gap-2"><i class="fa-solid fa-right-to-bracket text-xs"></i> เข้าสู่ระบบ</a></li>
+                    <li>
+                        <a href="{% url 'history' %}" class="hover:text-green-400 transition-colors flex items-center gap-3">
+                            <div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-file-invoice text-xs"></i></div>
+                            <span>ประวัติการซื้อขาย</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if request.user.is_authenticated %}
+                    <li>
+                        <a href="{% url 'profile' %}" class="hover:text-green-400 transition-colors flex items-center gap-3">
+                            <div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-user-gear text-xs"></i></div>
+                            <span>ข้อมูลส่วนตัว</span>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li>
+                        <a href="{% url 'login' %}" class="hover:text-green-400 transition-colors flex items-center gap-3">
+                            <div class="w-6 flex justify-center shrink-0"><i class="fa-solid fa-right-to-bracket text-xs"></i></div>
+                            <span>เข้าสู่ระบบ</span>
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
             </div>
@@ -305,8 +334,6 @@
 
 <script>
     const CURRENT_USER_ROLE = "{{ request.user.role|default:'GUEST' }}";
-    
-    // ใช้ Logic การจำ ID เพื่อไม่ให้หายเวลากด
     let readNotifIds = JSON.parse(localStorage.getItem('read_notif_ids') || '[]');
     let lastGlobalRead = new Date(localStorage.getItem('globalLastRead') || 0);
 
@@ -342,7 +369,6 @@
         }).then((result) => { if (result.isConfirmed) document.getElementById(formId).submit(); })
     }
 
-    // --- Core Notification Logic ---
     async function loadGlobalNotifications() {
         if (CURRENT_USER_ROLE === 'GUEST') return;
         try {
@@ -359,14 +385,12 @@
             const mobileCountText = document.getElementById('mobile-count-text');
 
             let itemsHTML = '';
-            
             sales.sort((a,b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at));
 
             sales.forEach(s => {
                 const actionDate = s.sold_at ? new Date(s.sold_at) : new Date(s.updated_at || s.created_at);
                 const isRead = readNotifIds.includes(s.id);
                 const isNew = !isRead; 
-
                 let relevant = false, msg = '', subMsg = '', icon = '', colorClass = '';
 
                 if (CURRENT_USER_ROLE === 'FARMER') {
@@ -432,19 +456,32 @@
     window.showManual = function() {
         let title = "{% trans 'คู่มือการใช้งาน' %}";
         let content = "";
+        
         if (CURRENT_USER_ROLE === 'FARMER') {
-            title += " {% trans '(สำหรับเกษตรกร)' %}";
+            title += "<br><span class='text-base font-normal text-gray-800'>{% trans '(สำหรับเกษตรกร)' %}</span>";
+            
             content = `<ul class="text-left space-y-3 text-sm text-gray-600"><li><i class="fa-solid fa-1 text-green-500 w-5"></i> <b>{% trans "วาดแปลงนา" %}:</b> {% trans "ใช้เครื่องมือขวาบนวาดพื้นที่นาของคุณบนแผนที่" %}</li><li><i class="fa-solid fa-2 text-green-500 w-5"></i> <b>{% trans "วิเคราะห์ผลผลิต" %}:</b> {% trans "กดปุ่ม 'วิเคราะห์' เพื่อดูค่า NDVI และปริมาณคาดการณ์" %}</li><li><i class="fa-solid fa-3 text-green-500 w-5"></i> <b>{% trans "ประกาศขาย" %}:</b> {% trans "เมื่อพร้อมขาย กดปุ่ม 'ประกาศขาย' และระบุราคา" %}</li><li><i class="fa-solid fa-4 text-green-500 w-5"></i> <b>{% trans "ต่อรองราคา" %}:</b> {% trans "หากโรงสีกดซื้อ คุณสามารถกด 'ยอมรับ' หรือ 'ต่อราคา' ได้" %}</li></ul>`;
+        
         } else if (CURRENT_USER_ROLE === 'MILLER') {
-            title += " {% trans '(สำหรับโรงสี)' %}";
+            title += "<br><span class='text-base font-normal text-gray-800'>{% trans '(สำหรับโรงสี)' %}</span>";
+            
             content = `<ul class="text-left space-y-3 text-sm text-gray-600"><li><i class="fa-solid fa-1 text-blue-500 w-5"></i> <b>{% trans "ค้นหาข้าว" %}:</b> {% trans "ดูรายการประกาศขายทางด้านซ้าย หรือบนแผนที่" %}</li><li><i class="fa-solid fa-2 text-blue-500 w-5"></i> <b>{% trans "ขอซื้อ" %}:</b> {% trans "กดปุ่ม 'ส่งคำขอซื้อ' และระบุราคาที่ต้องการ" %}</li><li><i class="fa-solid fa-3 text-blue-500 w-5"></i> <b>{% trans "เจรจา" %}:</b> {% trans "รอเกษตรกรตอบกลับ หากเขาต่อราคามา คุณสามารถตกลงหรือต่อกลับได้" %}</li><li><i class="fa-solid fa-4 text-blue-500 w-5"></i> <b>{% trans "นำทาง" %}:</b> {% trans "กดปุ่ม 'นำทาง' ในรายละเอียดเพื่อเปิด Google Maps ไปยังแปลงนา" %}</li></ul>`;
+        
         } else if (CURRENT_USER_ROLE === 'GOVT') {
-            title += " {% trans '(สำหรับเจ้าหน้าที่)' %}";
+            title += "<br><span class='text-base font-normal text-gray-800'>{% trans '(สำหรับเจ้าหน้าที่)' %}</span>";
+            
             content = `<ul class="text-left space-y-3 text-sm text-gray-600"><li><i class="fa-solid fa-chart-line text-purple-500 w-5"></i> <b>ตรวจสอบภาพรวม:</b> ดูยอดขายและปริมาณผลผลิตทั้งจังหวัด</li><li><i class="fa-solid fa-map text-purple-500 w-5"></i> <b>แผนที่:</b> ติดตามพื้นที่เพาะปลูกและการซื้อขายในแต่ละพื้นที่</li></ul>`;
+        
         } else {
             content = "<p class='text-center'>{% trans 'กรุณาเข้าสู่ระบบเพื่อดูคู่มือที่เหมาะสมกับคุณ' %}</p>";
         }
-        Swal.fire({ title: title, html: content, confirmButtonText: "{% trans 'เข้าใจแล้ว' %}", confirmButtonColor: '#16a34a' });
+        
+        Swal.fire({ 
+            title: title, 
+            html: content, 
+            confirmButtonText: "{% trans 'เข้าใจแล้ว' %}", 
+            confirmButtonColor: '#16a34a' 
+        });
     }
 
     if (CURRENT_USER_ROLE !== 'GUEST') {

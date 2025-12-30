@@ -34,7 +34,6 @@ services:
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com  # อีเมลสำหรับล็อกอินเข้า pgAdmin
       PGADMIN_DEFAULT_PASSWORD: admin       # รหัสผ่านสำหรับล็อกอินเข้า pgAdmin
-      PGADMIN_DEFAULT_PASSWORD: admin       # รหัสผ่านสำหรับล็อกอินเข้า pgAdmin
     ports:
       - "5050:80"  # เข้าผ่าน localhost:5050
     depends_on:

@@ -15,6 +15,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt # <--- สำคัญสำหรับ API
 from .models import RiceField, YieldEstimation, SaleNotification
 from .serializers import RiceFieldSerializer, YieldEstimationSerializer, SaleNotificationSerializer
+from .decorators import farmer_required, miller_required, govt_required, not_govt_required
 
 # --- GEE Init ---
 try:
