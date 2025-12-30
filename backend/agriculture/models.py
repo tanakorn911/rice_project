@@ -17,7 +17,7 @@ class RiceField(models.Model):
         ('KDML105', 'หอมมะลิ 105'),
         ('RD6', 'กข 6 (ข้าวเหนียว)'),
         ('RD15', 'กข 15'),
-        ('PATHUM1', 'ปทุมธานี'),
+        ('PATHUM1', 'ปทุมธานี 1'),
         ('OTHER', 'อื่นๆ'),
     ]
     variety = models.CharField(max_length=20, choices=VARIETY_CHOICES, default='KDML105')
