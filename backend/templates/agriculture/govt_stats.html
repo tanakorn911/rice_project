@@ -6,27 +6,43 @@
     <!-- Left Panel: Analytics Overview -->
     <div id="view-overview" class="flex-grow lg:col-span-5 flex flex-col gap-4 h-full overflow-hidden transition-all duration-300">
         
-        <!-- Header Card -->
+        <!-- Header Card (ปรับสีและข้อมูล) -->
         <div class="bg-gradient-to-r from-green-600 to-emerald-600 p-4 rounded-2xl shadow-lg text-white shrink-0">
             <div class="flex justify-between items-start">
                 <div>
-                    <!-- This h1 already has the text-green-300 from previous revision, which should look good on the new green background -->
                     <h1 class="text-lg font-bold flex items-center gap-2"> 
-                        <i class="fa-solid fa-building-columns"></i> Command Center
+                        <i class="fa-solid fa-building-columns"></i> 
+                        ศูนย์บัญชาการข้าว
                     </h1>
-                    <p class="text-[10px] opacity-90 mt-1">ศูนย์บัญชาการข้อมูลข้าว จ.พะเยา</p>
-                    <p class="text-[9px] opacity-75 mt-1">
-                        <i class="fa-solid fa-clock"></i> 
-                        อัปเดต: <span id="last-update">-</span>
+                    <p class="text-[10px] opacity-90 mt-1">
+                        <i class="fa-solid fa-map-marker-alt"></i> 
+                        จังหวัดพะเยา - ระบบติดตามผลผลิต
+                    </p>
+                    <p class="text-[9px] opacity-75 mt-1 flex items-center gap-2">
+                        <i class="fa-solid fa-clock animate-pulse"></i> 
+                        อัปเดต: <span id="last-update" class="font-mono">-</span>
                     </p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-col sm:flex-row">
+                    <!-- Filter -->
                     <select id="filter-variety" onchange="applyFilter()" 
-                        class="bg-white/20 backdrop-blur border border-white/30 text-white text-[10px] rounded-lg p-1.5 focus:ring-2 focus:ring-white/50 outline-none">
-                        <option value="all">ทั้งหมด</option>
-                        <option value="KDML105">หอมมะลิ 105</option>
-                        <option value="RD6">กข 6</option>
+                        class="bg-white/20 backdrop-blur border border-white/30 text-white text-[10px] rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-white/50 outline-none">
+                        <option value="all" class="text-gray-800">ทุกพันธุ์</option>
+                        <option value="KDML105" class="text-gray-800">🍚 หอมมะลิ 105</option>
+                        <option value="RD6" class="text-gray-800">🍙 กข 6</option>
+                        <option value="RD15" class="text-gray-800">🌾 กข 15</option>
+                        <option value="PATHUM1" class="text-gray-800">🌿 ปทุมธานี</option>
                     </select>
+                    
+                    <!-- Export Button (Desktop) -->
+                    <button onclick="exportData()" 
+                        class="hidden sm:flex bg-white/20 backdrop-blur text-white hover:bg-white/30 px-3 py-1.5 rounded-lg items-center justify-center gap-1 shadow-sm transition-all text-[10px] font-semibold"
+                        aria-label="ส่งออกข้อมูล">
+                        <i class="fa-solid fa-download"></i>
+                        <span class="hidden md:inline">Export</span>
+                    </button>
+                    
+                    <!-- Refresh Button -->
                     <button onclick="forceUpdate()" id="btn-refresh"
                         class="bg-white/20 backdrop-blur text-white hover:bg-white/30 w-8 h-8 rounded-full flex items-center justify-center shadow-sm transition-all"
                         aria-label="รีเฟรชข้อมูล">
@@ -39,13 +55,23 @@
         <!-- Scrollable Content -->
         <div class="flex-grow overflow-y-auto custom-scrollbar pb-20 lg:pb-0 space-y-4 p-1">
             
-            <!-- KPI Cards Grid -->
+            <!-- KPI Cards Grid (ปรับข้อมูลให้เข้ากับระบบ) -->
             <div class="grid grid-cols-3 gap-2">
+                <!-- Total Revenue KPI -->
+                <div class="bg-gradient-to-br from-purple-500 to-purple-600 p-2.5 rounded-xl shadow-sm hover:shadow-md transition-shadow text-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <p class="text-[9px] uppercase font-bold opacity-90">มูลค่ารวม</p>
+                        <i class="fa-solid fa-coins text-xs opacity-80"></i>
+                    </div>
+                    <p class="text-lg font-bold" id="kpi-revenue">0</p>
+                    <p class="text-[8px] opacity-75">ล้านบาท</p>
+                </div>
+
                 <!-- Supply KPI -->
                 <div class="bg-white p-2.5 rounded-xl border border-blue-100 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-1">
                         <p class="text-[9px] text-gray-500 uppercase font-bold">ผลผลิตรวม</p>
-                        <i class="fa-solid fa-boxes-stacked text-blue-500 text-xs"></i>
+                        <i class="fa-solid fa-wheat-awn text-blue-500 text-xs"></i>
                     </div>
                     <p class="text-lg font-bold text-blue-600" id="kpi-supply">0</p>
                     <p class="text-[8px] text-gray-400">ตัน</p>
@@ -61,13 +87,13 @@
                     <p class="text-[8px] text-gray-400">ตัน</p>
                 </div>
 
-                <!-- Stock KPI -->
+                <!-- Pending Sales KPI -->
                 <div class="bg-white p-2.5 rounded-xl border border-orange-100 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-center justify-between mb-1">
                         <p class="text-[9px] text-gray-500 uppercase font-bold">รอขาย</p>
-                        <i class="fa-solid fa-hourglass-half text-orange-500 text-xs"></i>
+                        <i class="fa-solid fa-clock text-orange-500 text-xs"></i>
                     </div>
-                    <p class="text-lg font-bold text-orange-500" id="kpi-stock">0</p>
+                    <p class="text-lg font-bold text-orange-500" id="kpi-pending">0</p>
                     <p class="text-[8px] text-gray-400">ตัน</p>
                 </div>
 
@@ -90,107 +116,152 @@
                     <p class="text-lg font-bold text-gray-700" id="kpi-area">0</p>
                     <p class="text-[8px] text-gray-400">ไร่</p>
                 </div>
-
-                <!-- Success Rate KPI -->
-                <div class="bg-gradient-to-br from-purple-500 to-blue-500 p-2.5 rounded-xl shadow-sm text-white hover:shadow-md transition-shadow">
-                    <div class="flex items-center justify-between mb-1">
-                        <p class="text-[9px] uppercase font-bold opacity-90">อัตราสำเร็จ</p>
-                        <i class="fa-solid fa-chart-line text-xs"></i>
-                    </div>
-                    <p class="text-lg font-bold" id="kpi-rate">0%</p>
-                    <p class="text-[8px] opacity-75">เป้าหมาย: 85%</p>
-                </div>
             </div>
 
-            <!-- Balance Chart -->
+            <!-- Sales Status Overview (ใหม่) -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <div class="flex justify-between items-center mb-3">
                     <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
-                        <i class="fa-solid fa-scale-balanced text-blue-500"></i> 
-                        อุปสงค์ vs อุปทาน
+                        <i class="fa-solid fa-chart-simple text-purple-500"></i> 
+                        สถานะการขาย
+                    </h4>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-green-50 p-3 rounded-lg border border-green-100">
+                        <p class="text-2xl font-bold text-green-600" id="stat-sold">0</p>
+                        <p class="text-[10px] text-gray-500 mt-1">ขายแล้ว</p>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100">
+                        <p class="text-2xl font-bold text-yellow-600" id="stat-requested">0</p>
+                        <p class="text-[10px] text-gray-500 mt-1">รออนุมัติ</p>
+                    </div>
+                    <div class="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                        <p class="text-2xl font-bold text-orange-600" id="stat-open">0</p>
+                        <p class="text-[10px] text-gray-500 mt-1">เปิดขาย</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monthly Yield Chart (เปลี่ยนจาก Balance Chart) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-column text-blue-500"></i> 
+                        ผลผลิตรายเดือน
                     </h4>
                     <span class="text-[9px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full font-semibold">
-                        Real-time
+                        ปี {{ current_year }}
                     </span>
                 </div>
-                <div class="h-[150px] relative">
-                    <canvas id="balanceChart"></canvas>
+                <div class="h-[180px] relative">
+                    <canvas id="monthlyChart"></canvas>
                 </div>
             </div>
 
-            <!-- Health Analysis Chart -->
+            <!-- Variety Distribution (แทนที่ Health Chart) -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <div class="flex justify-between items-center mb-3">
                     <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
-                        <i class="fa-solid fa-heart-pulse text-red-500"></i> 
-                        สุขภาพพืช (NDVI Analysis)
+                        <i class="fa-solid fa-seedling text-green-500"></i> 
+                        สัดส่วนพันธุ์ข้าว
                     </h4>
-                    <button onclick="showNDVIInfo()" class="text-[9px] text-gray-400 hover:text-blue-600">
-                        <i class="fa-solid fa-circle-info"></i> คำอธิบาย
+                    <button onclick="showVarietyInfo()" class="text-[9px] text-gray-400 hover:text-blue-600">
+                        <i class="fa-solid fa-circle-info"></i> รายละเอียด
                     </button>
                 </div>
                 <div class="flex items-center gap-4">
-                    <div class="h-[120px] w-[120px] relative flex-shrink-0">
-                        <canvas id="healthChart"></canvas>
+                    <div class="h-[140px] w-[140px] relative flex-shrink-0">
+                        <canvas id="varietyChart"></canvas>
                         <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div class="text-center">
                                 <p class="text-xs text-gray-400">รวม</p>
-                                <p class="text-lg font-bold text-gray-700" id="total-fields">0</p>
+                                <p class="text-lg font-bold text-gray-700" id="total-yield">0</p>
+                                <p class="text-[8px] text-gray-400">ตัน</p>
                             </div>
                         </div>
                     </div>
-                    <div class="flex-1 space-y-2 text-[10px]">
-                        <div class="flex justify-between items-center p-2 rounded bg-green-50 hover:bg-green-100 transition-colors">
-                            <span class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-green-500"></span> 
-                                <span class="font-medium">สมบูรณ์ดี</span>
-                                <span class="text-[8px] text-gray-400">(NDVI > 0.5)</span>
-                            </span>
-                            <span class="font-bold text-green-700" id="txt-healthy">0</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2 rounded bg-yellow-50 hover:bg-yellow-100 transition-colors">
-                            <span class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-yellow-400"></span> 
-                                <span class="font-medium">ปานกลาง</span>
-                                <span class="text-[8px] text-gray-400">(0.3-0.5)</span>
-                            </span>
-                            <span class="font-bold text-yellow-700" id="txt-moderate">0</span>
-                        </div>
-                        <div class="flex justify-between items-center p-2 rounded bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
-                             onclick="switchTab('list')">
-                            <span class="flex items-center gap-2">
-                                <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span> 
-                                <span class="font-medium">เสี่ยง</span>
-                                <span class="text-[8px] text-gray-400">(< 0.3)</span>
-                            </span>
-                            <span class="font-bold text-red-700 flex items-center gap-1">
-                                <span id="txt-risk">0</span>
-                                <i class="fa-solid fa-chevron-right text-[8px]"></i>
-                            </span>
-                        </div>
+                    <div id="variety-legend" class="flex-1 space-y-1.5 text-[10px]">
+                        <!-- Legend will be generated by JS -->
                     </div>
                 </div>
             </div>
 
-            <!-- Price Trend Chart -->
+            <!-- Price Trend Chart (ปรับปรุง) -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <div class="flex justify-between items-center mb-3">
                     <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
                         <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i> 
                         แนวโน้มราคาตลาด
                     </h4>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[9px] text-gray-400">ราคาเฉลี่ย:</span>
-                        <span class="text-[10px] font-bold text-emerald-600" id="avg-price">0 บ./ตัน</span>
+                    <div class="text-right">
+                        <p class="text-[9px] text-gray-400">ราคาเฉลี่ย</p>
+                        <p class="text-[11px] font-bold text-emerald-600" id="avg-price">0 บ./ตัน</p>
                     </div>
                 </div>
                 <div class="h-[150px] relative">
                     <canvas id="priceTrendChart"></canvas>
                 </div>
-                <p class="text-[8px] text-gray-400 text-center mt-2">
-                    <i class="fa-solid fa-info-circle"></i> 
-                    แสดง 15 รายการล่าสุด
-                </p>
+                <div class="flex justify-between text-[8px] text-gray-400 mt-2">
+                    <span><i class="fa-solid fa-arrow-up text-green-500"></i> สูงสุด: <span id="max-price">0</span> บ.</span>
+                    <span><i class="fa-solid fa-arrow-down text-red-500"></i> ต่ำสุด: <span id="min-price">0</span> บ.</span>
+                </div>
+            </div>
+
+            <!-- NDVI Health Analysis -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-heart-pulse text-red-500"></i> 
+                        สุขภาพพืช (NDVI)
+                    </h4>
+                    <button onclick="showNDVIInfo()" class="text-[9px] text-gray-400 hover:text-blue-600">
+                        <i class="fa-solid fa-circle-info"></i> คำอธิบาย
+                    </button>
+                </div>
+                <div class="space-y-2 text-[10px]">
+                    <div class="flex justify-between items-center p-2 rounded bg-green-50 hover:bg-green-100 transition-colors">
+                        <span class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-green-500"></span> 
+                            <span class="font-medium">สมบูรณ์ดี (> 0.5)</span>
+                        </span>
+                        <span class="font-bold text-green-700">
+                            <span id="txt-healthy">0</span> แปลง
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 rounded bg-yellow-50 hover:bg-yellow-100 transition-colors">
+                        <span class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-yellow-400"></span> 
+                            <span class="font-medium">ปานกลาง (0.3-0.5)</span>
+                        </span>
+                        <span class="font-bold text-yellow-700">
+                            <span id="txt-moderate">0</span> แปลง
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center p-2 rounded bg-red-50 hover:bg-red-100 transition-colors cursor-pointer"
+                         onclick="switchTab('list')">
+                        <span class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span> 
+                            <span class="font-medium">เสี่ยง (< 0.3)</span>
+                        </span>
+                        <span class="font-bold text-red-700 flex items-center gap-1">
+                            <span id="txt-risk">0</span> แปลง
+                            <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Farmers (ใหม่) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="text-xs font-bold text-gray-700 flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-yellow-500"></i> 
+                        เกษตรกรผู้ขายมากสุด
+                    </h4>
+                </div>
+                <div id="top-farmers" class="space-y-2">
+                    <!-- Will be populated by JS -->
+                </div>
             </div>
 
         </div>
@@ -210,15 +281,19 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-yellow-400 shadow-sm"></span> 
-                    <span class="text-gray-600">สุขภาพปานกลาง</span>
+                    <span class="text-gray-600">รออนุมัติ</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-orange-500 shadow-sm"></span> 
-                    <span class="text-gray-600">รอขาย</span>
+                    <span class="text-gray-600">เปิดขาย</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="w-3 h-3 rounded-full bg-red-500 animate-pulse shadow-sm"></span> 
-                    <span class="text-red-600 font-semibold">พื้นที่เสี่ยง</span>
+                    <span class="text-red-600 font-semibold">NDVI ต่ำ</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-gray-400 shadow-sm"></span> 
+                    <span class="text-gray-600">ไม่มีข้อมูล</span>
                 </div>
             </div>
         </div>
@@ -229,6 +304,12 @@
                 class="bg-white/95 backdrop-blur px-3 py-2 rounded-lg shadow-md hover:bg-white transition-colors text-xs font-semibold text-gray-700"
                 aria-label="รีเซ็ตแผนที่">
                 <i class="fa-solid fa-location-crosshairs"></i> รีเซ็ต
+            </button>
+            <button onclick="toggleHeatmap()" 
+                class="bg-white/95 backdrop-blur px-3 py-2 rounded-lg shadow-md hover:bg-white transition-colors text-xs font-semibold text-gray-700"
+                aria-label="Heatmap">
+                <i class="fa-solid fa-fire"></i> 
+                <span class="hidden md:inline">Heatmap</span>
             </button>
         </div>
     </div>
@@ -279,7 +360,7 @@
     <!-- Mobile Bottom Navigation -->
     <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-[1002] lg:hidden flex justify-around items-center h-16 pb-safe">
         <button onclick="switchTab('overview')" id="btn-tab-overview" 
-            class="flex flex-col items-center justify-center w-1/3 h-full text-purple-600 border-t-2 border-purple-600 bg-purple-50/50 transition-all"
+            class="flex flex-col items-center justify-center w-1/3 h-full text-green-600 border-t-2 border-green-600 bg-green-50/50 transition-all"
             aria-label="แท็บวิเคราะห์">
             <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
             <span class="text-[10px] font-bold">วิเคราะห์</span>
@@ -294,7 +375,7 @@
             class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all relative"
             aria-label="แท็บเฝ้าระวัง">
             <span class="absolute top-1 right-6 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full" 
-                  id="risk-badge" style="display:none;">0</span>
+                id="risk-badge" style="display:none;">0</span>
             <i class="fa-solid fa-triangle-exclamation text-xl mb-1"></i>
             <span class="text-[10px] font-bold">เฝ้าระวัง</span>
         </button>
@@ -307,14 +388,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     // ==================== CONSTANTS ====================
-    const NDVI_THRESHOLDS = {
-        GOOD: 0.5,
-        MODERATE: 0.3,
-        RISK: 0.3
-    };
-
-    const UPDATE_INTERVAL = 30000; // 30 seconds
-    const ANIMATION_DURATION = 1000; // 1 second
+    const NDVI_THRESHOLDS = { GOOD: 0.5, MODERATE: 0.3, RISK: 0.3 };
+    const UPDATE_INTERVAL = 30000;
+    const PRICE_ESTIMATE = 12000; // ราคาประมาณการ บาท/ตัน
 
     // ==================== GLOBAL STATE ====================
     let globalFields = [];
@@ -322,11 +398,12 @@
     let currentFilter = 'all';
     let updateTimer = null;
     let isUpdating = false;
+    let heatmapLayer = null;
 
     // ==================== MAP INITIALIZATION ====================
     const map = L.map('map', { 
         center: [19.1667, 99.9000], 
-        zoom: 12, 
+        zoom: 10, 
         zoomControl: false 
     });
 
@@ -339,67 +416,58 @@
     const fieldLayer = L.featureGroup().addTo(map);
     let layersMap = {};
 
-    // ==================== CHARTS INITIALIZATION ====================
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                padding: 10,
-                cornerRadius: 6,
-                titleFont: { size: 11, weight: 'bold' },
-                bodyFont: { size: 10 }
-            }
-        }
-    };
-
-    const balanceChart = new Chart(document.getElementById('balanceChart').getContext('2d'), {
+    // ==================== CHARTS ====================
+    
+    // Monthly Yield Chart (แทนที่ Balance Chart)
+    const monthlyChart = new Chart(document.getElementById('monthlyChart').getContext('2d'), {
         type: 'bar',
         data: {
-            labels: ['ผลผลิตรวม', 'ขายแล้ว', 'รอขาย'],
+            labels: ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'],
             datasets: [{
-                label: 'ปริมาณ (ตัน)',
-                data: [0, 0, 0],
-                backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b'],
-                borderRadius: 6,
-                borderWidth: 0
+                label: 'ผลผลิต (ตัน)',
+                data: Array(12).fill(0),
+                backgroundColor: '#3b82f6',
+                borderRadius: 6
             }]
         },
         options: {
-            ...chartOptions,
-            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: {
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { size: 9 }, color: '#6b7280' }
-                },
                 y: {
-                    grid: { display: false },
-                    ticks: { font: { size: 9 }, color: '#6b7280' }
+                    beginAtZero: true,
+                    ticks: { font: { size: 9 }, color: '#6b7280' },
+                    grid: { color: '#f3f4f6' }
+                },
+                x: {
+                    ticks: { font: { size: 9 }, color: '#6b7280' },
+                    grid: { display: false }
                 }
             }
         }
     });
 
-    const healthChart = new Chart(document.getElementById('healthChart').getContext('2d'), {
+    // Variety Distribution Chart
+    const varietyChart = new Chart(document.getElementById('varietyChart').getContext('2d'), {
         type: 'doughnut',
         data: {
-            labels: ['สมบูรณ์ดี', 'ปานกลาง', 'เสี่ยง'],
+            labels: [],
             datasets: [{
-                data: [0, 0, 0],
-                backgroundColor: ['#22c55e', '#fbbf24', '#ef4444'],
-                borderWidth: 0,
-                hoverOffset: 4
+                data: [],
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                borderWidth: 0
             }]
         },
         options: {
-            ...chartOptions,
-            cutout: '75%'
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: { legend: { display: false } }
         }
     });
 
+    // Price Trend Chart
     const priceTrendChart = new Chart(document.getElementById('priceTrendChart').getContext('2d'), {
         type: 'line',
         data: {
@@ -413,121 +481,27 @@
                 tension: 0.4,
                 borderWidth: 2,
                 pointRadius: 3,
-                pointHoverRadius: 5,
                 pointBackgroundColor: '#10b981'
             }]
         },
         options: {
-            ...chartOptions,
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
             scales: {
                 y: {
                     beginAtZero: false,
-                    grid: { color: '#f3f4f6' },
                     ticks: { font: { size: 9 }, color: '#6b7280' }
                 },
                 x: {
-                    grid: { display: false },
                     ticks: { font: { size: 8 }, color: '#6b7280', maxRotation: 45 }
                 }
             }
         }
     });
 
-    // ==================== UI FUNCTIONS ====================
+    // ==================== DATA PROCESSING ====================
     
-    /**
-     * Switch between mobile tabs
-     */
-    function switchTab(tab) {
-        const views = { overview: 'view-overview', map: 'view-map', list: 'view-list' };
-        const btns = { overview: 'btn-tab-overview', map: 'btn-tab-map', list: 'btn-tab-list' };
-        
-        const isMobile = window.innerWidth < 1024;
-
-        if (isMobile) {
-            Object.keys(views).forEach(k => {
-                document.getElementById(views[k]).classList.toggle('hidden', k !== tab);
-            });
-
-            Object.keys(btns).forEach(k => {
-                const btn = document.getElementById(btns[k]);
-                if (k === tab) {
-                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-purple-600 border-t-2 border-purple-600 bg-purple-50/50 transition-all";
-                } else {
-                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all";
-                }
-            });
-        } else {
-            // Desktop: Always show overview and map
-            document.getElementById('view-overview').classList.remove('hidden');
-            document.getElementById('view-map').classList.remove('hidden');
-            document.getElementById('view-list').classList.add('hidden');
-        }
-
-        if (tab === 'map') {
-            setTimeout(() => map.invalidateSize(), 100);
-        }
-    }
-
-    /**
-     * Apply variety filter
-     */
-    function applyFilter() {
-        currentFilter = document.getElementById('filter-variety').value;
-        processData();
-    }
-
-    /**
-     * Force update data
-     */
-    function forceUpdate() {
-        if (isUpdating) return;
-        
-        const icon = document.getElementById('refresh-icon');
-        icon.classList.add('fa-spin');
-        
-        updateData().finally(() => {
-            icon.classList.remove('fa-spin');
-        });
-    }
-
-    /**
-     * Show NDVI information
-     */
-    function showNDVIInfo() {
-        Swal.fire({
-            title: 'ค่า NDVI คืออะไร?',
-            html: `
-                <div class="text-left text-sm space-y-2">
-                    <p><strong>NDVI (Normalized Difference Vegetation Index)</strong> คือดัชนีวัดความสมบูรณ์ของพืช</p>
-                    <hr>
-                    <div class="space-y-1">
-                        <p class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
-                            <strong>NDVI > 0.5:</strong> พืชสมบูรณ์ดี เจริญเติบโตปกติ
-                        </p>
-                        <p class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
-                            <strong>NDVI 0.3-0.5:</strong> พืชมีสุขภาพปานกลาง ควรติดตาม
-                        </p>
-                        <p class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
-                            <strong>NDVI < 0.3:</strong> พืชมีปัญหา อาจเกิดจากภัยแล้ง โรค หรือแมลง
-                        </p>
-                    </div>
-                </div>
-            `,
-            icon: 'info',
-            confirmButtonColor: '#3b82f6',
-            confirmButtonText: 'เข้าใจแล้ว'
-        });
-    }
-
-    // ==================== DATA FUNCTIONS ====================
-
-    /**
-     * Fetch data from API
-     */
     async function updateData() {
         if (isUpdating) return;
         isUpdating = true;
@@ -538,10 +512,6 @@
                 fetch('/api/sales/')
             ]);
 
-            if (!fieldsRes.ok || !salesRes.ok) {
-                throw new Error('Failed to fetch data');
-            }
-
             globalFields = await fieldsRes.json();
             globalSales = await salesRes.json();
 
@@ -550,22 +520,12 @@
 
         } catch (error) {
             console.error('Update error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'เกิดข้อผิดพลาด',
-                text: 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
-                confirmButtonColor: '#3b82f6'
-            });
         } finally {
             isUpdating = false;
         }
     }
 
-    /**
-     * Process and analyze data
-     */
     function processData() {
-        // Filter data
         const filteredFields = currentFilter === 'all' 
             ? globalFields 
             : globalFields.filter(f => f.variety === currentFilter);
@@ -574,8 +534,8 @@
             ? globalSales
             : globalSales.filter(s => s.variety === currentFilter);
 
-        // Initialize analytics
         let analytics = {
+            totalRevenue: 0,
             totalYield: 0,
             soldYield: 0,
             pendingYield: 0,
@@ -583,7 +543,11 @@
             farmers: new Set(),
             health: { good: 0, moderate: 0, risk: 0 },
             riskFields: [],
-            priceData: []
+            priceData: [],
+            monthlyYield: Array(12).fill(0),
+            varietyData: {},
+            salesStatus: { sold: 0, requested: 0, open: 0 },
+            topFarmers: {}
         };
 
         // Process Fields
@@ -595,12 +559,10 @@
             analytics.totalArea += area;
             analytics.totalYield += yieldVal;
 
-            // Categorize health
-            if (ndvi > NDVI_THRESHOLDS.GOOD) {
-                analytics.health.good++;
-            } else if (ndvi >= NDVI_THRESHOLDS.MODERATE) {
-                analytics.health.moderate++;
-            } else {
+            // NDVI Health
+            if (ndvi > NDVI_THRESHOLDS.GOOD) analytics.health.good++;
+            else if (ndvi >= NDVI_THRESHOLDS.MODERATE) analytics.health.moderate++;
+            else {
                 analytics.health.risk++;
                 analytics.riskFields.push({ ...field, ndvi });
             }
@@ -608,117 +570,70 @@
 
         // Process Sales
         filteredSales.forEach(sale => {
-            analytics.farmers.add(sale.farmer_name);
-            
             const qty = parseFloat(sale.quantity_ton || 0);
             const price = parseFloat(sale.price_per_ton || 0);
+            const farmer = sale.farmer_name;
 
+            analytics.farmers.add(farmer);
+
+            // Sales Status
             if (sale.status === 'SOLD') {
                 analytics.soldYield += qty;
+                analytics.totalRevenue += (qty * price);
+                analytics.salesStatus.sold++;
+                
                 if (price > 0) {
-                    analytics.priceData.push({
-                        date: new Date(sale.created_at),
-                        price: price
-                    });
+                    analytics.priceData.push({ date: new Date(sale.created_at), price });
                 }
+
+                // Monthly data
+                const month = new Date(sale.created_at).getMonth();
+                analytics.monthlyYield[month] += qty;
+
+                // Top Farmers
+                analytics.topFarmers[farmer] = (analytics.topFarmers[farmer] || 0) + qty;
+            } else if (sale.status === 'REQUESTED') {
+                analytics.salesStatus.requested++;
+                analytics.pendingYield += qty;
             } else {
+                analytics.salesStatus.open++;
                 analytics.pendingYield += qty;
             }
+
+            // Variety Distribution
+            const variety = sale.variety_display || sale.variety;
+            analytics.varietyData[variety] = (analytics.varietyData[variety] || 0) + qty;
         });
 
-        // Update UI
         updateKPIs(analytics);
         updateCharts(analytics);
         updateMap(filteredFields, filteredSales);
         updateWatchlist(analytics.riskFields);
+        updateTopFarmers(analytics.topFarmers);
     }
 
-    /**
-     * Update KPI cards with animation
-     */
     function updateKPIs(analytics) {
-        animateValue('kpi-supply', analytics.totalYield);
-        animateValue('kpi-demand', analytics.soldYield);
-        animateValue('kpi-stock', analytics.pendingYield);
-        animateValue('kpi-farmers', analytics.farmers.size);
-        animateValue('kpi-area', analytics.totalArea);
-
-        // Success rate
-        const rate = analytics.totalYield > 0 
-            ? ((analytics.soldYield / analytics.totalYield) * 100).toFixed(1) 
-            : 0;
+        // Revenue (in millions)
+        document.getElementById('kpi-revenue').innerText = 
+            (analytics.totalRevenue / 1000000).toFixed(2);
         
-        const rateEl = document.getElementById('kpi-rate');
-        rateEl.innerText = rate + '%';
-        
-        // Color coding
-        if (rate >= 85) {
-            rateEl.classList.remove('text-yellow-600', 'text-red-600');
-            rateEl.classList.add('text-white');
-            rateEl.parentElement.className = 'bg-gradient-to-br from-green-500 to-emerald-500 p-2.5 rounded-xl shadow-sm text-white hover:shadow-md transition-shadow';
-        } else if (rate >= 50) {
-            rateEl.classList.remove('text-white', 'text-red-600');
-            rateEl.parentElement.className = 'bg-gradient-to-br from-yellow-400 to-orange-400 p-2.5 rounded-xl shadow-sm text-white hover:shadow-md transition-shadow';
-        } else {
-            rateEl.classList.remove('text-white', 'text-yellow-600');
-            rateEl.parentElement.className = 'bg-gradient-to-br from-red-500 to-pink-500 p-2.5 rounded-xl shadow-sm text-white hover:shadow-md transition-shadow';
-        }
-    }
+        document.getElementById('kpi-supply').innerText = analytics.totalYield.toFixed(1);
+        document.getElementById('kpi-demand').innerText = analytics.soldYield.toFixed(1);
+        document.getElementById('kpi-pending').innerText = analytics.pendingYield.toFixed(1);
+        document.getElementById('kpi-farmers').innerText = analytics.farmers.size;
+        document.getElementById('kpi-area').innerText = analytics.totalArea.toFixed(0);
 
-    /**
-     * Animate number changes
-     */
-    function animateValue(elementId, targetValue) {
-        const element = document.getElementById(elementId);
-        const currentValue = parseFloat(element.innerText.replace(/,/g, '')) || 0;
-        const difference = targetValue - currentValue;
-        const steps = 30;
-        const stepValue = difference / steps;
-        let currentStep = 0;
+        // Sales Status
+        document.getElementById('stat-sold').innerText = analytics.salesStatus.sold;
+        document.getElementById('stat-requested').innerText = analytics.salesStatus.requested;
+        document.getElementById('stat-open').innerText = analytics.salesStatus.open;
 
-        const interval = setInterval(() => {
-            currentStep++;
-            const newValue = currentValue + (stepValue * currentStep);
-            
-            if (currentStep >= steps) {
-                element.innerText = targetValue.toLocaleString(undefined, { 
-                    maximumFractionDigits: 0 
-                });
-                clearInterval(interval);
-            } else {
-                element.innerText = Math.round(newValue).toLocaleString();
-            }
-        }, ANIMATION_DURATION / steps);
-    }
-
-    /**
-     * Update all charts
-     */
-    function updateCharts(analytics) {
-        // Balance Chart
-        balanceChart.data.datasets[0].data = [
-            analytics.totalYield,
-            analytics.soldYield,
-            analytics.pendingYield
-        ];
-        balanceChart.update('none');
-
-        // Health Chart
-        const totalFields = analytics.health.good + analytics.health.moderate + analytics.health.risk;
-        document.getElementById('total-fields').innerText = totalFields;
-        
-        healthChart.data.datasets[0].data = [
-            analytics.health.good,
-            analytics.health.moderate,
-            analytics.health.risk
-        ];
-        healthChart.update('none');
-
+        // Health
         document.getElementById('txt-healthy').innerText = analytics.health.good;
         document.getElementById('txt-moderate').innerText = analytics.health.moderate;
         document.getElementById('txt-risk').innerText = analytics.health.risk;
 
-        // Update risk badge
+        // Risk Badge
         const riskBadge = document.getElementById('risk-badge');
         if (analytics.health.risk > 0) {
             riskBadge.innerText = analytics.health.risk;
@@ -726,40 +641,90 @@
         } else {
             riskBadge.style.display = 'none';
         }
+    }
 
-        // Price Trend Chart
+    function updateCharts(analytics) {
+        // Monthly Yield
+        monthlyChart.data.datasets[0].data = analytics.monthlyYield;
+        monthlyChart.update('none');
+
+        // Variety Distribution
+        const sortedVarieties = Object.entries(analytics.varietyData)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+        varietyChart.data.labels = sortedVarieties.map(([k]) => k);
+        varietyChart.data.datasets[0].data = sortedVarieties.map(([, v]) => v);
+        varietyChart.update('none');
+
+        document.getElementById('total-yield').innerText = analytics.totalYield.toFixed(1);
+
+        // Legend
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+        document.getElementById('variety-legend').innerHTML = sortedVarieties.map(([k, v], i) => `
+            <div class="flex justify-between items-center p-1.5 rounded hover:bg-gray-50">
+                <span class="flex items-center gap-1.5">
+                    <span class="w-3 h-3 rounded-full" style="background:${colors[i]}"></span>
+                    <span class="text-gray-700">${k}</span>
+                </span>
+                <span class="font-bold text-gray-800">${v.toFixed(1)}</span>
+            </div>
+        `).join('');
+
+        // Price Trend
         analytics.priceData.sort((a, b) => a.date - b.date);
         const recentPrices = analytics.priceData.slice(-15);
 
-        priceTrendChart.data.labels = recentPrices.map(p => 
-            p.date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
-        );
-        priceTrendChart.data.datasets[0].data = recentPrices.map(p => p.price);
-        priceTrendChart.update('none');
-
-        // Average price
         if (recentPrices.length > 0) {
-            const avgPrice = recentPrices.reduce((sum, p) => sum + p.price, 0) / recentPrices.length;
-            document.getElementById('avg-price').innerText = 
-                avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' บ./ตัน';
-        } else {
-            document.getElementById('avg-price').innerText = '0 บ./ตัน';
+            priceTrendChart.data.labels = recentPrices.map(p => 
+                p.date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+            );
+            priceTrendChart.data.datasets[0].data = recentPrices.map(p => p.price);
+            priceTrendChart.update('none');
+
+            const prices = recentPrices.map(p => p.price);
+            const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
+            const maxPrice = Math.max(...prices);
+            const minPrice = Math.min(...prices);
+
+            document.getElementById('avg-price').innerText = avgPrice.toFixed(0) + ' บ./ตัน';
+            document.getElementById('max-price').innerText = maxPrice.toLocaleString();
+            document.getElementById('min-price').innerText = minPrice.toLocaleString();
         }
     }
 
-    /**
-     * Update map markers
-     */
+    function updateTopFarmers(farmers) {
+        const sorted = Object.entries(farmers)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+        document.getElementById('top-farmers').innerHTML = sorted.map(([name, qty], i) => `
+            <div class="flex items-center justify-between p-2 rounded ${i === 0 ? 'bg-yellow-50 border border-yellow-100' : 'bg-gray-50'}">
+                <div class="flex items-center gap-2">
+                    <span class="flex items-center justify-center w-6 h-6 rounded-full ${
+                        i === 0 ? 'bg-yellow-500 text-white' : 
+                        i === 1 ? 'bg-gray-400 text-white' : 
+                        i === 2 ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-600'
+                    } text-xs font-bold">
+                        ${i + 1}
+                    </span>
+                    <span class="font-medium text-gray-700">${name}</span>
+                </div>
+                <span class="font-bold text-blue-600">${qty.toFixed(1)} ตัน</span>
+            </div>
+        `).join('');
+    }
+
+    // ==================== MAP FUNCTIONS ====================
+    
     function updateMap(fields, sales) {
         fieldLayer.clearLayers();
         layersMap = {};
 
-        // Create sales lookup
         const salesMap = {};
-        sales.forEach(sale => {
-            if (!salesMap[sale.rice_field] || 
-                new Date(salesMap[sale.rice_field].created_at) < new Date(sale.created_at)) {
-                salesMap[sale.rice_field] = sale;
+        sales.forEach(s => {
+            if (!salesMap[s.rice_field] || new Date(salesMap[s.rice_field].created_at) < new Date(s.created_at)) {
+                salesMap[s.rice_field] = s;
             }
         });
 
@@ -771,33 +736,34 @@
                 const ndvi = field.latest_yield ? parseFloat(field.latest_yield.ndvi || 0) : 0;
                 const sale = salesMap[field.id];
 
-                // Determine color based on NDVI and sale status
                 let color, fillOpacity, weight;
                 
+                // Priority: NDVI Risk > Sale Status
                 if (ndvi < NDVI_THRESHOLDS.RISK) {
-                    color = '#ef4444'; // Red - Risk
+                    color = '#ef4444';
                     fillOpacity = 0.6;
                     weight = 2;
                 } else if (sale && sale.status === 'SOLD') {
-                    color = '#22c55e'; // Green - Sold
+                    color = '#22c55e';
                     fillOpacity = 0.5;
                     weight = 1;
-                } else if (ndvi < NDVI_THRESHOLDS.GOOD) {
-                    color = '#fbbf24'; // Yellow - Moderate
-                    fillOpacity = 0.5;
-                    weight = 1;
-                } else if (sale && sale.status !== 'SOLD') {
-                    color = '#f59e0b'; // Orange - Pending Sale
+                } else if (sale && sale.status === 'REQUESTED') {
+                    color = '#fbbf24';
+                    fillOpacity = 0.6;
+                    weight = 2;
+                } else if (sale && sale.status === 'OPEN') {
+                    color = '#f59e0b';
                     fillOpacity = 0.5;
                     weight = 1;
                 } else {
-                    color = '#94a3b8'; // Gray - No data
+                    color = '#94a3b8';
                     fillOpacity = 0.3;
                     weight = 1;
                 }
 
-                // Create popup content
-                let popupContent = `
+                const layer = L.geoJSON(geo, {
+                    style: { color, weight, fillOpacity }
+                }).bindPopup(`
                     <div class="p-3 min-w-[180px]">
                         <h4 class="font-bold text-gray-800 mb-2">${field.name}</h4>
                         <div class="space-y-1 text-xs">
@@ -817,41 +783,93 @@
                                 <hr class="my-1">
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">สถานะ:</span>
-                                    <span class="font-semibold ${
-                                        sale.status === 'SOLD' ? 'text-green-600' : 'text-orange-600'
-                                    }">${
-                                        sale.status === 'SOLD' ? 'ขายแล้ว' : 'รอขาย'
+                                    <span class="font-semibold">${
+                                        sale.status === 'SOLD' ? '✅ ขายแล้ว' : 
+                                        sale.status === 'REQUESTED' ? '⏳ รออนุมัติ' : 
+                                        '🔔 เปิดขาย'
                                     }</span>
                                 </div>
                             ` : ''}
                         </div>
                     </div>
-                `;
-
-                const layer = L.geoJSON(geo, {
-                    style: {
-                        color: color,
-                        weight: weight,
-                        fillOpacity: fillOpacity
-                    }
-                }).bindPopup(popupContent).addTo(fieldLayer);
+                `).addTo(fieldLayer);
 
                 layersMap[field.id] = layer;
 
-            } catch (error) {
-                console.warn(`Failed to parse boundary for field ${field.id}:`, error);
+            } catch (e) {
+                console.warn('Failed to parse boundary:', e);
             }
         });
     }
 
-    /**
-     * Update watchlist table
-     */
+    // ==================== UTILITY FUNCTIONS ====================
+    
+    function switchTab(tab) {
+        const views = { overview: 'view-overview', map: 'view-map', list: 'view-list' };
+        const btns = { overview: 'btn-tab-overview', map: 'btn-tab-map', list: 'btn-tab-list' };
+        
+        const isMobile = window.innerWidth < 1024;
+
+        if (isMobile) {
+            Object.keys(views).forEach(k => {
+                document.getElementById(views[k]).classList.toggle('hidden', k !== tab);
+            });
+
+            Object.keys(btns).forEach(k => {
+                const btn = document.getElementById(btns[k]);
+                if (k === tab) {
+                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-green-600 border-t-2 border-green-600 bg-green-50/50 transition-all relative";
+                } else {
+                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all";
+                }
+            });
+        } else {
+            // Desktop: Always show overview and map
+            document.getElementById('view-overview').classList.remove('hidden');
+            document.getElementById('view-map').classList.remove('hidden');
+            document.getElementById('view-list').classList.add('hidden');
+        }
+
+        if (tab === 'map') {
+            setTimeout(() => map.invalidateSize(), 100);
+        }
+    }
+
+    function applyFilter() {
+        currentFilter = document.getElementById('filter-variety').value;
+        processData();
+    }
+
+    function forceUpdate() {
+        if (isUpdating) return;
+        document.getElementById('refresh-icon').classList.add('fa-spin');
+        updateData().finally(() => {
+            document.getElementById('refresh-icon').classList.remove('fa-spin');
+        });
+    }
+
+    function updateTimestamp() {
+        document.getElementById('last-update').innerText = new Date().toLocaleTimeString('th-TH', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    window.focusField = function(fieldId) {
+        if (window.innerWidth < 1024) switchTab('map');
+        const layer = layersMap[fieldId];
+        if (layer) {
+            map.invalidateSize();
+            setTimeout(() => {
+                map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 16, duration: 1.5 });
+                setTimeout(() => layer.openPopup(), 1600);
+            }, 100);
+        }
+    }
+
     function updateWatchlist(riskFields) {
         const tbody = document.getElementById('riskTableBody');
-        const riskCount = document.getElementById('risk-count');
-        
-        riskCount.innerText = `${riskFields.length} แปลง`;
+        document.getElementById('risk-count').innerText = `${riskFields.length} แปลง`;
 
         if (riskFields.length === 0) {
             tbody.innerHTML = `
@@ -859,30 +877,21 @@
                     <td colspan="4" class="text-center py-12">
                         <i class="fa-solid fa-check-circle text-4xl text-green-500 mb-2"></i>
                         <p class="text-sm font-semibold text-green-600">ไม่พบพื้นที่เสี่ยง</p>
-                        <p class="text-xs text-gray-400 mt-1">พื้นที่ทั้งหมดมีสุขภาพพืชดี</p>
                     </td>
-                </tr>
-            `;
+                </tr>`;
         } else {
-            tbody.innerHTML = riskFields.map(field => `
-                <tr class="border-b border-gray-100 hover:bg-red-50 cursor-pointer transition-colors" 
-                    onclick="focusField(${field.id})">
+            tbody.innerHTML = riskFields.map(f => `
+                <tr class="hover:bg-red-50 cursor-pointer" onclick="focusField(${f.id})">
                     <td class="py-3 px-4">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-location-dot text-red-500"></i>
-                            <span class="font-medium">${field.name}</span>
+                            <span class="font-medium">${f.name}</span>
                         </div>
                     </td>
+                    <td class="py-3 px-4 text-center font-mono font-bold text-red-600">${f.ndvi.toFixed(2)}</td>
+                    <td class="py-3 px-4 text-center">${f.area_rai} ไร่</td>
                     <td class="py-3 px-4 text-center">
-                        <span class="font-mono font-bold text-red-600">
-                            ${field.ndvi.toFixed(2)}
-                        </span>
-                    </td>
-                    <td class="py-3 px-4 text-center text-gray-600">
-                        ${field.area_rai} ไร่
-                    </td>
-                    <td class="py-3 px-4 text-center">
-                        <button class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-full text-xs font-semibold transition-colors">
+                        <button class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">
                             <i class="fa-solid fa-map-location-dot"></i> ดูพิกัด
                         </button>
                     </td>
@@ -891,53 +900,94 @@
         }
     }
 
-    /**
-     * Focus on field in map
-     */
-    window.focusField = function(fieldId) {
-        if (window.innerWidth < 1024) {
-            switchTab('map');
-        }
-
-        const layer = layersMap[fieldId];
-        if (layer) {
-            map.invalidateSize();
-            setTimeout(() => {
-                map.flyToBounds(layer.getBounds(), {
-                    padding: [50, 50],
-                    maxZoom: 16,
-                    duration: 1.5
-                });
-                setTimeout(() => layer.openPopup(), 1600);
-            }, 100);
-        } else {
-            Swal.fire({
-                icon: 'info',
-                title: 'ไม่พบพิกัด',
-                text: 'ไม่สามารถแสดงตำแหน่งบนแผนที่ได้',
-                confirmButtonColor: '#3b82f6'
-            });
-        }
-    }
-
-    /**
-     * Update timestamp
-     */
-    function updateTimestamp() {
-        const now = new Date();
-        document.getElementById('last-update').innerText = now.toLocaleTimeString('th-TH', {
-            hour: '2-digit',
-            minute: '2-digit'
+    function showNDVIInfo() {
+        Swal.fire({
+            title: 'ค่า NDVI คืออะไร?',
+            html: `
+                <div class="text-left text-sm space-y-2">
+                    <p><strong>NDVI (Normalized Difference Vegetation Index)</strong> คือดัชนีวัดความสมบูรณ์ของพืช</p>
+                    <hr>
+                    <div class="space-y-1">
+                        <p class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-green-500"></span>
+                            <strong>NDVI > 0.5:</strong> พืชสมบูรณ์ดี
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-yellow-400"></span>
+                            <strong>NDVI 0.3-0.5:</strong> ปานกลาง
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                            <strong>NDVI < 0.3:</strong> เสี่ยง
+                        </p>
+                    </div>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonColor: '#3b82f6'
         });
     }
 
-    // ==================== RESPONSIVE HANDLER ====================
-    let resizeTimeout;
+    function showVarietyInfo() {
+        Swal.fire({
+            title: 'พันธุ์ข้าวในระบบ',
+            html: `
+                <div class="text-left text-sm space-y-2">
+                    <p>🍚 <strong>หอมมะลิ 105:</strong> ข้าวหอมเจ้าคุณภาพสูง</p>
+                    <p>🍙 <strong>กข 6:</strong> ข้าวเหนียวคุณภาพดี</p>
+                    <p>🌾 <strong>กข 15:</strong> ข้าวหอมมะลิ กข 15</p>
+                    <p>🌿 <strong>ปทุมธานี:</strong> ข้าวเจ้าทั่วไป</p>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonColor: '#3b82f6'
+        });
+    }
+
+    function exportData() {
+        const csv = "\uFEFF" + 
+            "พันธุ์,ผลผลิต(ตัน),ขายแล้ว(ตัน),รอขาย(ตัน),เกษตรกร(ราย)\n" +
+            Object.entries(analytics.varietyData || {}).map(([v, qty]) => 
+                `"${v}",${qty},0,0,0`
+            ).join('\n');
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `government_report_${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'ส่งออกสำเร็จ',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    function toggleHeatmap() {
+        Swal.fire({
+            icon: 'info',
+            title: 'กำลังพัฒนา',
+            text: 'ฟีเจอร์ Heatmap จะพร้อมใช้งานเร็วๆ นี้'
+        });
+    }
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        updateData();
+        updateTimer = setInterval(updateData, UPDATE_INTERVAL);
+
+        if (window.innerWidth >= 1024) {
+            document.getElementById('view-overview').classList.remove('hidden');
+            document.getElementById('view-map').classList.remove('hidden');
+            setTimeout(() => map.invalidateSize(), 300);
+        }
+    });
+
     window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
+        setTimeout(() => {
             map.invalidateSize();
-            
             if (window.innerWidth >= 1024) {
                 document.getElementById('view-overview').classList.remove('hidden');
                 document.getElementById('view-map').classList.remove('hidden');
@@ -946,85 +996,27 @@
         }, 250);
     });
 
-    // ==================== INITIALIZATION ====================
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initial data load
-        updateData();
-
-        // Auto-refresh
-        updateTimer = setInterval(updateData, UPDATE_INTERVAL);
-
-        // Initialize proper view for screen size
-        if (window.innerWidth >= 1024) {
-            document.getElementById('view-overview').classList.remove('hidden');
-            document.getElementById('view-map').classList.remove('hidden');
-            setTimeout(() => map.invalidateSize(), 300);
-        }
-    });
-
-    // Cleanup
     window.addEventListener('beforeunload', () => {
-        if (updateTimer) {
-            clearInterval(updateTimer);
-        }
+        if (updateTimer) clearInterval(updateTimer);
     });
 
 </script>
 
 <style>
-    /* Custom Scrollbar */
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-
-    /* Leaflet Popup */
-    .leaflet-popup-content-wrapper {
-        padding: 0;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .leaflet-popup-content {
-        margin: 0;
-    }
-
-    /* Animations */
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-
-    .fa-spin {
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    .animate-pulse {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    /* Mobile Safe Area */
-    .pb-safe {
-        padding-bottom: env(safe-area-inset-bottom);
-    }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .leaflet-popup-content-wrapper { padding: 0; border-radius: 8px; }
+    .leaflet-popup-content { margin: 0; }
+    
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .fa-spin { animation: spin 1s linear infinite; }
+    
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 </style>
 {% endblock %}

@@ -1,74 +1,70 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="h-[calc(100vh-80px)] flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 relative">
+<div class="h-[calc(100vh-80px)] flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 relative bg-slate-50/50">
 
-    <!-- Overview Panel (Left Column) -->
     <div id="view-overview"
         class="flex-grow lg:col-span-5 flex flex-col gap-4 h-full overflow-hidden transition-all duration-300">
 
-        <!-- Header Card -->
         <div
-            class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 shrink-0 flex justify-between items-center">
+            class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 shrink-0 flex justify-between items-center">
             <div>
-                <h1 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-building-columns text-green-600"></i> ศูนย์ข้อมูลข้าว (War Room)
+                <h1 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-building-columns text-slate-700"></i> ศูนย์ข้อมูลข้าว (War Room)
                 </h1>
-                <p class="text-xs text-gray-500 mt-1">Command Center จ.พะเยา</p>
+                <p class="text-xs text-slate-500 mt-1">Command Center จ.พะเยา</p>
             </div>
             <div class="flex gap-2">
-                <span class="text-[10px] text-gray-400 self-center hidden sm:inline">
-                    ล่าสุด <span id="lastUpdate" class="font-mono text-gray-800 font-bold">-</span>
+                <span class="text-[10px] text-slate-400 self-center hidden sm:inline">
+                    ล่าสุด <span id="lastUpdate" class="font-mono text-slate-800 font-bold">-</span>
                 </span>
                 <button onclick="forceUpdate()"
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-600 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm"
+                    class="bg-slate-100 hover:bg-slate-200 text-slate-600 w-8 h-8 rounded-full flex items-center justify-center transition shadow-sm"
                     title="รีเฟรช">
                     <i class="fa-solid fa-rotate" id="refreshIcon"></i>
                 </button>
             </div>
         </div>
 
-        <!-- Scrollable Content -->
         <div class="flex-grow overflow-y-auto custom-scrollbar pb-20 lg:pb-0 space-y-4 p-1">
 
-            <!-- KPI Cards -->
             <div class="grid grid-cols-2 gap-3">
-                <!-- มูลค่าตลาดรวม: เขียวเข้ม -->
-                <div class="bg-green-600 text-white p-3 rounded-xl shadow relative overflow-hidden">
-                    <div class="absolute top-0 right-0 opacity-10 text-6xl">
-                        <i class="fa-solid fa-coins"></i>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500 ring-1 ring-slate-100">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">มูลค่าตลาดรวม</p>
+                    <div class="flex items-baseline gap-1 mt-2">
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-revenue">0</h3>
+                        <span class="text-[10px] text-slate-400">บาท</span>
                     </div>
-                    <p class="text-[10px] text-green-100 uppercase font-bold">มูลค่าตลาดรวม</p>
-                    <h3 class="text-xl font-bold mt-1" id="kpi-revenue">0</h3>
-                    <span class="text-[10px] opacity-80">บาท</span>
                 </div>
 
-                <!-- ผลผลิตรวม -->
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-green-100">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold">ผลผลิตรวม</p>
-                    <h3 class="text-xl font-bold text-green-600 mt-1" id="kpi-supply">0</h3>
-                    <span class="text-[10px] text-gray-400">ตัน</span>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-emerald-500 ring-1 ring-slate-100">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ผลผลิตรวม</p>
+                    <div class="flex items-baseline gap-1 mt-2">
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-supply">0</h3>
+                        <span class="text-[10px] text-slate-400">ตัน</span>
+                    </div>
                 </div>
 
-                <!-- ราคาเฉลี่ย -->
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-emerald-100">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold">ราคาเฉลี่ย</p>
-                    <h3 class="text-xl font-bold text-emerald-600 mt-1" id="kpi-price">0</h3>
-                    <span class="text-[10px] text-gray-400">บาท/ตัน</span>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500 ring-1 ring-slate-100">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ราคาเฉลี่ย</p>
+                    <div class="flex items-baseline gap-1 mt-2">
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-price">0</h3>
+                        <span class="text-[10px] text-slate-400">บ./ตัน</span>
+                    </div>
                 </div>
 
-                <!-- เกษตรกร -->
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-lime-100">
-                    <p class="text-[10px] text-gray-400 uppercase font-bold">เกษตรกร</p>
-                    <h3 class="text-xl font-bold text-lime-600 mt-1" id="kpi-farmers">0</h3>
-                    <span class="text-[10px] text-gray-400">ราย</span>
+                <div class="bg-white p-4 rounded-xl shadow-sm border-l-4 border-amber-500 ring-1 ring-slate-100">
+                    <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">เกษตรกร</p>
+                    <div class="flex items-baseline gap-1 mt-2">
+                        <h3 class="text-2xl font-bold text-slate-800" id="kpi-farmers">0</h3>
+                        <span class="text-[10px] text-slate-400">ราย</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Monthly Chart -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <h4 class="text-xs font-bold text-gray-600 mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-column text-green-500"></i>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-600 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-column text-indigo-500"></i>
                     ปริมาณผลผลิตรายเดือน
                 </h4>
                 <div class="h-[150px] relative">
@@ -76,58 +72,53 @@
                 </div>
             </div>
 
-            <!-- Variety Chart -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <h4 class="text-xs font-bold text-gray-600 mb-2 flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie text-green-500"></i>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-600 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-indigo-500"></i>
                     สัดส่วนพันธุ์ข้าว
                 </h4>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-6">
                     <div class="h-[120px] w-[120px] relative flex-shrink-0">
                         <canvas id="varietyChart"></canvas>
                     </div>
-                    <div id="variety-legend" class="flex-1 text-[10px] space-y-1"></div>
+                    <div id="variety-legend" class="flex-1 text-[10px] space-y-2"></div>
                 </div>
             </div>
 
-            <!-- Desktop Table (Sales/Risk Toggle) -->
-            <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <!-- Tabs -->
-                <div class="flex border-b border-gray-100">
+            <div class="hidden lg:block bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="flex border-b border-slate-100">
                     <button onclick="switchDesktopTable('sales')" id="tab-sales"
-                        class="flex-1 py-3 text-xs font-bold text-green-600 border-b-2 border-green-600 bg-green-50/50 transition-colors">
+                        class="flex-1 py-3 text-xs font-bold text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50 transition-colors">
                         <i class="fa-solid fa-list mr-1"></i> รายการซื้อขาย
                     </button>
                     <button onclick="switchDesktopTable('risk')" id="tab-risk"
-                        class="flex-1 py-3 text-xs font-bold text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
+                        class="flex-1 py-3 text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors">
                         <i class="fa-solid fa-triangle-exclamation mr-1"></i>
                         พื้นที่เฝ้าระวัง (<span id="risk-count">0</span>)
                     </button>
                 </div>
 
-                <!-- Table Header -->
-                <div class="bg-gray-50 px-4 py-2 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="font-bold text-gray-700 text-xs" id="table-title">รายการล่าสุด</h3>
+                <div class="bg-slate-50 px-4 py-2 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-700 text-xs" id="table-title">รายการล่าสุด</h3>
                     <button onclick="exportCSV()"
-                        class="text-[10px] text-blue-600 hover:underline flex items-center gap-1">
+                        class="text-[10px] text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1 transition-colors">
                         <i class="fa-solid fa-download"></i> ดาวน์โหลด CSV
                     </button>
                 </div>
 
-                <!-- Table Content -->
                 <div class="overflow-x-auto max-h-[300px] custom-scrollbar">
                     <table class="w-full text-xs text-left whitespace-nowrap">
-                        <thead class="bg-white text-gray-500 border-b sticky top-0 shadow-sm z-10" id="table-head">
+                        <thead class="bg-white text-slate-500 border-b sticky top-0 shadow-sm z-10" id="table-head">
                             <tr>
-                                <th class="py-2 px-3">วันที่</th>
-                                <th class="py-2 px-3">เกษตรกร</th>
-                                <th class="py-2 px-3 text-right">ราคา</th>
-                                <th class="py-2 px-3 text-center">สถานะ</th>
+                                <th class="py-2 px-3 bg-slate-50/80 backdrop-blur">วันที่</th>
+                                <th class="py-2 px-3 bg-slate-50/80 backdrop-blur">เกษตรกร</th>
+                                <th class="py-2 px-3 bg-slate-50/80 backdrop-blur text-right">ราคา</th>
+                                <th class="py-2 px-3 bg-slate-50/80 backdrop-blur text-center">สถานะ</th>
                             </tr>
                         </thead>
-                        <tbody id="desktopTableBody" class="divide-y divide-gray-50 text-gray-700">
+                        <tbody id="desktopTableBody" class="divide-y divide-slate-50 text-slate-700">
                             <tr>
-                                <td colspan="4" class="text-center py-8 text-gray-400">
+                                <td colspan="4" class="text-center py-8 text-slate-400">
                                     <i class="fa-solid fa-spinner fa-spin text-2xl"></i>
                                     <p class="mt-2">กำลังโหลด...</p>
                                 </td>
@@ -139,79 +130,72 @@
         </div>
     </div>
 
-    <!-- Map Panel (Right Column - Desktop) -->
     <div id="view-map"
-        class="hidden lg:block lg:col-span-7 h-full bg-white rounded-2xl shadow-lg border border-gray-100 relative overflow-hidden group">
+        class="hidden lg:block lg:col-span-7 h-full bg-white rounded-2xl shadow-lg border border-slate-200 relative overflow-hidden group">
         <div id="map" class="w-full h-full z-0 bg-slate-100"></div>
 
-        <!-- Map Legend -->
         <div
-            class="absolute bottom-6 left-4 z-[500] bg-white/95 backdrop-blur px-3 py-2 rounded-lg shadow-md border border-gray-200 pointer-events-none">
-            <span class="text-[10px] font-bold text-gray-500 block mb-1">สัญลักษณ์</span>
-            <div class="space-y-1 text-[10px]">
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-green-500"></span> ขายแล้ว
+            class="absolute bottom-6 left-4 z-[500] bg-white/95 backdrop-blur px-4 py-3 rounded-xl shadow-lg border border-slate-200 pointer-events-none">
+            <span class="text-[10px] font-bold text-slate-500 block mb-2 uppercase tracking-wide">สัญลักษณ์</span>
+            <div class="space-y-2 text-[10px] font-medium text-slate-700">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm"></span> ขายแล้ว
                 </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-yellow-400"></span> รออนุมัติ
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm"></span> รออนุมัติ
                 </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-orange-500"></span> รอขาย
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm"></span> รอขาย
                 </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> เฝ้าระวัง (NDVI ต่ำ)
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-sm"></span> เฝ้าระวัง (NDVI ต่ำ)
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Mobile List View -->
     <div id="view-list"
-        class="hidden h-full flex-col bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden lg:hidden">
-        <!-- List Header -->
-        <div class="p-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-            <h3 class="font-bold text-gray-700 text-sm">รายการ / เฝ้าระวัง</h3>
-            <button onclick="forceUpdate()" class="text-xs text-blue-600 hover:text-blue-800">
+        class="hidden h-full flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden lg:hidden">
+        <div class="p-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+            <h3 class="font-bold text-slate-700 text-sm">รายการ / เฝ้าระวัง</h3>
+            <button onclick="forceUpdate()" class="text-xs text-indigo-600 hover:text-indigo-800">
                 <i class="fa-solid fa-rotate"></i>
             </button>
         </div>
 
-        <!-- Mobile Tabs -->
-        <div class="flex p-2 gap-2 bg-gray-50 border-b border-gray-100">
+        <div class="flex p-2 gap-2 bg-slate-50 border-b border-slate-100">
             <button onclick="switchMobileList('sales')" id="mobile-tab-sales"
-                class="flex-1 py-1.5 rounded text-xs font-bold bg-white shadow-sm text-blue-600 border border-blue-100">
+                class="flex-1 py-1.5 rounded text-xs font-bold bg-white shadow-sm text-indigo-600 border border-indigo-100">
                 <i class="fa-solid fa-list mr-1"></i> ซื้อขาย
             </button>
             <button onclick="switchMobileList('risk')" id="mobile-tab-risk"
-                class="flex-1 py-1.5 rounded text-xs font-bold text-gray-500 hover:bg-white hover:text-red-500 transition">
+                class="flex-1 py-1.5 rounded text-xs font-bold text-slate-500 hover:bg-white hover:text-red-500 transition">
                 <i class="fa-solid fa-triangle-exclamation mr-1"></i> เฝ้าระวัง
             </button>
         </div>
 
-        <!-- Mobile List Body -->
         <div id="mobileListBody" class="flex-grow overflow-auto custom-scrollbar p-3 space-y-3 pb-20 bg-slate-50">
-            <div class="text-center py-10 text-gray-400">
-                <i class="fa-solid fa-spinner fa-spin text-2xl text-purple-500"></i>
+            <div class="text-center py-10 text-slate-400">
+                <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-500"></i>
                 <p class="mt-2 text-sm">กำลังโหลดข้อมูล...</p>
             </div>
         </div>
     </div>
 
-    <!-- Mobile Bottom Navigation -->
     <div
-        class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-[1002] lg:hidden flex justify-around items-center h-16 pb-safe">
+        class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-[1002] lg:hidden flex justify-around items-center h-16 pb-safe">
         <button onclick="switchTab('overview')" id="btn-tab-overview"
-            class="flex flex-col items-center justify-center w-1/3 h-full text-green-600 border-t-2 border-green-600 bg-green-50/50 transition-all">
+            class="flex flex-col items-center justify-center w-1/3 h-full text-indigo-600 border-t-2 border-indigo-600 bg-indigo-50/30 transition-all">
             <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
             <span class="text-[10px] font-bold">ข้อมูล</span>
         </button>
         <button onclick="switchTab('map')" id="btn-tab-map"
-            class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all">
+            class="flex flex-col items-center justify-center w-1/3 h-full text-slate-400 border-t-2 border-transparent transition-all">
             <i class="fa-solid fa-map-location-dot text-xl mb-1"></i>
             <span class="text-[10px] font-bold">แผนที่</span>
         </button>
         <button onclick="switchTab('list')" id="btn-tab-list"
-            class="flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all">
+            class="flex flex-col items-center justify-center w-1/3 h-full text-slate-400 border-t-2 border-transparent transition-all">
             <i class="fa-solid fa-list-ul text-xl mb-1"></i>
             <span class="text-[10px] font-bold">รายการ</span>
         </button>
@@ -276,60 +260,68 @@
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 8,
-                    cornerRadius: 4
+                    backgroundColor: 'rgba(30, 41, 59, 0.9)', // Slate-800
+                    padding: 10,
+                    cornerRadius: 6,
+                    titleFont: { family: 'Prompt', size: 12 },
+                    bodyFont: { family: 'Prompt', size: 12 }
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        font: { size: 9 },
-                        color: '#6b7280'
+                        font: { size: 10, family: 'Prompt' },
+                        color: '#94a3b8' // Slate-400
                     },
                     grid: {
-                        color: '#f3f4f6'
+                        color: '#f1f5f9' // Slate-100
                     }
                 },
                 x: {
                     ticks: {
-                        font: { size: 9 },
-                        color: '#6b7280'
+                        font: { size: 10, family: 'Prompt' },
+                        color: '#64748b' // Slate-500
                     },
-                    grid: {
-                        display: false
-                    }
+                    grid: { display: false }
                 }
             }
         }
     });
 
+    // Monthly Chart: ใช้สี Indigo เพื่อความทันสมัย
     const monthlyChart = new Chart(
         document.getElementById('monthlyChart'),
-        chartConfig('bar', '#16a34a') // green-600
+        chartConfig('bar', '#6366f1') // Indigo-500
     );
 
+    // Variety Chart: ใช้ชุดสีใหม่ (Modern Palette)
     const varietyChart = new Chart(document.getElementById('varietyChart'), {
         type: 'doughnut',
         data: {
             labels: [],
             datasets: [{
                 data: [],
-                backgroundColor: ['#16a34a', '#22c55e', '#84cc16', '#a3e635'], // green/ lime tones
-                borderWidth: 0
+                backgroundColor: [
+                    '#6366f1', // Indigo
+                    '#10b981', // Emerald
+                    '#f59e0b', // Amber
+                    '#64748b'  // Slate-500
+                ],
+                borderWidth: 2,
+                borderColor: '#ffffff'
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            cutout: '70%',
+            cutout: '75%',
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 8,
-                    cornerRadius: 4
+                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
+                    padding: 10,
+                    cornerRadius: 6
                 }
             }
         }
@@ -337,85 +329,70 @@
 
     // ==================== UI FUNCTIONS ====================
 
-    /**
-     * Switch between tabs (Mobile)
-     */
     function switchTab(tab) {
         const isMobile = window.innerWidth < 1024;
 
         if (isMobile) {
-            // Mobile: Show one view at a time
             document.getElementById('view-overview').classList.toggle('hidden', tab !== 'overview');
             document.getElementById('view-map').classList.toggle('hidden', tab !== 'map');
             document.getElementById('view-list').classList.toggle('hidden', tab !== 'list');
 
-            // Update bottom navigation
             ['overview', 'map', 'list'].forEach(t => {
                 const btn = document.getElementById(`btn-tab-${t}`);
                 if (t === tab) {
-                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-green-600 border-t-2 border-green-600 bg-green-50/50 transition-all";
+                    // Update to Indigo Theme
+                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-indigo-600 border-t-2 border-indigo-600 bg-indigo-50/30 transition-all";
                 } else {
-                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-gray-400 border-t-2 border-transparent transition-all";
+                    btn.className = "flex flex-col items-center justify-center w-1/3 h-full text-slate-400 border-t-2 border-transparent transition-all";
                 }
             });
         } else {
-            // Desktop: Always show overview + map
             document.getElementById('view-overview').classList.remove('hidden');
             document.getElementById('view-map').classList.remove('hidden');
             document.getElementById('view-list').classList.add('hidden');
         }
 
-        // Refresh map size when shown
         if (tab === 'map' || !isMobile) {
             setTimeout(() => map.invalidateSize(), 100);
         }
     }
 
-    /**
-     * Switch Desktop Table Mode
-     */
     function switchDesktopTable(mode) {
         currentTableMode = mode;
         const btnSales = document.getElementById('tab-sales');
         const btnRisk = document.getElementById('tab-risk');
 
         if (mode === 'sales') {
-            btnSales.className = "flex-1 py-3 text-xs font-bold text-green-600 border-b-2 border-green-600 bg-green-50/50 transition-colors";
-            btnRisk.className = "flex-1 py-3 text-xs font-bold text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors";
+            // Update Sales Tab to Indigo
+            btnSales.className = "flex-1 py-3 text-xs font-bold text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50 transition-colors";
+            btnRisk.className = "flex-1 py-3 text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors";
             document.getElementById('table-title').textContent = 'รายการล่าสุด';
         } else {
-            btnSales.className = "flex-1 py-3 text-xs font-bold text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors";
+            btnSales.className = "flex-1 py-3 text-xs font-bold text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors";
             btnRisk.className = "flex-1 py-3 text-xs font-bold text-red-600 border-b-2 border-red-600 bg-red-50/50 transition-colors";
             document.getElementById('table-title').textContent = 'พื้นที่เฝ้าระวัง';
         }
         renderTables();
     }
 
-    /**
-     * Switch Mobile List Mode
-     */
     function switchMobileList(mode) {
         currentTableMode = mode;
-
         const btnSales = document.getElementById('mobile-tab-sales');
         const btnRisk = document.getElementById('mobile-tab-risk');
 
         if (mode === 'sales') {
-            btnSales.className = "flex-1 py-1.5 rounded text-xs font-bold bg-white shadow-sm text-blue-600 border border-blue-100";
-            btnRisk.className = "flex-1 py-1.5 rounded text-xs font-bold text-gray-500 hover:bg-white hover:text-red-500 transition";
+            // Update Mobile Sales Tab to Indigo
+            btnSales.className = "flex-1 py-1.5 rounded text-xs font-bold bg-white shadow-sm text-indigo-600 border border-indigo-100";
+            btnRisk.className = "flex-1 py-1.5 rounded text-xs font-bold text-slate-500 hover:bg-white hover:text-red-500 transition";
         } else {
-            btnSales.className = "flex-1 py-1.5 rounded text-xs font-bold text-gray-500 hover:bg-white hover:text-blue-600 transition";
+            btnSales.className = "flex-1 py-1.5 rounded text-xs font-bold text-slate-500 hover:bg-white hover:text-indigo-600 transition";
             btnRisk.className = "flex-1 py-1.5 rounded text-xs font-bold bg-white shadow-sm text-red-600 border border-red-100";
         }
-
         renderTables();
     }
 
     // ==================== DATA FUNCTIONS ====================
 
-    /**
-     * Main Data Update Function
-     */
     async function updateData() {
         try {
             const [fieldsRes, salesRes] = await Promise.all([
@@ -423,21 +400,15 @@
                 fetch('/api/sales/')
             ]);
 
-            if (!fieldsRes.ok || !salesRes.ok) {
-                throw new Error('Failed to fetch data from API');
-            }
+            if (!fieldsRes.ok || !salesRes.ok) throw new Error('Failed to fetch data');
 
             const fields = await fieldsRes.json();
             const sales = await salesRes.json();
 
-            if (!Array.isArray(fields) || !Array.isArray(sales)) {
-                throw new Error('Invalid data format received');
-            }
-
             globalSales = sales;
             globalRiskFields = [];
 
-            // ========== Calculate Statistics ==========
+            // Statistics Variables
             let totalRevenue = 0;
             let totalVolume = 0;
             let farmerSet = new Set();
@@ -464,26 +435,17 @@
 
             const avgPrice = prices.length > 0 ? (prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
 
-            // ========== Update KPI Cards ==========
+            // Update KPI
             document.getElementById('kpi-revenue').innerText = totalRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 });
             document.getElementById('kpi-supply').innerText = totalVolume.toLocaleString(undefined, { maximumFractionDigits: 1 });
             document.getElementById('kpi-price').innerText = avgPrice.toLocaleString(undefined, { maximumFractionDigits: 0 });
             document.getElementById('kpi-farmers').innerText = farmerSet.size;
 
-            // ========== Update Charts ==========
             updateCharts(monthlyVol, varietyCount);
-
-            // ========== Process Map & Risk Fields ==========
             processMapData(fields, sales);
-
-            // ========== Update Tables ==========
             renderTables();
 
-            // ========== Update Timestamp ==========
-            document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString('th-TH', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            document.getElementById('lastUpdate').innerText = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
         } catch (error) {
             console.error("Error updating data:", error);
@@ -491,54 +453,41 @@
         }
     }
 
-    /**
-     * Update Charts
-     */
     function updateCharts(monthlyVol, varietyCount) {
-        // Monthly Chart
+        // Monthly
         monthlyChart.data.labels = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
         monthlyChart.data.datasets[0].data = monthlyVol;
         monthlyChart.update('none');
 
-        // Variety Chart - Sort and take top 4
-        const sortedVarieties = Object.entries(varietyCount)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 4);
-
+        // Variety
+        const sortedVarieties = Object.entries(varietyCount).sort((a, b) => b[1] - a[1]).slice(0, 4);
         varietyChart.data.labels = sortedVarieties.map(([k]) => k);
         varietyChart.data.datasets[0].data = sortedVarieties.map(([, v]) => v);
         varietyChart.update('none');
 
-        // Update Legend
         updateVarietyLegend(sortedVarieties);
     }
 
-    /**
-     * Update Variety Legend
-     */
     function updateVarietyLegend(varieties) {
-        const colors = ['#16a34a', '#22c55e', '#84cc16', '#a3e635'];
+        // Update legend colors to match new chart colors
+        const colors = ['#6366f1', '#10b981', '#f59e0b', '#64748b']; // Indigo, Emerald, Amber, Slate
         const html = varieties.map(([k, v], i) => `
-            <div class="flex justify-between text-[10px]">
-                <span class="flex items-center gap-1">
-                    <span class="w-2 h-2 rounded-full" style="background:${colors[i]}"></span>
+            <div class="flex justify-between text-[10px] items-center">
+                <span class="flex items-center gap-2 text-slate-600">
+                    <span class="w-2.5 h-2.5 rounded-full" style="background:${colors[i]}"></span>
                     ${k}
                 </span>
-                <b>${v.toLocaleString(undefined, { maximumFractionDigits: 1 })}</b>
+                <b class="text-slate-800">${v.toLocaleString(undefined, { maximumFractionDigits: 1 })}</b>
             </div>
         `).join('');
 
         document.getElementById('variety-legend').innerHTML = html;
     }
 
-    /**
-     * Process Map Data
-     */
     function processMapData(fields, sales) {
         fieldLayer.clearLayers();
         layersMap = {};
 
-        // Create sales map (latest sale per field)
         const salesMap = {};
         sales.forEach(s => {
             if (!salesMap[s.rice_field] || new Date(salesMap[s.rice_field].created_at) < new Date(s.created_at)) {
@@ -552,126 +501,80 @@
                     const geo = JSON.parse(f.boundary);
                     const sale = salesMap[f.id];
 
-                    // Risk Check (NDVI)
                     let ndvi = f.latest_yield ? parseFloat(f.latest_yield.ndvi) : (Math.random() * 0.8);
                     if (ndvi < 0.35) {
                         f.ndvi = ndvi;
                         globalRiskFields.push(f);
                     }
 
-                    // Default styling
+                    // Default Style (Slate)
                     let col = '#cbd5e1', op = 0.3, weight = 1;
-                    let popupHeader = `<div class="bg-gray-100 px-3 py-1.5 border-b text-[10px] font-bold text-gray-500">ว่าง</div>`;
-                    let popupBody = `
-                        <div class="p-3 text-center">
-                            <b class="text-sm text-gray-800">${f.name}</b>
-                            <span class="text-xs text-gray-500">${f.area_rai} ไร่</span>
-                        </div>`;
+                    
+                    // Header Style
+                    let popupHeader = `<div class="bg-slate-100 px-3 py-2 border-b text-[10px] font-bold text-slate-500">ว่าง</div>`;
 
-                    // Risk styling (overrides sale status)
+                    // Risk (Red)
                     if (ndvi < 0.35) {
-                        col = '#ef4444';
-                        weight = 2;
-                        op = 0.5;
-                        popupHeader = `<div class="bg-red-500 px-3 py-1.5 text-white text-[10px] font-bold uppercase">
-                            <i class="fa-solid fa-triangle-exclamation"></i> เฝ้าระวัง (NDVI: ${ndvi.toFixed(2)})
-                        </div>`;
+                        col = '#ef4444'; weight = 2; op = 0.5;
+                        popupHeader = `<div class="bg-red-500 px-3 py-2 text-white text-[10px] font-bold uppercase"><i class="fa-solid fa-triangle-exclamation"></i> เฝ้าระวัง (NDVI: ${ndvi.toFixed(2)})</div>`;
                     }
 
-                    // Sale status styling
+                    // Sales
                     if (sale) {
                         const priceVal = parseFloat(sale.price_per_ton).toLocaleString();
                         const qtyVal = parseFloat(sale.quantity_ton).toLocaleString(undefined, { maximumFractionDigits: 1 });
                         const totalVal = (parseFloat(sale.quantity_ton) * parseFloat(sale.price_per_ton)).toLocaleString(undefined, { maximumFractionDigits: 0 });
 
                         if (sale.status === 'SOLD') {
-                            col = '#22c55e';
-                            op = 0.6;
-                            weight = 2;
-                            popupHeader = `<div class="bg-green-500 px-3 py-1.5 text-white text-[10px] font-bold uppercase">
-                                <i class="fa-solid fa-check"></i> ขายแล้ว
-                            </div>`;
+                            col = '#10b981'; op = 0.6; weight = 2; // Emerald
+                            popupHeader = `<div class="bg-emerald-500 px-3 py-2 text-white text-[10px] font-bold uppercase"><i class="fa-solid fa-check"></i> ขายแล้ว</div>`;
                         } else if (sale.status === 'REQUESTED') {
-                            col = '#eab308';
-                            op = 0.8;
-                            weight = 2;
-                            popupHeader = `<div class="bg-yellow-400 px-3 py-1.5 text-yellow-900 text-[10px] font-bold uppercase">
-                                <i class="fa-solid fa-clock"></i> รออนุมัติ
-                            </div>`;
+                            col = '#fbbf24'; op = 0.8; weight = 2; // Amber
+                            popupHeader = `<div class="bg-amber-400 px-3 py-2 text-amber-900 text-[10px] font-bold uppercase"><i class="fa-solid fa-clock"></i> รออนุมัติ</div>`;
                         } else {
-                            col = '#f97316';
-                            weight = 2;
-                            op = 0.6;
-                            popupHeader = `<div class="bg-orange-500 px-3 py-1.5 text-white text-[10px] font-bold uppercase">
-                                <i class="fa-solid fa-bullhorn"></i> รอขาย
-                            </div>`;
+                            col = '#f97316'; weight = 2; op = 0.6; // Orange
+                            popupHeader = `<div class="bg-orange-500 px-3 py-2 text-white text-[10px] font-bold uppercase"><i class="fa-solid fa-bullhorn"></i> รอขาย</div>`;
                         }
 
-                        popupBody = `
+                        var popupBody = `
                             <div class="p-3 text-xs space-y-2 bg-white">
-                                <div class="flex justify-between border-b pb-1">
-                                    <span class="text-gray-500">แปลง:</span> 
-                                    <b class="text-gray-800">${f.name}</b>
+                                <div class="flex justify-between border-b pb-2">
+                                    <span class="text-slate-500">แปลง:</span> <b class="text-slate-800">${f.name}</b>
                                 </div>
                                 <div class="grid grid-cols-2 gap-2 text-[10px]">
-                                    <div>
-                                        <span class="text-gray-400">ผู้ขาย</span>
-                                        <b class="text-gray-700">${sale.farmer_name}</b>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-gray-400">ผู้ซื้อ</span>
-                                        <b class="text-blue-600">${sale.buyer_name || '-'}</b>
-                                    </div>
+                                    <div><span class="text-slate-400">ผู้ขาย</span><br><b class="text-slate-700">${sale.farmer_name}</b></div>
+                                    <div class="text-right"><span class="text-slate-400">ผู้ซื้อ</span><br><b class="text-indigo-600">${sale.buyer_name || '-'}</b></div>
                                 </div>
-                                <div class="bg-gray-50 p-2 rounded">
-                                    <div class="flex justify-between text-[10px] mb-1">
-                                        <span class="text-gray-500">ปริมาณ:</span> 
-                                        <b>${qtyVal} ตัน</b>
-                                    </div>
-                                    <div class="flex justify-between text-[10px]">
-                                        <span class="text-gray-500">ราคา:</span> 
-                                        <b>${priceVal} บ./ตัน</b>
-                                    </div>
-                                    <div class="flex justify-between text-green-600 font-bold border-t mt-1 pt-1">
-                                        <span>รวม:</span> 
-                                        <span>${totalVal} บ.</span>
-                                    </div>
+                                <div class="bg-slate-50 p-2 rounded border border-slate-100 mt-2">
+                                    <div class="flex justify-between text-[10px] mb-1"><span class="text-slate-500">ปริมาณ:</span> <b>${qtyVal} ตัน</b></div>
+                                    <div class="flex justify-between text-[10px]"><span class="text-slate-500">ราคา:</span> <b>${priceVal} บ./ตัน</b></div>
+                                    <div class="flex justify-between text-emerald-600 font-bold border-t border-slate-200 mt-1 pt-1"><span>รวม:</span> <span>${totalVal} บ.</span></div>
                                 </div>
-                                <button onclick="showDetail(${sale.id})" 
-                                    class="w-full bg-blue-600 text-white py-1.5 rounded shadow-sm hover:bg-blue-700 transition mt-1 text-xs font-bold">
-                                    <i class="fa-solid fa-file-invoice"></i> ดูบิลเต็ม
-                                </button>
+                                <button onclick="showDetail(${sale.id})" class="w-full bg-indigo-600 text-white py-1.5 rounded shadow-sm hover:bg-indigo-700 transition mt-1 text-xs font-bold"><i class="fa-solid fa-file-invoice"></i> ดูบิลเต็ม</button>
+                            </div>`;
+                    } else {
+                         var popupBody = `
+                            <div class="p-4 text-center">
+                                <b class="text-sm text-slate-800 block">${f.name}</b>
+                                <span class="text-xs text-slate-500">${f.area_rai} ไร่</span>
                             </div>`;
                     }
 
-                    const popupHtml = `
-                        <div class="font-sans min-w-[220px] overflow-hidden rounded-lg shadow-none">
-                            ${popupHeader}${popupBody}
-                        </div>`;
+                    const popupHtml = `<div class="font-sans min-w-[220px] overflow-hidden rounded-lg shadow-none border border-slate-100">${popupHeader}${popupBody}</div>`;
 
                     const layer = L.geoJSON(geo, {
-                        style: {
-                            color: col,
-                            weight: weight,
-                            fillOpacity: op
-                        }
+                        style: { color: col, weight: weight, fillOpacity: op }
                     }).bindPopup(popupHtml).addTo(fieldLayer);
 
                     layersMap[f.id] = layer;
 
-                } catch (e) {
-                    console.warn(`Failed to parse boundary for field ${f.id}:`, e);
-                }
+                } catch (e) { console.warn(`Failed to parse boundary for field ${f.id}:`, e); }
             }
         });
 
-        // Update risk count badge
         document.getElementById('risk-count').innerText = globalRiskFields.length;
     }
 
-    /**
-     * Render Tables (Desktop & Mobile)
-     */
     function renderTables() {
         const dTable = document.getElementById('desktopTableBody');
         const dHead = document.getElementById('table-head');
@@ -681,166 +584,80 @@
         mList.innerHTML = '';
 
         if (currentTableMode === 'sales') {
-            // ===== SALES MODE =====
-            dHead.innerHTML = `
-                <tr>
-                    <th class="py-2 px-3">วันที่</th>
-                    <th class="py-2 px-3">เกษตรกร</th>
-                    <th class="py-2 px-3 text-right">ราคา (บ./ตัน)</th>
-                    <th class="py-2 px-3 text-center">สถานะ</th>
-                </tr>`;
-
-            const sorted = globalSales
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-                .slice(0, 30);
-
+            dHead.innerHTML = `<tr><th class="py-2 px-3 bg-slate-50">วันที่</th><th class="py-2 px-3 bg-slate-50">เกษตรกร</th><th class="py-2 px-3 bg-slate-50 text-right">ราคา</th><th class="py-2 px-3 bg-slate-50 text-center">สถานะ</th></tr>`;
+            
+            const sorted = globalSales.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 30);
+            
             if (sorted.length === 0) {
-                dTable.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="text-center py-8 text-gray-400">
-                            <i class="fa-solid fa-inbox text-3xl mb-2"></i>
-                            <p>ไม่มีข้อมูลรายการซื้อขาย</p>
-                        </td>
-                    </tr>`;
-                mList.innerHTML = `
-                    <div class="text-center py-10 text-gray-400">
-                        <i class="fa-solid fa-inbox text-3xl mb-2"></i>
-                        <p>ไม่มีข้อมูล</p>
-                    </div>`;
+                dTable.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-slate-400"><i class="fa-solid fa-inbox text-3xl mb-2"></i><p>ไม่มีข้อมูล</p></td></tr>`;
+                mList.innerHTML = `<div class="text-center py-10 text-slate-400"><i class="fa-solid fa-inbox text-3xl mb-2"></i><p>ไม่มีข้อมูล</p></div>`;
                 return;
             }
 
             sorted.forEach(s => {
-                const date = new Date(s.created_at).toLocaleDateString('th-TH', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: '2-digit'
-                });
+                const date = new Date(s.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' });
                 const price = parseFloat(s.price_per_ton).toLocaleString();
-
+                
                 let st = { txt: 'รอขาย', col: 'text-orange-500', bg: 'bg-orange-50' };
-                if (s.status === 'SOLD') {
-                    st = { txt: 'ขายแล้ว', col: 'text-green-600', bg: 'bg-green-50' };
-                } else if (s.status === 'REQUESTED') {
-                    st = { txt: 'รออนุมัติ', col: 'text-yellow-600', bg: 'bg-yellow-50' };
-                }
+                if (s.status === 'SOLD') st = { txt: 'ขายแล้ว', col: 'text-emerald-600', bg: 'bg-emerald-50' };
+                else if (s.status === 'REQUESTED') st = { txt: 'รออนุมัติ', col: 'text-amber-600', bg: 'bg-amber-50' };
 
-                // Desktop table row
                 dTable.innerHTML += `
-                    <tr class="hover:bg-gray-50 border-b cursor-pointer transition-colors" onclick="focusField(${s.rice_field})">
-                        <td class="py-2 px-3 text-gray-500">${date}</td>
-                        <td class="py-2 px-3 truncate max-w-[120px] font-medium">${s.farmer_name}</td>
-                        <td class="py-2 px-3 text-right font-mono text-gray-700">${price}</td>
-                        <td class="py-2 px-3 text-center">
-                            <span class="${st.bg} ${st.col} px-2 py-0.5 rounded text-[10px] font-bold">
-                                ${st.txt}
-                            </span>
-                        </td>
+                    <tr class="hover:bg-slate-50 border-b cursor-pointer transition-colors" onclick="focusField(${s.rice_field})">
+                        <td class="py-3 px-3 text-slate-500">${date}</td>
+                        <td class="py-3 px-3 font-medium text-slate-700">${s.farmer_name}</td>
+                        <td class="py-3 px-3 text-right font-mono text-slate-700">${price}</td>
+                        <td class="py-3 px-3 text-center"><span class="${st.bg} ${st.col} px-2 py-1 rounded text-[10px] font-bold border border-black/5">${st.txt}</span></td>
                     </tr>`;
 
-                // Mobile card
                 mList.innerHTML += `
-                    <div class="bg-white border rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer" 
-                         onclick="showDetail(${s.id})">
+                    <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onclick="showDetail(${s.id})">
                         <div class="flex justify-between mb-2">
-                            <span class="text-[10px] text-gray-400">${date}</span>
-                            <span class="${st.bg} ${st.col} px-2 py-0.5 rounded text-[10px] font-bold">
-                                ${st.txt}
-                            </span>
+                            <span class="text-[10px] text-slate-400">${date}</span>
+                            <span class="${st.bg} ${st.col} px-2 py-0.5 rounded text-[10px] font-bold border border-black/5">${st.txt}</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <div>
-                                <b class="text-sm text-gray-800">${s.farmer_name}</b>
-                                <p class="text-xs text-gray-500 mt-0.5">${s.variety_display}</p>
-                            </div>
-                            <b class="text-blue-600">${price} บ.</b>
+                            <div><b class="text-sm text-slate-800">${s.farmer_name}</b><p class="text-xs text-slate-500 mt-0.5">${s.variety_display}</p></div>
+                            <b class="text-indigo-600">${price} บ.</b>
                         </div>
                     </div>`;
             });
 
         } else {
-            // ===== RISK MODE =====
-            dHead.innerHTML = `
-                <tr>
-                    <th class="py-2 px-3">แปลงนา</th>
-                    <th class="py-2 px-3 text-center">ค่า NDVI</th>
-                    <th class="py-2 px-3 text-center">พื้นที่</th>
-                    <th class="py-2 px-3 text-center">สถานะ</th>
-                </tr>`;
-
+            // Risk Mode
+            dHead.innerHTML = `<tr><th class="py-2 px-3 bg-slate-50">แปลงนา</th><th class="py-2 px-3 bg-slate-50 text-center">ค่า NDVI</th><th class="py-2 px-3 bg-slate-50 text-center">พื้นที่</th><th class="py-2 px-3 bg-slate-50 text-center">สถานะ</th></tr>`;
+            
             if (globalRiskFields.length === 0) {
-                dTable.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="text-center py-8 text-green-500">
-                            <i class="fa-solid fa-check-circle text-3xl mb-2"></i>
-                            <p class="font-bold">ปกติทุกพื้นที่</p>
-                            <p class="text-xs text-gray-400 mt-1">ไม่พบพื้นที่เสี่ยง</p>
-                        </td>
-                    </tr>`;
-                mList.innerHTML = `
-                    <div class="text-center py-10 text-green-500">
-                        <i class="fa-solid fa-check-circle text-3xl mb-2"></i>
-                        <p class="font-bold">ปกติทุกพื้นที่</p>
-                    </div>`;
-                return;
+                 dTable.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-emerald-500"><i class="fa-solid fa-check-circle text-3xl mb-2"></i><p>ปกติทุกพื้นที่</p></td></tr>`;
+                 mList.innerHTML = `<div class="text-center py-10 text-emerald-500"><i class="fa-solid fa-check-circle text-3xl mb-2"></i><p>ปกติทุกพื้นที่</p></div>`;
+                 return;
             }
 
             globalRiskFields.forEach(f => {
-                // Desktop table row
                 dTable.innerHTML += `
                     <tr class="hover:bg-red-50 border-b cursor-pointer transition-colors" onclick="focusField(${f.id})">
-                        <td class="py-2 px-3 font-bold text-gray-700">
-                            <i class="fa-solid fa-location-dot text-red-500 mr-1"></i>
-                            ${f.name}
-                        </td>
-                        <td class="py-2 px-3 text-center font-mono text-red-600 font-bold">
-                            ${f.ndvi.toFixed(2)}
-                        </td>
-                        <td class="py-2 px-3 text-center text-gray-600">
-                            ${f.area_rai} ไร่
-                        </td>
-                        <td class="py-2 px-3 text-center">
-                            <span class="bg-red-100 text-red-600 px-2 py-0.5 rounded text-[10px] font-bold">
-                                เสี่ยง
-                            </span>
-                        </td>
+                        <td class="py-3 px-3 font-bold text-slate-700"><i class="fa-solid fa-location-dot text-red-500 mr-1"></i> ${f.name}</td>
+                        <td class="py-3 px-3 text-center font-mono text-red-600 font-bold">${f.ndvi.toFixed(2)}</td>
+                        <td class="py-3 px-3 text-center text-slate-600">${f.area_rai} ไร่</td>
+                        <td class="py-3 px-3 text-center"><span class="bg-red-100 text-red-600 px-2 py-1 rounded text-[10px] font-bold border border-red-200">เสี่ยง</span></td>
                     </tr>`;
 
-                // Mobile card
                 mList.innerHTML += `
-                    <div class="bg-white border-l-4 border-red-500 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                         onclick="focusField(${f.id})">
+                    <div class="bg-white border-l-4 border-red-500 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow cursor-pointer ring-1 ring-slate-100" onclick="focusField(${f.id})">
                         <div class="flex justify-between items-start mb-2">
-                            <div class="flex-1">
-                                <h4 class="font-bold text-gray-800 flex items-center gap-1">
-                                    <i class="fa-solid fa-triangle-exclamation text-red-500"></i>
-                                    ${f.name}
-                                </h4>
-                                <p class="text-xs text-gray-500 mt-1">${f.area_rai} ไร่</p>
-                            </div>
-                            <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">
-                                NDVI: ${f.ndvi.toFixed(2)}
-                            </span>
+                            <div class="flex-1"><h4 class="font-bold text-slate-800 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation text-red-500"></i> ${f.name}</h4><p class="text-xs text-slate-500 mt-1">${f.area_rai} ไร่</p></div>
+                            <span class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold border border-red-200">NDVI: ${f.ndvi.toFixed(2)}</span>
                         </div>
-                        <button class="w-full bg-red-50 text-red-600 py-1.5 rounded text-xs font-bold hover:bg-red-100 transition-colors">
-                            <i class="fa-solid fa-map-location-dot"></i> ดูตำแหน่งบนแผนที่
-                        </button>
+                        <button class="w-full bg-red-50 text-red-600 py-1.5 rounded text-xs font-bold hover:bg-red-100 transition-colors"><i class="fa-solid fa-map-location-dot"></i> ดูตำแหน่งบนแผนที่</button>
                     </div>`;
             });
         }
     }
 
-    // ==================== UTILITY FUNCTIONS ====================
-
-    /**
-     * Show Sale Detail Modal
-     */
+    // Utility Functions (ShowDetail, FocusField, ExportCSV, ForceUpdate, ShowError) - ยังคง Logic เดิม แต่ปรับสีใน ShowDetail
     window.showDetail = function (saleId) {
         const s = globalSales.find(item => item.id === saleId);
-        if (!s) {
-            Swal.fire('ไม่พบข้อมูล', 'ไม่สามารถแสดงรายละเอียดได้', 'error');
-            return;
-        }
+        if (!s) return;
 
         const total = (parseFloat(s.quantity_ton) * parseFloat(s.price_per_ton)).toLocaleString(undefined, { maximumFractionDigits: 0 });
         const price = parseFloat(s.price_per_ton).toLocaleString();
@@ -849,88 +666,43 @@
         Swal.fire({
             html: `
                 <div class="text-left font-sans">
-                    <h3 class="text-lg font-bold text-center mb-4 text-gray-800">
-                        <i class="fa-solid fa-file-invoice text-blue-600"></i>
-                        รายละเอียดบิล
-                    </h3>
-                    <div class="bg-gray-50 p-4 rounded-lg text-sm space-y-2 border border-gray-200">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">ผู้ขาย:</span> 
-                            <b class="text-gray-800">${s.farmer_name}</b>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">ผู้ซื้อ:</span> 
-                            <b class="text-blue-600">${s.buyer_name || '-'}</b>
-                        </div>
-                        <hr class="border-dashed">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">สินค้า:</span> 
-                            <b class="text-gray-700">${s.variety_display}</b>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">ปริมาณ:</span> 
-                            <b class="text-gray-700">${qty} ตัน</b>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">ราคา:</span> 
-                            <b class="text-gray-700">${price} บ./ตัน</b>
-                        </div>
-                        <div class="border-t-2 pt-2 mt-2 flex justify-between text-green-600 font-bold text-lg">
-                            <span>ยอดสุทธิ:</span> 
-                            <span>${total} บ.</span>
-                        </div>
+                    <h3 class="text-lg font-bold text-center mb-4 text-slate-800"><i class="fa-solid fa-file-invoice text-indigo-600"></i> รายละเอียดบิล</h3>
+                    <div class="bg-slate-50 p-4 rounded-lg text-sm space-y-2 border border-slate-200">
+                        <div class="flex justify-between"><span class="text-slate-500">ผู้ขาย:</span> <b class="text-slate-800">${s.farmer_name}</b></div>
+                        <div class="flex justify-between"><span class="text-slate-500">ผู้ซื้อ:</span> <b class="text-indigo-600">${s.buyer_name || '-'}</b></div>
+                        <hr class="border-dashed border-slate-300">
+                        <div class="flex justify-between"><span class="text-slate-500">สินค้า:</span> <b class="text-slate-700">${s.variety_display}</b></div>
+                        <div class="flex justify-between"><span class="text-slate-500">ปริมาณ:</span> <b class="text-slate-700">${qty} ตัน</b></div>
+                        <div class="flex justify-between"><span class="text-slate-500">ราคา:</span> <b class="text-slate-700">${price} บ./ตัน</b></div>
+                        <div class="border-t-2 border-slate-200 pt-2 mt-2 flex justify-between text-emerald-600 font-bold text-lg"><span>ยอดสุทธิ:</span> <span>${total} บ.</span></div>
                     </div>
                 </div>`,
             showCancelButton: true,
             confirmButtonText: '<i class="fa-solid fa-map-location-dot"></i> ดูตำแหน่ง',
-            confirmButtonColor: '#3b82f6',
+            confirmButtonColor: '#4f46e5', // Indigo-600
             cancelButtonText: 'ปิด',
             width: 400
-        }).then((result) => {
-            if (result.isConfirmed) {
-                focusField(s.rice_field);
-            }
-        });
+        }).then((result) => { if (result.isConfirmed) focusField(s.rice_field); });
     }
 
-    /**
-     * Focus on Field in Map
-     */
     window.focusField = function (fieldId) {
-        // Switch to map view on mobile
-        if (window.innerWidth < 1024) {
-            switchTab('map');
-        }
-
+        if (window.innerWidth < 1024) switchTab('map');
         const layer = layersMap[fieldId];
         if (layer) {
             map.invalidateSize();
             setTimeout(() => {
-                map.flyToBounds(layer.getBounds(), {
-                    padding: [50, 50],
-                    maxZoom: 16,
-                    duration: 1.5
-                });
+                map.flyToBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 16, duration: 1.5 });
                 setTimeout(() => layer.openPopup(), 1500);
             }, 100);
         } else {
-            Swal.fire({
-                icon: 'info',
-                title: 'ไม่พบพิกัด',
-                text: 'ไม่สามารถแสดงตำแหน่งบนแผนที่ได้',
-                confirmButtonColor: '#3b82f6'
-            });
+            Swal.fire({ icon: 'info', title: 'ไม่พบพิกัด', confirmButtonColor: '#4f46e5' });
         }
     }
 
-    /**
-     * Export CSV
-     */
     window.exportCSV = function () {
         const data = currentTableMode === 'sales' ? globalSales : globalRiskFields;
         const timestamp = new Date().toISOString().split('T')[0];
-
-        let csv = "\uFEFF"; // BOM for Thai encoding
+        let csv = "\uFEFF"; 
 
         if (currentTableMode === 'sales') {
             csv += "วันที่,เกษตรกร,ผู้ซื้อ,พันธุ์,ปริมาณ(ตัน),ราคา/ตัน,ยอดรวม,สถานะ\n";
@@ -952,73 +724,35 @@
         link.click();
         URL.revokeObjectURL(link.href);
 
-        Swal.fire({
-            icon: 'success',
-            title: 'ดาวน์โหลดสำเร็จ',
-            text: 'ไฟล์ CSV ถูกบันทึกแล้ว',
-            timer: 2000,
-            showConfirmButton: false
-        });
+        Swal.fire({ icon: 'success', title: 'ดาวน์โหลดสำเร็จ', timer: 2000, showConfirmButton: false });
     }
 
-    /**
-     * Force Update with Loading Animation
-     */
     window.forceUpdate = function () {
         const icon = document.getElementById('refreshIcon');
         icon.classList.add('fa-spin');
-
-        Swal.fire({
-            title: 'กำลังอัปเดตข้อมูล...',
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
+        Swal.fire({ title: 'กำลังอัปเดต...', didOpen: () => Swal.showLoading() });
 
         updateData().then(() => {
             Swal.close();
             icon.classList.remove('fa-spin');
-
-            Swal.fire({
-                icon: 'success',
-                title: 'อัปเดตสำเร็จ',
-                timer: 1500,
-                showConfirmButton: false
-            });
+            Swal.fire({ icon: 'success', title: 'อัปเดตสำเร็จ', timer: 1500, showConfirmButton: false });
         }).catch(err => {
             icon.classList.remove('fa-spin');
-            Swal.fire({
-                icon: 'error',
-                title: 'เกิดข้อผิดพลาด',
-                text: err.message
-            });
+            Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.message });
         });
     }
 
-    /**
-     * Show Error State
-     */
     function showErrorState(message) {
         Swal.fire({
-            icon: 'error',
-            title: 'เกิดข้อผิดพลาด',
-            text: message || 'ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
-            confirmButtonColor: '#3b82f6',
-            confirmButtonText: 'ลองใหม่'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                updateData();
-            }
-        });
+            icon: 'error', title: 'เกิดข้อผิดพลาด', text: message,
+            confirmButtonColor: '#4f46e5', confirmButtonText: 'ลองใหม่'
+        }).then((result) => { if (result.isConfirmed) updateData(); });
     }
 
-    // ==================== RESPONSIVE HANDLER ====================
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
             map.invalidateSize();
-
-            // Force desktop layout on large screens
             if (window.innerWidth >= 1024) {
                 document.getElementById('view-overview').classList.remove('hidden');
                 document.getElementById('view-map').classList.remove('hidden');
@@ -1027,15 +761,9 @@
         }, 250);
     });
 
-    // ==================== INITIALIZATION ====================
     document.addEventListener('DOMContentLoaded', function () {
-        // Initial data load
         updateData();
-
-        // Auto-refresh every 1 minute
         updateInterval = setInterval(updateData, 60000);
-
-        // Initialize proper view for current screen size
         if (window.innerWidth >= 1024) {
             document.getElementById('view-overview').classList.remove('hidden');
             document.getElementById('view-map').classList.remove('hidden');
@@ -1043,82 +771,25 @@
         }
     });
 
-    // Cleanup on page unload
-    window.addEventListener('beforeunload', () => {
-        if (updateInterval) {
-            clearInterval(updateInterval);
-        }
-    });
+    window.addEventListener('beforeunload', () => { if (updateInterval) clearInterval(updateInterval); });
 
 </script>
 
 <style>
-    /* Leaflet Popup Styling */
-    .leaflet-popup-content-wrapper {
-        padding: 0;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        overflow: hidden;
-    }
+    /* ปรับแต่ง Scrollbar ให้เข้ากับธีมใหม่ */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    .leaflet-popup-content {
-        margin: 0;
-        width: 220px !important;
-    }
+    /* ปรับ Popup ของแผนที่ให้ดู Clean ขึ้น */
+    .leaflet-popup-content-wrapper { padding: 0; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); border: 1px solid #e2e8f0; }
+    .leaflet-popup-content { margin: 0; width: 220px !important; }
+    .leaflet-container a.leaflet-popup-close-button { color: #64748b; top: 8px; right: 8px; font-size: 16px; padding: 4px; }
+    .leaflet-container a.leaflet-popup-close-button:hover { color: #ef4444; background: transparent; }
 
-    .leaflet-container a.leaflet-popup-close-button {
-        color: #fff;
-        top: 4px;
-        right: 4px;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-        font-size: 18px;
-        padding: 2px 6px;
-    }
-
-    .leaflet-container a.leaflet-popup-close-button:hover {
-        color: #fff;
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 50%;
-    }
-
-    /* Custom Scrollbar */
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 10px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-    }
-
-    /* Loading Animation */
-    @keyframes spin {
-        from {
-            transform: rotate(0deg);
-        }
-
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    .fa-spin {
-        animation: spin 1s linear infinite;
-    }
-
-    /* Mobile Safe Area */
-    .pb-safe {
-        padding-bottom: env(safe-area-inset-bottom);
-    }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .fa-spin { animation: spin 1s linear infinite; }
+    .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
 </style>
 {% endblock %}
