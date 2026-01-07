@@ -1,0 +1,121 @@
+/* ==========================================================================
+   Base Styles for Rice Supply Chain Platform
+   ========================================================================== */
+
+/* --- Body & Typography --- */
+body {
+    font-family: 'Sarabun', sans-serif;
+    background-color: #f8fafc;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* --- Navigation Links --- */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 9999px;
+    transition: all 0.2s;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+.nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.nav-link.active {
+    background-color: white;
+    color: #15803d;
+    font-weight: 700;
+    box-shadow: 0 10px 15px -3px rgba(21, 128, 61, 0.1);
+}
+
+/* --- Buttons --- */
+.btn-primary {
+    background-color: #059669;
+    box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.2);
+    transition: all 0.3s;
+    border-radius: 0.75rem;
+}
+.btn-primary:hover {
+    background-color: #047857;
+}
+
+/* --- Cards --- */
+.card-rice {
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid #f1f5f9;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s;
+}
+.card-rice:hover {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* --- Leaflet Popup Customization --- */
+.leaflet-popup-content-wrapper {
+    border-radius: 0.75rem;
+    border: 0;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* --- Mobile Menu Animation --- */
+#mobile-menu {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform-origin: top;
+}
+#mobile-menu:not(.hidden) {
+    max-height: 100vh;
+    opacity: 1;
+}
+
+/* --- Custom Scrollbar --- */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* --- Animations --- */
+@keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes swing {
+    20% { transform: rotate(15deg); }
+    40% { transform: rotate(-10deg); }
+    60% { transform: rotate(5deg); }
+    80% { transform: rotate(-5deg); }
+    100% { transform: rotate(0deg); }
+}
+.group:hover .animate-swing {
+    animation: swing 1s ease-in-out;
+}
+
+/* --- SweetAlert2 Overrides --- */
+.swal2-popup {
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+    font-family: 'Sarabun', sans-serif;
+}

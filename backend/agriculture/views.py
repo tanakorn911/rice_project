@@ -3,6 +3,7 @@ import json
 import datetime
 import ee
 from google.oauth2 import service_account
+import logging
 
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
@@ -12,22 +13,38 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import GEOSGeometry
 from django.db.models import Sum, Count, Q
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt # <--- สำคัญสำหรับ API
+from rest_framework.pagination import PageNumberPagination
 from .models import RiceField, YieldEstimation, SaleNotification
 from .serializers import RiceFieldSerializer, YieldEstimationSerializer, SaleNotificationSerializer
 from .decorators import farmer_required, miller_required, govt_required, not_govt_required
 
+# Pagination for API responses
+class StandardPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 # --- GEE Init ---
+EE_INITIALIZED = False
 try:
     KEY_PATH = os.path.join(settings.BASE_DIR, 'gee-key.json')
     if os.path.exists(KEY_PATH):
         SCOPES = ['https://www.googleapis.com/auth/earthengine']
         credentials = service_account.Credentials.from_service_account_file(KEY_PATH, scopes=SCOPES)
         ee.Initialize(credentials=credentials)
+        EE_INITIALIZED = True
+        logging.info('Google Earth Engine initialized using service account key.')
     else:
-        ee.Initialize()
+        try:
+            ee.Initialize()
+            EE_INITIALIZED = True
+            logging.info('Google Earth Engine initialized using default credentials.')
+        except Exception as inner_e:
+            logging.warning('GEE default initialization failed: %s', inner_e)
+            EE_INITIALIZED = False
 except Exception as e:
-    print(f"GEE Init Error: {e}")
+    logging.error('GEE Init Error: %s', e)
+    EE_INITIALIZED = False
 
 # --- Views & Dashboard ---
 @login_required
@@ -98,6 +115,7 @@ def dashboard_stats(request):
 
 class RiceFieldViewSet(viewsets.ModelViewSet):
     serializer_class = RiceFieldSerializer
+    pagination_class = StandardPagination
 
     @action(detail=False, methods=['get'])
     def trash(self, request):
@@ -116,6 +134,9 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
         try:
             # ต้อง Query เองโดยตรง เพราะ get_object() ปกติจะหาไม่เจอ (ติด Filter is_active=True ใน get_queryset)
             field = RiceField.objects.get(pk=pk, owner=request.user, is_active=False)
+            # Prevent restoring if an active field with same name already exists
+            if RiceField.objects.filter(owner=request.user, name=field.name, is_active=True).exists():
+                return Response({'error': f'มีแปลงนาชื่อ "{field.name}" อยู่แล้ว'}, status=400)
             field.is_active = True
             field.save()
             return Response({'status': 'restored', 'msg': f'กู้คืนแปลง "{field.name}" สำเร็จ'})
@@ -155,8 +176,9 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
             data = request.data
             field_name = data.get('name', 'แปลงนาใหม่').strip()
 
-            if RiceField.objects.filter(owner=request.user, name=field_name, is_active=True).exists():
-                return Response({'error': f"คุณมีแปลงนาชื่อ '{field_name}' อยู่แล้ว"}, status=400)
+            # Block creating a new field with the same name even if an inactive (trashed) one exists
+            if RiceField.objects.filter(owner=request.user, name=field_name).exists():
+                return Response({'error': f"คุณมีแปลงนาชื่อ '{field_name}' อยู่แล้ว (อาจอยู่ในถังขยะ)"}, status=400)
 
             geom_input = data.get('geometry')
             if not geom_input: return Response({'error': 'กรุณาวาดแปลงนา'}, status=400)
@@ -182,6 +204,11 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def calculate_yield(self, request, pk=None):
         rice_field = self.get_object()
+        # Fail fast when EE is not initialized to give a clear error to caller
+        if not globals().get('EE_INITIALIZED', False):
+            return Response({
+                'error': 'Earth Engine client not initialized on server. Configure GEE credentials (see http://goo.gle/ee-auth)'
+            }, status=503)
         try:
             geom_json = json.loads(rice_field.boundary.json)
             ee_geometry = ee.Geometry.Polygon(geom_json['coordinates'])
@@ -295,6 +322,7 @@ class RiceFieldViewSet(viewsets.ModelViewSet):
 
 class SaleNotificationViewSet(viewsets.ModelViewSet):
     serializer_class = SaleNotificationSerializer
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         if not self.request.user.is_authenticated: return SaleNotification.objects.none()
@@ -316,10 +344,15 @@ class SaleNotificationViewSet(viewsets.ModelViewSet):
         sale = self.get_object()
         if sale.status != 'OPEN': 
             return Response({'error': 'รายการนี้ไม่ว่างหรือมีการขอซื้อแล้ว'}, status=400)
-        
+        # Validate buyer contact phone
+        contact = request.data.get('contact', request.user.phone or '')
+        cleaned = ''.join(ch for ch in contact if ch.isdigit())
+        if not contact or len(cleaned) < 9 or len(cleaned) > 10:
+            return Response({'error': 'เบอร์โทรติดต่อไม่ถูกต้อง'}, status=400)
+
         sale.status = 'REQUESTED'
         sale.buyer = request.user
-        sale.buyer_contact = request.data.get('contact', request.user.phone or '-')
+        sale.buyer_contact = contact
         
         # +++ รับค่าราคาต่อรอง +++
         negotiated_price = request.data.get('negotiated_price')

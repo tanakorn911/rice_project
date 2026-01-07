@@ -2,9 +2,11 @@ import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-change-me-please'
-DEBUG = True
-ALLOWED_HOSTS = ['*']
+
+# Security Settings - ดึงจาก environment variables
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-only-key-change-in-production')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -49,15 +51,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'rice_core.wsgi.application'
 
-# Database เชื่อมกับ Docker
+# Database เชื่อมกับ Docker - ใช้ environment variables
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'rice_db',
-        'USER': 'postgres',
-        'PASSWORD': 'password',
-        'HOST': 'db', # ชื่อ Service ใน Docker compose
-        'PORT': '5432',
+        'NAME': os.environ.get('POSTGRES_DB', 'rice_db'),
+        'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'password'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'db'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 
@@ -80,3 +82,28 @@ LOGIN_REDIRECT_URL = 'dashboard_router'
 # (แนะนำ) เมื่อ Logout สำเร็จ ให้กลับมาหน้า Login
 LOGOUT_REDIRECT_URL = 'login'
 LOGOUT_ON_GET = True
+
+# Password Validators - ความปลอดภัยรหัสผ่าน
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': 8}},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {'format': '{levelname} {asctime} {module} {message}', 'style': '{'},
+    },
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'formatter': 'verbose'},
+    },
+    'root': {'handlers': ['console'], 'level': 'INFO'},
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'agriculture': {'handlers': ['console'], 'level': 'DEBUG', 'propagate': False},
+    },
+}

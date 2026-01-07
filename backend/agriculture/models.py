@@ -5,7 +5,6 @@ class RiceField(models.Model):
     # --- 1. ความสัมพันธ์และข้อมูลหลัก ---
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='rice_fields')
     name = models.CharField(max_length=100, help_text="ชื่อแปลงนา")
-    is_active = models.BooleanField(default=True)
     
     # --- 2. ข้อมูลเชิงพื้นที่ (Spatial Data) ---
     boundary = models.PolygonField(help_text="ขอบเขตแปลงนา (Polygon)")
@@ -28,8 +27,10 @@ class RiceField(models.Model):
     updated_at = models.DateTimeField(auto_now=True) # เพิ่มเพื่อดูการแก้ไขล่าสุด
 
     class Meta:
-        # เอา unique_together ออก เพื่อให้สามารถสร้างชื่อซ้ำได้ถ้าอันเก่าถูก Soft Delete ไปแล้ว
-        # unique_together = ('owner', 'name') 
+        # Enforce unique name per owner across all records (including soft-deleted)
+        constraints = [
+            models.UniqueConstraint(fields=['owner', 'name'], name='unique_owner_name')
+        ]
         ordering = ['-created_at']
 
     def __str__(self):
@@ -57,10 +58,19 @@ class SaleNotification(models.Model):
     
     status = models.CharField(max_length=20, default='OPEN', choices=STATUS_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)  # เพิ่มใหม่
 
     buyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='purchases')
     buyer_contact = models.CharField(max_length=20, blank=True, null=True, help_text="เบอร์ติดต่อคนซื้อ")
     sold_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status']),
+            models.Index(fields=['farmer', 'status']),
+            models.Index(fields=['created_at']),
+        ]
 
     def __str__(self):
         return f"{self.farmer} - {self.status}"

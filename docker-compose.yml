@@ -4,18 +4,22 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_DB=rice_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=${POSTGRES_DB:-rice_db}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
     ports:
       - "5432:5432"
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build: .
     command: >
-      sh -c "python manage.py makemigrations &&
-             python manage.py migrate &&
+      sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./backend:/app/backend
@@ -23,8 +27,16 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-only-key-change-in-production}
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-true}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - POSTGRES_DB=${POSTGRES_DB:-rice_db}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
+      - POSTGRES_HOST=db
       - GOOGLE_APPLICATION_CREDENTIALS=/app/backend/gee-key.json
       - PYTHONUNBUFFERED=1
     restart: on-failure
@@ -32,10 +44,10 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com  # อีเมลสำหรับล็อกอินเข้า pgAdmin
-      PGADMIN_DEFAULT_PASSWORD: admin       # รหัสผ่านสำหรับล็อกอินเข้า pgAdmin
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
     ports:
-      - "5050:80"  # เข้าผ่าน localhost:5050
+      - "5050:80"
     depends_on:
       - db
       

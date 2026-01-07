@@ -1,34 +1,41 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="flex flex-col h-[100dvh] bg-gray-50 overflow-hidden relative">
-    
+
     <!-- Header Bar -->
-    <div class="flex-none bg-white px-4 py-3 shadow-sm border-b border-gray-100 z-30 flex justify-between items-center h-16">
+    <div
+        class="flex-none bg-white px-4 py-3 shadow-sm border-b border-gray-100 z-30 flex justify-between items-center h-16">
         <div>
             <h1 class="text-lg lg:text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <i class="fa-solid fa-seedling text-green-600"></i>
-                <span class="hidden sm:inline">แปลงนาของคุณ {{ request.user.first_name|default:request.user.username }}</span>
-                <span class="sm:hidden">แปลงนาของฉัน</span>
+                <span class="hidden sm:inline">แปลงนาของคุณ {{ request.user.first_name|default:request.user.username}}</span>
+                <span class="sm:hidden">แปลงนาของคุณ {{request.user.first_name|default:request.user.username}}</span>
             </h1>
         </div>
         <div class="flex items-center gap-2">
             <!-- Desktop: Export Button -->
-            <button onclick="exportFields()" 
-                class="hidden lg:flex w-9 h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 items-center justify-center transition shadow-sm" 
+            <button onclick="exportFields()"
+                class="hidden lg:flex w-9 h-9 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 items-center justify-center transition shadow-sm"
                 title="ส่งออกข้อมูล">
                 <i class="fa-solid fa-download"></i>
             </button>
-            
+
             <!-- Trash Button -->
-            <button onclick="openTrash()" 
-                class="w-9 h-9 rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition shadow-sm" 
+            <button onclick="openTrash()"
+                class="w-9 h-9 rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-500 flex items-center justify-center transition shadow-sm"
                 title="ถังขยะ">
                 <i class="fa-solid fa-trash-can"></i>
             </button>
-            
+
             <!-- Field Counter Badge -->
-            <div class="bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-bold border border-green-100 shadow-sm whitespace-nowrap">
+            <div
+                class="bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-bold border border-green-100 shadow-sm whitespace-nowrap">
                 <span id="field-count" class="text-base">0</span> แปลง
             </div>
         </div>
@@ -36,24 +43,23 @@
 
     <!-- Main Content: List + Map -->
     <div class="flex-1 min-h-0 relative lg:grid lg:grid-cols-12 lg:gap-0">
-        
+
         <!-- LEFT PANEL: Field List -->
-        <div id="view-list"
-            class="absolute inset-0
+        <div id="view-list" class="absolute inset-0
                    lg:static lg:inset-auto
                    lg:col-span-4 lg:block
                    lg:h-[calc(100vh-64px)]
                    flex flex-col bg-white border-r border-gray-200 min-h-0">
-            
+
             <!-- List Header with Search & Filter -->
-            <div class="flex-none p-3 bg-gradient-to-r from-gray-50 to-white backdrop-blur border-b border-gray-200 space-y-2 z-20">
+            <div
+                class="flex-none p-3 bg-gradient-to-r from-gray-50 to-white backdrop-blur border-b border-gray-200 space-y-2 z-20">
                 <!-- Title Row -->
                 <div class="flex justify-between items-center">
                     <span class="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2">
                         <i class="fa-solid fa-list"></i> รายการแปลงนา
                     </span>
-                    <button onclick="location.reload()" 
-                        class="text-gray-400 hover:text-green-600 transition" 
+                    <button onclick="location.reload()" class="text-gray-400 hover:text-green-600 transition"
                         title="รีโหลด">
                         <i class="fa-solid fa-rotate-right"></i>
                     </button>
@@ -62,18 +68,14 @@
                 <!-- Search Bar -->
                 <div class="relative">
                     <i class="fa-solid fa-search absolute left-3 top-2.5 text-gray-400 text-sm"></i>
-                    <input type="text" 
-                        id="search-field" 
-                        placeholder="ค้นหาแปลงนา..." 
-                        oninput="filterFields()"
+                    <input type="text" id="search-field" placeholder="ค้นหาแปลงนา..." oninput="filterFields()"
                         class="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition">
                 </div>
 
                 <!-- Filter & Sort Row -->
                 <div class="flex gap-2">
                     <!-- Filter by Status -->
-                    <select id="filter-status" 
-                        onchange="filterFields()"
+                    <select id="filter-status" onchange="filterFields()"
                         class="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 outline-none bg-white">
                         <option value="all">ทุกสถานะ</option>
                         <option value="ready">พร้อมขาย</option>
@@ -83,8 +85,7 @@
                     </select>
 
                     <!-- Sort Options -->
-                    <select id="sort-by" 
-                        onchange="filterFields()"
+                    <select id="sort-by" onchange="filterFields()"
                         class="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-green-500 outline-none bg-white">
                         <option value="name">เรียงตามชื่อ</option>
                         <option value="area">เรียงตามพื้นที่</option>
@@ -123,7 +124,7 @@
                 <div id="no-results" class="hidden flex flex-col items-center justify-center h-64 text-gray-400 p-4">
                     <i class="fa-solid fa-search text-4xl mb-2 opacity-30"></i>
                     <p class="font-semibold">ไม่พบแปลงนาที่ค้นหา</p>
-                    <button onclick="clearFilters()" 
+                    <button onclick="clearFilters()"
                         class="mt-3 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition">
                         ล้างตัวกรอง
                     </button>
@@ -131,33 +132,33 @@
             </div>
 
             <!-- Batch Actions Bar (Desktop) -->
-            <div id="batch-bar" 
+            <div id="batch-bar"
                 class="hidden lg:flex flex-none items-center justify-between px-3 py-2 bg-blue-50 border-t border-blue-100">
                 <span class="text-xs font-semibold text-blue-700">
                     <i class="fa-solid fa-square-check"></i> เลือก <span id="selected-count">0</span> แปลง
                 </span>
                 <div class="flex gap-2">
-                    <button onclick="batchAnalyze()" 
+                    <button onclick="batchAnalyze()"
                         class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition">
                         <i class="fa-solid fa-satellite"></i> วิเคราะห์ทั้งหมด
                     </button>
-                    <button onclick="batchDelete()" 
+                    <button onclick="batchDelete()"
                         class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded-lg transition">
                         <i class="fa-solid fa-trash"></i> ลบทั้งหมด
                     </button>
-                    <button onclick="clearSelection()" 
+                    <button onclick="clearSelection()"
                         class="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded-lg transition">
                         ยกเลิก
                     </button>
                 </div>
             </div>
         </div>
-    
+
         <!-- RIGHT PANEL: Map -->
-        <div id="view-map" 
+        <div id="view-map"
             class="hidden absolute inset-0 z-20 lg:static lg:block lg:col-span-8 lg:h-full h-full bg-slate-100 relative min-h-0">
             <div id="map" class="w-full h-full z-0 outline-none"></div>
-            
+
             <!-- Map Hint (Mobile Only) -->
             <div class="absolute top-4 left-0 right-0 z-[400] flex justify-center lg:hidden pointer-events-none">
                 <div class="bg-white/90 backdrop-blur px-4 py-1.5 rounded-full shadow-lg border border-gray-200">
@@ -167,23 +168,24 @@
                 </div>
             </div>
         </div>
-    
+
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <div class="lg:hidden flex-none fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] z-[1000] pb-[env(safe-area-inset-bottom)]">
+    <div
+        class="lg:hidden flex-none fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] z-[1000] pb-[env(safe-area-inset-bottom)]">
         <div class="grid grid-cols-2 h-16 relative">
-            <button onclick="switchTab('list')" 
+            <button onclick="switchTab('list')"
                 class="group flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden">
-                <div id="nav-icon-list" 
+                <div id="nav-icon-list"
                     class="bg-green-50 text-green-600 w-12 h-8 rounded-full flex items-center justify-center transition-all duration-300 scale-100">
                     <i class="fa-solid fa-list-ul text-lg"></i>
                 </div>
                 <span id="nav-text-list" class="text-[10px] font-bold text-green-600 transition-colors">รายการ</span>
             </button>
-            <button onclick="switchTab('map')" 
+            <button onclick="switchTab('map')"
                 class="group flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden">
-                <div id="nav-icon-map" 
+                <div id="nav-icon-map"
                     class="bg-transparent text-gray-400 w-12 h-8 rounded-full flex items-center justify-center transition-all duration-300 scale-90">
                     <i class="fa-solid fa-map-location-dot text-lg"></i>
                 </div>
@@ -195,23 +197,28 @@
 </div>
 
 <!-- Sale Modal -->
-<div id="saleModal" class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative transform transition-transform scale-95 opacity-0" id="saleModalContent">
+<div id="saleModal"
+    class="fixed inset-0 z-[999] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm transition-opacity">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 relative transform transition-transform scale-95 opacity-0"
+        id="saleModalContent">
         <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
             <i class="fa-solid fa-xmark text-xl"></i>
         </button>
         <div class="text-center">
-            <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+            <div
+                class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
                 <i class="fa-solid fa-handshake"></i>
             </div>
             <h3 class="text-xl font-bold text-gray-800">รายละเอียดการขาย</h3>
-            <span class="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold mt-1 inline-block border border-green-100">ขายสำเร็จแล้ว</span>
-            
+            <span
+                class="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold mt-1 inline-block border border-green-100">ขายสำเร็จแล้ว</span>
+
             <div class="mt-6 space-y-4 text-left">
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
                     <h4 class="text-xs font-bold text-blue-500 uppercase mb-2">ผู้รับซื้อ (Buyer)</h4>
                     <div class="flex items-center gap-3 mb-2">
-                        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm">
+                        <div
+                            class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm">
                             <i class="fa-solid fa-industry"></i>
                         </div>
                         <div>
@@ -220,16 +227,18 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm">
+                        <div
+                            class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm">
                             <i class="fa-solid fa-phone"></i>
                         </div>
                         <div>
                             <p class="text-xs text-gray-400">เบอร์โทรศัพท์</p>
-                            <a href="#" id="modal-buyer-phone-link" class="font-bold text-gray-700 hover:text-blue-600 transition">-</a>
+                            <a href="#" id="modal-buyer-phone-link"
+                                class="font-bold text-gray-700 hover:text-blue-600 transition">-</a>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2 text-sm">
                     <div class="flex justify-between">
                         <span class="text-gray-500">วันที่ขาย</span>
@@ -249,8 +258,8 @@
                     </div>
                 </div>
             </div>
-            
-            <button onclick="closeModal()" 
+
+            <button onclick="closeModal()"
                 class="mt-5 w-full bg-gray-800 hover:bg-gray-900 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-lg shadow-gray-200">
                 ปิดหน้าต่าง
             </button>
@@ -259,8 +268,10 @@
 </div>
 
 <!-- Trash Modal -->
-<div id="trashModal" class="fixed inset-0 z-[1050] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-2xl w-full max-w-md p-5 relative shadow-2xl flex flex-col max-h-[80vh]" id="trashModalContent">
+<div id="trashModal"
+    class="fixed inset-0 z-[1050] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl w-full max-w-md p-5 relative shadow-2xl flex flex-col max-h-[80vh]"
+        id="trashModalContent">
         <button onclick="closeTrash()" class="absolute top-3 right-3 text-gray-400">
             <i class="fa-solid fa-xmark text-xl"></i>
         </button>
@@ -272,54 +283,11 @@
 </div>
 
 <!-- Loading Overlay -->
-<div id="loading-overlay" class="fixed inset-0 z-[3000] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center flex-col text-white">
+<div id="loading-overlay"
+    class="fixed inset-0 z-[3000] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center flex-col text-white">
     <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-3"></i>
     <p>กำลังประมวลผล...</p>
 </div>
-
-<style>
-    /* Scrollbar */
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    
-    /* Animation */
-    .animate-fade-in-down { animation: fadeInDown 0.3s ease-out forwards; }
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* SweetAlert Tweaks */
-    .swal2-popup { 
-        border-radius: 20px !important; 
-        padding: 1.5rem !important; 
-        font-family: 'Sarabun', sans-serif; 
-    }
-    .swal2-actions { 
-        width: 100%; 
-        margin: 1rem 0 0 0 !important; 
-    }
-
-    /* Desktop: Always show list & map */
-    @media (min-width: 1024px) {
-        #view-list, #view-map {
-            display: flex !important; /* Override hidden class */
-        }
-        #view-map {
-            display: block !important;
-        }
-    }
-
-    /* Checkbox styling */
-    input[type="checkbox"].field-checkbox {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-        accent-color: #16a34a;
-    }
-</style>
 
 {% endblock %}
 
@@ -336,7 +304,7 @@
     function switchTab(tab) {
         const viewList = document.getElementById('view-list');
         const viewMap = document.getElementById('view-map');
-        
+
         const iconList = document.getElementById('nav-icon-list');
         const textList = document.getElementById('nav-text-list');
         const iconMap = document.getElementById('nav-icon-map');
@@ -382,19 +350,19 @@
         let filtered = allFieldsData.filter(field => {
             // Search filter
             const matchesSearch = field.name.toLowerCase().includes(searchTerm);
-            
+
             // Status filter
             let matchesStatus = true;
             if (statusFilter !== 'all') {
                 const sale = saleMapData[field.id];
                 const hasYield = field.latest_yield && parseFloat(field.latest_yield.yield) > 0;
-                
+
                 if (statusFilter === 'ready') matchesStatus = hasYield && !sale;
                 else if (statusFilter === 'selling') matchesStatus = sale && sale.status !== 'SOLD';
                 else if (statusFilter === 'sold') matchesStatus = sale && sale.status === 'SOLD';
                 else if (statusFilter === 'pending') matchesStatus = !field.latest_yield;
             }
-            
+
             return matchesSearch && matchesStatus;
         });
 
@@ -422,7 +390,7 @@
     }
 
     // ==================== EXPORT FUNCTION ====================
-    window.exportFields = function() {
+    window.exportFields = function () {
         if (allFieldsData.length === 0) {
             Swal.fire({
                 icon: 'info',
@@ -452,7 +420,7 @@
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         const timestamp = new Date().toISOString().split('T')[0];
-        
+
         link.setAttribute("href", url);
         link.setAttribute("download", `แปลงนา_${timestamp}.csv`);
         link.style.visibility = 'hidden';
@@ -482,9 +450,9 @@
     function updateBatchBar() {
         const batchBar = document.getElementById('batch-bar');
         const countEl = document.getElementById('selected-count');
-        
+
         countEl.innerText = selectedFields.size;
-        
+
         if (selectedFields.size > 0) {
             batchBar.classList.remove('hidden');
             batchBar.classList.add('flex');
@@ -616,7 +584,7 @@
         fields.forEach(f => {
             const activeSale = saleMapData[f.id];
             const status = activeSale ? activeSale.status : 'NONE';
-            
+
             // Calculate stats
             totalArea += parseFloat(f.area_rai || 0);
             if (f.latest_yield) {
@@ -659,7 +627,7 @@
             // Yield Info
             let yieldInfo = '<div class="text-center py-4 text-gray-400 text-xs bg-gray-50 rounded-lg border border-dashed border-gray-200">ยังไม่เคยวิเคราะห์</div>';
             let popupYield = '';
-            
+
             if (f.latest_yield) {
                 const rev = f.latest_yield.yield * 12000;
                 yieldInfo = `
@@ -670,7 +638,7 @@
                         </div>
                         <div>
                             <p class="text-[10px] text-gray-500">มูลค่าคาดการณ์</p>
-                            <p class="text-base font-bold text-orange-600">${rev.toLocaleString('en-US', {maximumFractionDigits: 0})}</p>
+                            <p class="text-base font-bold text-orange-600">${rev.toLocaleString('en-US', { maximumFractionDigits: 0 })}</p>
                         </div>
                         <div class="col-span-2 border-t border-green-100 pt-1 mt-1 flex justify-between items-center px-1">
                             <span class="text-[10px] text-gray-500 font-bold">
@@ -681,7 +649,7 @@
                             </span>
                         </div>
                     </div>`;
-                
+
                 if (parseFloat(f.latest_yield.yield) > 0) {
                     popupYield = `
                         <div class="mt-2 pt-2 border-t border-gray-100 flex justify-between items-center bg-green-50 p-2 rounded-lg">
@@ -705,7 +673,7 @@
                 let priceInfoHTML = '';
                 const originalPrice = parseFloat(activeSale.price_per_ton);
                 const offerPrice = activeSale.negotiated_price ? parseFloat(activeSale.negotiated_price) : originalPrice;
-                
+
                 if (activeSale.negotiated_price && offerPrice !== originalPrice) {
                     const diff = offerPrice - originalPrice;
                     priceInfoHTML = `
@@ -720,7 +688,7 @@
                 } else {
                     priceInfoHTML = `<p class="text-xs text-gray-600 mb-2 bg-white px-2 py-1 rounded border border-gray-100">เสนอซื้อที่ราคาเดิม: <b>${originalPrice.toLocaleString()}</b> บ./ตัน</p>`;
                 }
-                
+
                 actionBtns = `
                     <div class="mt-2 bg-yellow-50 p-3 rounded-lg border border-yellow-200 text-center shadow-sm">
                         <div class="flex items-center gap-2 justify-center mb-2 text-yellow-800 font-bold text-xs">
@@ -797,14 +765,52 @@
                 ${yieldInfo}
                 ${actionBtns}
             `;
-            
+
             listContainer.appendChild(cardDiv);
 
             // Add to Map
             if (f.boundary) {
                 try {
                     const geoJsonData = (typeof f.boundary === 'string') ? JSON.parse(f.boundary) : f.boundary;
-                    const popupContent = `
+                    // Validate coordinates to avoid NaN LatLng errors in Leaflet
+                    function coordsAreNumbers(coords) {
+                        if (Array.isArray(coords)) {
+                            return coords.every(c => coordsAreNumbers(c));
+                        }
+                        return typeof coords === 'number' && isFinite(coords);
+                    }
+
+                    function geoHasValidCoords(g) {
+                        if (!g) return false;
+                        if (g.type === 'Feature') return geoHasValidCoords(g.geometry);
+                        if (g.type === 'GeometryCollection') return g.geometries.every(geoHasValidCoords);
+                        if (g.coordinates) {
+                            // coordinates should be nested arrays of numbers
+                            const stack = [g.coordinates];
+                            while (stack.length) {
+                                const item = stack.pop();
+                                if (Array.isArray(item)) {
+                                    if (item.length === 0) continue;
+                                    if (typeof item[0] === 'number') {
+                                        // expecting [lng, lat]
+                                        if (!coordsAreNumbers(item)) return false;
+                                    } else {
+                                        for (const sub of item) stack.push(sub);
+                                    }
+                                } else {
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    if (!geoHasValidCoords(geoJsonData)) {
+                        console.warn('Skipping field with invalid boundary coords', f.id, f.name);
+                        // still create a lightweight card but don't add to map
+                    } else {
+                        const popupContent = `
                         <div class="font-sans min-w-[200px]">
                             <div class="flex justify-between items-start mb-2">
                                 <h4 class="font-bold text-gray-800 text-base m-0 leading-tight">${f.name}</h4>
@@ -824,17 +830,17 @@
                                 <i class="fa-solid fa-eye"></i> ดูข้อมูลลึก
                             </button>
                         </div>`;
-                    
-                    const layer = L.geoJSON(geoJsonData, {
-                        style: {
-                            color: polyColor,
-                            weight: 2,
-                            fillOpacity: 0.4,
-                            fill: true
-                        }
-                    }).bindPopup(popupContent).addTo(drawnItems);
-                    
-                    fieldLayers[f.id] = layer;
+
+                        const layer = L.geoJSON(geoJsonData, {
+                            style: {
+                                color: polyColor,
+                                weight: 2,
+                                fillOpacity: 0.4,
+                                fill: true
+                            }
+                        }).bindPopup(popupContent).addTo(drawnItems);
+                        fieldLayers[f.id] = layer;
+                    }
                 } catch (e) {
                     console.warn('Failed to parse boundary:', e);
                 }
@@ -848,7 +854,7 @@
     }
 
     // ==================== FOCUS FIELD ====================
-    window.focusField = function(id) {
+    window.focusField = function (id) {
         if (window.innerWidth < 1024) {
             switchTab('map');
         }
@@ -921,10 +927,10 @@
     // Locate Control
     var LocateControl = L.Control.extend({
         options: { position: 'bottomright' },
-        onAdd: function(map) {
+        onAdd: function (map) {
             var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
             container.innerHTML = '<a href="#" class="bg-white hover:bg-gray-50 text-blue-600 w-8 h-8 flex items-center justify-center rounded shadow-sm transition-colors" title="ตำแหน่งปัจจุบัน"><i class="fa-solid fa-crosshairs"></i></a>';
-            container.onclick = function(e) {
+            container.onclick = function (e) {
                 e.preventDefault();
                 map.locate({ setView: false, enableHighAccuracy: true });
                 Swal.fire({
@@ -941,8 +947,13 @@
     });
     map.addControl(new LocateControl());
 
-    map.on('locationfound', function(e) {
+    map.on('locationfound', function (e) {
         Swal.close();
+        if (!e || !e.latlng || !isFinite(e.latlng.lat) || !isFinite(e.latlng.lng)) {
+            console.warn('locationfound with invalid latlng:', e && e.latlng);
+            return;
+        }
+
         if (!map.getBounds().contains(e.latlng)) {
             Swal.fire({
                 icon: 'warning',
@@ -965,7 +976,7 @@
             .openOn(map);
     });
 
-    map.on('locationerror', function(e) {
+    map.on('locationerror', function (e) {
         Swal.fire({
             icon: 'error',
             title: 'ไม่พบพิกัด',
@@ -994,9 +1005,14 @@
     }).addTo(map);
 
     // ==================== DRAW EVENT ====================
-    map.on(L.Draw.Event.CREATED, async function(e) {
+    map.on(L.Draw.Event.CREATED, async function (e) {
         var layer = e.layer;
         var center = layer.getBounds().getCenter();
+        if (!center || !isFinite(center.lng) || !isFinite(center.lat)) {
+            console.warn('Draw created with invalid center for layer:', layer);
+            Swal.fire({ icon: 'error', title: 'รูปทรงไม่ถูกต้อง', text: 'ไม่สามารถบันทึกแปลงที่มีพิกัดไม่ถูกต้องได้' });
+            return;
+        }
 
         // Check bounds
         if (center.lng < 99.70 || center.lng > 100.65 || center.lat < 18.90 || center.lat > 19.80) {
@@ -1026,11 +1042,11 @@
                         <div class="relative">
                             <select id="swal-variety" 
                                 class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl appearance-none focus:ring-2 focus:ring-green-500 outline-none text-base">
-                                <option value="KDML105">🍚 ข้าวหอมมะลิ 105</option>
-                                <option value="RD6">🍙 ข้าวเหนียว กข 6</option>
-                                <option value="RD15">🍚 ข้าวหอมมะลิ กข 15</option>
+                                <option value="KDML105">🌾 ข้าวหอมมะลิ 105</option>
+                                <option value="RD6">🌾 ข้าวเหนียว กข 6</option>
+                                <option value="RD15">🌾 ข้าวหอมมะลิ กข 15</option>
                                 <option value="PATHUM1">🌾 ข้าวปทุมธานี 1</option>
-                                <option value="OTHER">🌱 พันธุ์อื่น ๆ</option>
+                                <option value="OTHER">🌾 พันธุ์อื่น ๆ</option>
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-gray-500">
                                 <i class="fa-solid fa-chevron-down"></i>
@@ -1080,7 +1096,7 @@
                 body: JSON.stringify({ name, geometry: geom, variety })
             });
             const data = await res.json();
-            
+
             if (res.ok) {
                 Swal.fire({
                     icon: 'success',
@@ -1112,8 +1128,12 @@
                 fetch('/api/rice-fields/'),
                 fetch('/api/sales/')
             ]);
-            const fields = await fieldRes.json();
-            const sales = await saleRes.json();
+            const fieldData = await fieldRes.json();
+            const saleData = await saleRes.json();
+
+            // Handle paginated response (API returns {count, results:[]})
+            const fields = Array.isArray(fieldData) ? fieldData : (fieldData.results || []);
+            const sales = Array.isArray(saleData) ? saleData : (saleData.results || []);
 
             allFieldsData = fields;
             saleMapData = {};
@@ -1150,12 +1170,12 @@
     }
 
     // ==================== VIEW FIELD DETAILS ====================
-    window.viewFieldDetails = function(id) {
+    window.viewFieldDetails = function (id) {
         const field = allFieldsData.find(f => f.id === id);
         if (!field) return;
 
         const activeSale = saleMapData[id];
-        
+
         // Yield Details
         let yieldDetails = `
             <div class="p-8 text-center text-gray-400 text-sm bg-gray-50 rounded-lg">
@@ -1163,7 +1183,7 @@
 
                 ยังไม่เคยวิเคราะห์ผลผลิต
             </div>`;
-        
+
         if (field.latest_yield) {
             const ndviVal = parseFloat(field.latest_yield.ndvi).toFixed(3);
             const yieldVal = parseFloat(field.latest_yield.yield).toFixed(2);
@@ -1187,7 +1207,7 @@
             <div class="p-8 text-center text-gray-400 text-sm bg-gray-50 rounded-lg">
                 ยังไม่มีการประกาศขาย
             </div>`;
-        
+
         if (activeSale) {
             let buyerSection = '';
             if (activeSale.buyer) {
@@ -1231,12 +1251,12 @@
                         </div>
                     </div>`;
             }
-            
-            let statusText = activeSale.status === 'OPEN' ? 'รอรับซื้อ' : 
-                            (activeSale.status === 'REQUESTED' ? 'รออนุมัติ' : 'ขายแล้ว');
-            let statusColor = activeSale.status === 'OPEN' ? 'text-orange-600' : 
-                             (activeSale.status === 'REQUESTED' ? 'text-yellow-600' : 'text-green-600');
-            
+
+            let statusText = activeSale.status === 'OPEN' ? 'รอรับซื้อ' :
+                (activeSale.status === 'REQUESTED' ? 'รออนุมัติ' : 'ขายแล้ว');
+            let statusColor = activeSale.status === 'OPEN' ? 'text-orange-600' :
+                (activeSale.status === 'REQUESTED' ? 'text-yellow-600' : 'text-green-600');
+
             saleInfoHTML = `
                 <div class="space-y-3 text-sm">
                     <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
@@ -1343,14 +1363,14 @@
     window.calcYield = async (id, btn) => {
         const loading = document.getElementById('loading-overlay');
         if (loading) loading.classList.remove('hidden');
-        
+
         try {
             const res = await fetch(`/api/rice-fields/${id}/calculate_yield/`, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': '{{ csrf_token }}' }
             });
             const data = await res.json();
-            
+
             if (res.ok) {
                 // Handle satellite layer
                 if (satelliteLayer) {
@@ -1358,7 +1378,7 @@
                     map.removeLayer(satelliteLayer);
                     satelliteLayer = null;
                 }
-                
+
                 if (data.satellite_image) {
                     satelliteLayer = L.tileLayer(data.satellite_image, {
                         attribution: 'Sentinel-2',
@@ -1367,7 +1387,7 @@
                     });
                     layerControl.addOverlay(satelliteLayer, "ภาพดาวเทียมวิเคราะห์");
                     satelliteLayer.addTo(map);
-                    
+
                     if (fieldLayers[id]) {
                         map.flyToBounds(fieldLayers[id].getBounds(), {
                             padding: [50, 50],
@@ -1378,7 +1398,7 @@
 
                 // Result styling
                 let headerHtml = '', icon = 'success', btnColor = '#16a34a';
-                
+
                 if (data.result_type === 'building') {
                     headerHtml = `
                         <div class="bg-red-100 text-red-700 p-2 rounded-lg mb-3 text-sm border border-red-200">
@@ -1459,7 +1479,7 @@
                     allowOutsideClick: false,
                     showCloseButton: true
                 });
-                
+
                 loadFields();
             } else {
                 Swal.fire({
@@ -1554,8 +1574,8 @@
                 cancelButton: 'w-full py-3 rounded-xl text-lg font-bold mt-2'
             },
             preConfirm: () => {
-                const q  = document.getElementById('q').value;
-                const p  = document.getElementById('p').value;
+                const q = document.getElementById('q').value;
+                const p = document.getElementById('p').value;
                 const ph = document.getElementById('ph').value;
 
                 if (!q || !p || !ph) {
@@ -1571,6 +1591,13 @@
                     return false;
                 }
 
+                // Phone validation: digits only, length 9-10
+                const cleaned = ph.replace(/\D/g, '');
+                if (cleaned.length < 9 || cleaned.length > 10) {
+                    Swal.showValidationMessage('เบอร์โทรศัพท์ไม่ถูกต้อง');
+                    return false;
+                }
+
                 return {
                     rice_field: id,
                     quantity_ton: qNum,
@@ -1581,24 +1608,33 @@
         });
 
         if (form) {
-            await fetch('/api/sales/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify(form)
-            });
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'ประกาศขายสำเร็จ!',
-                text: 'รอโรงสีติดต่อกลับได้เลยครับ',
-                timer: 3000,
-                showConfirmButton: false
-            });
-            
-            loadFields();
+            try {
+                const res = await fetch('/api/sales/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify(form)
+                });
+
+                if (res.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ประกาศขายสำเร็จ!',
+                        text: 'รอโรงสีติดต่อกลับได้เลยครับ',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                    loadFields();
+                } else {
+                    const data = await res.json();
+                    Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: data.error || 'ไม่สามารถประกาศขายได้' });
+                }
+            } catch (e) {
+                console.error('Notify sale error:', e);
+                Swal.fire({ icon: 'error', title: 'ข้อผิดพลาด', text: 'เกิดข้อผิดพลาดในการเชื่อมต่อ' });
+            }
         }
     };
 
@@ -1613,7 +1649,7 @@
             confirmButtonText: 'ลบ',
             cancelButtonText: 'ยกเลิก'
         });
-        
+
         if (result.isConfirmed) {
             await fetch(`/api/rice-fields/${id}/`, {
                 method: 'DELETE',
@@ -1630,7 +1666,7 @@
                 method: 'POST',
                 headers: { 'X-CSRFToken': '{{ csrf_token }}' }
             });
-            
+
             if (res.ok) {
                 Swal.fire({
                     icon: 'success',
@@ -1656,7 +1692,7 @@
             confirmButtonText: 'ใช่',
             cancelButtonText: 'ไม่'
         });
-        
+
         if (result.isConfirmed) {
             await fetch(`/api/sales/${id}/`, {
                 method: 'DELETE',
@@ -1667,23 +1703,23 @@
     }
 
     // ==================== TRASH MODAL ====================
-    window.openTrash = async function() {
+    window.openTrash = async function () {
         const modal = document.getElementById('trashModal');
         const content = document.getElementById('trashModalContent');
         const listDiv = document.getElementById('trash-list');
-        
+
         modal.classList.remove('hidden');
         setTimeout(() => {
             content.classList.remove('scale-95', 'opacity-0');
             content.classList.add('scale-100', 'opacity-100');
         }, 10);
-        
+
         try {
             const res = await fetch('/api/rice-fields/trash/');
             const data = await res.json();
-            
+
             listDiv.innerHTML = '';
-            
+
             if (data.length === 0) {
                 listDiv.innerHTML = `
                     <div class="text-center py-10 text-gray-400">
@@ -1693,7 +1729,7 @@
                     </div>`;
                 return;
             }
-            
+
             data.forEach(item => {
                 listDiv.innerHTML += `
                     <div class="bg-gray-50 border border-gray-100 p-3 rounded-xl flex justify-between items-center group hover:bg-white hover:shadow-sm transition">
@@ -1723,19 +1759,19 @@
         }
     }
 
-    window.closeTrash = function() {
+    window.closeTrash = function () {
         const modal = document.getElementById('trashModal');
         const content = document.getElementById('trashModalContent');
-        
+
         content.classList.remove('scale-100', 'opacity-100');
         content.classList.add('scale-95', 'opacity-0');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
         }, 200);
     }
 
-    window.restoreField = async function(id) {
+    window.restoreField = async function (id) {
         // ยืนยันก่อนกู้คืน
         const confirmResult = await Swal.fire({
             title: 'ยืนยันการกู้คืน',
@@ -1768,11 +1804,11 @@
                 method: 'POST',
                 headers: { 'X-CSRFToken': '{{ csrf_token }}' }
             });
-            
+
             if (res.ok) {
                 // ปิด loading
                 Swal.close();
-                
+
                 // แสดงผลสำเร็จ
                 Swal.fire({
                     icon: 'success',
@@ -1781,19 +1817,20 @@
                     timer: 1500,
                     showConfirmButton: false
                 });
-                
+
                 // รีเฟรชข้อมูล
                 setTimeout(() => {
                     openTrash();
                     loadFields();
                 }, 500);
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ไม่สำเร็จ',
-                    text: 'ไม่สามารถกู้คืนแปลงนาได้',
-                    confirmButtonText: 'ตกลง'
-                });
+                // Try to show server-provided error message if available
+                try {
+                    const data = await res.json();
+                    Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: data.error || 'ไม่สามารถกู้คืนแปลงนาได้', confirmButtonText: 'ตกลง' });
+                } catch (e) {
+                    Swal.fire({ icon: 'error', title: 'ไม่สำเร็จ', text: 'ไม่สามารถกู้คืนแปลงนาได้', confirmButtonText: 'ตกลง' });
+                }
             }
         } catch (error) {
             console.error('Restore error:', error);
@@ -1806,7 +1843,7 @@
         }
     }
 
-    window.forceDeleteField = async function(id) {
+    window.forceDeleteField = async function (id) {
         const r1 = await Swal.fire({
             title: 'ลบถาวร?',
             text: "ไม่สามารถกู้คืนได้!",
@@ -1817,7 +1854,7 @@
             confirmButtonText: 'ลบ',
             cancelButtonText: 'ยกเลิก'
         });
-        
+
         if (r1.isConfirmed) {
             const r2 = await Swal.fire({
                 title: 'ยืนยันครั้งสุดท้าย!',
@@ -1829,14 +1866,14 @@
                 confirmButtonText: 'ลบถาวร',
                 cancelButtonText: 'ยกเลิก'
             });
-            
+
             if (r2.isConfirmed) {
                 try {
                     const res = await fetch(`/api/rice-fields/${id}/force_delete/`, {
                         method: 'DELETE',
                         headers: { 'X-CSRFToken': '{{ csrf_token }}' }
                     });
-                    
+
                     if (res.ok) {
                         Swal.fire({
                             icon: 'success',
@@ -1854,13 +1891,13 @@
     }
 
     // ==================== CLOSE MODAL ====================
-    window.closeModal = function() {
+    window.closeModal = function () {
         const modal = document.getElementById('saleModal');
         const content = document.getElementById('saleModalContent');
-        
+
         content.classList.remove('scale-100', 'opacity-100');
         content.classList.add('scale-95', 'opacity-0');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
         }, 200);

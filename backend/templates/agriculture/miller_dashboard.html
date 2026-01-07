@@ -1,39 +1,64 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+<style>
+    .animate-fade-in-up {
+        animation: fadeInUp 0.3s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="flex flex-col h-screen bg-gray-50 overflow-hidden relative">
-    
+
     <!-- Header Bar -->
-    <div class="flex-none bg-white px-4 py-3 shadow-sm border-b border-gray-100 z-30 flex justify-between items-center h-16">
+    <div
+        class="flex-none bg-white px-4 py-3 shadow-sm border-b border-gray-100 z-30 flex justify-between items-center h-16">
         <div>
             <h1 class="text-lg lg:text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <i class="fa-solid fa-industry text-blue-600"></i> 
+                <i class="fa-solid fa-industry text-blue-600"></i>
                 <span class="hidden sm:inline">แผงควบคุมโรงสี</span>
                 <span class="sm:hidden">โรงสี (รับซื้อ)</span>
             </h1>
         </div>
-        <div class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full border border-blue-100 flex items-center shadow-sm">
+        <div
+            class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full border border-blue-100 flex items-center shadow-sm">
             <span class="text-xs font-bold mr-1">🛒</span>
-            <span id="sale-count" class="text-base font-bold">0</span> 
+            <span id="sale-count" class="text-base font-bold">0</span>
             <span class="text-xs ml-1 hidden sm:inline">รายการ</span>
         </div>
     </div>
 
     <!-- Main Content: List + Map -->
     <div class="flex-1 min-h-0 relative lg:grid lg:grid-cols-12 lg:gap-0">
-        
+
         <!-- LEFT PANEL: Sales List (Desktop: Always visible, Mobile: Toggle) -->
-        <div id="view-list" 
-            class="lg:col-span-4 
+        <div id="view-list" class="lg:col-span-4 
                 h-[calc(100vh-64px-64px)]
                 lg:h-[calc(100vh-64px)]
                 flex flex-col bg-white border-r border-gray-200 
                 transition-opacity duration-200">
-            
+
             <!-- List Header -->
-            <div class="flex-none p-3 bg-gradient-to-r from-blue-50 to-white backdrop-blur border-b border-gray-200 sticky top-0 z-20">
+            <div
+                class="flex-none p-3 bg-gradient-to-r from-blue-50 to-white backdrop-blur border-b border-gray-200 sticky top-0 z-20">
                 <div class="flex justify-between items-center">
                     <span class="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                        <i class="fa-solid fa-basket-shopping"></i> 
+                        <i class="fa-solid fa-basket-shopping"></i>
                         รายการประกาศขาย
                     </span>
                     <div class="flex items-center gap-2">
@@ -44,7 +69,7 @@
             </div>
 
             <!-- Scrollable List Container -->
-            <div id="saleList" 
+            <div id="saleList"
                 class="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-3 pb-24 lg:pb-4 bg-slate-50">
                 <!-- Loading State -->
                 <div class="flex flex-col items-center justify-center h-64 text-gray-400 opacity-60">
@@ -55,26 +80,26 @@
         </div>
 
         <!-- RIGHT PANEL: Map (Desktop: Always visible, Mobile: Toggle) -->
-        <div id="view-map" 
-            class="hidden lg:block lg:col-span-8 
+        <div id="view-map" class="hidden lg:block lg:col-span-8 
                 h-[calc(100vh-64px-64px)]
                 lg:h-[calc(100vh-64px)]
                 bg-slate-100 relative">
-                
+
             <div id="map" class="w-full h-full z-0"></div>
-            
+
             <!-- Mobile Hint (Only on Mobile) -->
             <div class="absolute top-4 left-0 right-0 z-[400] flex justify-center lg:hidden pointer-events-none">
                 <div class="bg-white/90 backdrop-blur px-4 py-1.5 rounded-full shadow-lg border border-gray-200">
                     <span class="text-xs font-bold text-gray-600 flex items-center gap-2">
-                        <i class="fa-solid fa-map-location-dot text-blue-500"></i> 
+                        <i class="fa-solid fa-map-location-dot text-blue-500"></i>
                         แตะที่หมุดเพื่อดูข้อมูล
                     </span>
                 </div>
             </div>
 
             <!-- Desktop Legend (Only on Desktop) -->
-            <div class="hidden lg:block absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200 p-3">
+            <div
+                class="hidden lg:block absolute bottom-4 left-4 z-[400] bg-white/95 backdrop-blur rounded-lg shadow-lg border border-gray-200 p-3">
                 <h4 class="text-xs font-bold text-gray-700 mb-2">สัญลักษณ์</h4>
                 <div class="space-y-1.5 text-xs">
                     <div class="flex items-center gap-2">
@@ -96,21 +121,22 @@
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-50 pb-[env(safe-area-inset-bottom)]">
+    <div
+        class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-50 pb-[env(safe-area-inset-bottom)]">
         <div class="grid grid-cols-2 h-16 relative">
-            
-            <button onclick="switchTab('list')" 
+
+            <button onclick="switchTab('list')"
                 class="group flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden">
-                <div id="nav-icon-list" 
+                <div id="nav-icon-list"
                     class="bg-blue-50 text-blue-600 w-12 h-8 rounded-full flex items-center justify-center transition-all duration-300 scale-100">
                     <i class="fa-solid fa-list-ul text-lg"></i>
                 </div>
                 <span id="nav-text-list" class="text-[10px] font-bold text-blue-600 transition-colors">รายการ</span>
             </button>
 
-            <button onclick="switchTab('map')" 
+            <button onclick="switchTab('map')"
                 class="group flex flex-col items-center justify-center gap-1 transition-all relative overflow-hidden">
-                <div id="nav-icon-map" 
+                <div id="nav-icon-map"
                     class="bg-transparent text-gray-400 w-12 h-8 rounded-full flex items-center justify-center transition-all duration-300 scale-90">
                     <i class="fa-solid fa-map text-lg"></i>
                 </div>
@@ -121,55 +147,6 @@
     </div>
 
 </div>
-
-<style>
-    /* Scrollbar สวยๆ */
-    .custom-scrollbar::-webkit-scrollbar { 
-        width: 6px; 
-        height: 6px; 
-    }
-    .custom-scrollbar::-webkit-scrollbar-track { 
-        background: #f1f5f9; 
-        border-radius: 10px; 
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb { 
-        background: #cbd5e1; 
-        border-radius: 10px; 
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
-        background: #94a3b8; 
-    }
-    
-    /* Animation พื้นฐาน */
-    .animate-fade-in-up { 
-        animation: fadeInUp 0.3s ease-out forwards; 
-    }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ปรับแต่ง SweetAlert */
-    .swal2-popup { 
-        border-radius: 20px !important; 
-        padding: 1.5rem !important; 
-        font-family: 'Sarabun', sans-serif; 
-    }
-    .swal2-actions { 
-        width: 100%; 
-        margin: 1rem 0 0 0 !important; 
-    }
-
-    /* Desktop: Force both panels to show */
-    @media (min-width: 1024px) {
-        #view-list, #view-map {
-            display: flex !important; /* Override hidden class */
-        }
-        #view-map {
-            display: block !important;
-        }
-    }
-</style>
 {% endblock %}
 
 {% block scripts %}
@@ -177,30 +154,30 @@
     // ==========================================
     // 0. Global & Setup
     // ==========================================
-    const currentUserId = {{ request.user.id }}; 
-    
-    var map = L.map('map', { 
-        center: [19.1667, 99.9000], 
-        zoom: 13, 
-        zoomControl: false 
+    const currentUserId = {{ request.user.id }};
+
+    var map = L.map('map', {
+        center: [19.1667, 99.9000],
+        zoom: 13,
+        zoomControl: false
     });
-    
+
     L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
         maxZoom: 20,
         subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
     }).addTo(map);
-    
+
     L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     var markers = L.featureGroup().addTo(map);
     let lastReadTime = new Date(localStorage.getItem('globalLastRead') || 0);
-    let allSalesData = []; 
+    let allSalesData = [];
 
     // Handle window resize for map
-    window.addEventListener('resize', function() { 
-        setTimeout(function() { 
-            map.invalidateSize(); 
-        }, 300); 
+    window.addEventListener('resize', function () {
+        setTimeout(function () {
+            map.invalidateSize();
+        }, 300);
     });
 
     // ==========================================
@@ -209,7 +186,7 @@
     function switchTab(mode) {
         const viewList = document.getElementById('view-list');
         const viewMap = document.getElementById('view-map');
-        
+
         const iconList = document.getElementById('nav-icon-list');
         const textList = document.getElementById('nav-text-list');
         const iconMap = document.getElementById('nav-icon-map');
@@ -229,7 +206,7 @@
         if (mode === 'list') {
             viewList.classList.remove('hidden');
             viewMap.classList.add('hidden');
-            
+
             // Update Nav Styles (List Active)
             iconList.classList.remove('bg-transparent', 'text-gray-400', 'scale-90');
             iconList.classList.add('bg-blue-50', 'text-blue-600', 'scale-100');
@@ -240,7 +217,7 @@
             iconMap.classList.remove('bg-blue-50', 'text-blue-600', 'scale-100');
             textMap.classList.add('text-gray-400');
             textMap.classList.remove('text-blue-600');
-            
+
         } else {
             viewMap.classList.remove('hidden');
             viewList.classList.add('hidden');
@@ -256,8 +233,8 @@
             textList.classList.remove('text-blue-600');
 
             // Refresh Map
-            setTimeout(() => { 
-                map.invalidateSize(); 
+            setTimeout(() => {
+                map.invalidateSize();
             }, 100);
         }
     }
@@ -268,12 +245,14 @@
     async function loadData() {
         try {
             const res = await fetch('/api/sales/');
-            const sales = await res.json();
+            const saleData = await res.json();
+            // Handle paginated response (API returns {count, results:[]})
+            const sales = Array.isArray(saleData) ? saleData : (saleData.results || []);
             allSalesData = sales;
-            
+
             const listDiv = document.getElementById('saleList');
             const countSpan = document.getElementById('sale-count');
-            
+
             // Sort sales
             const openSales = sales.filter(s => s.status === 'OPEN')
                 .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -286,7 +265,7 @@
 
             listDiv.innerHTML = '';
             markers.clearLayers();
-            countSpan.innerText = openSales.length; 
+            countSpan.innerText = openSales.length;
 
             if (displayList.length === 0) {
                 listDiv.innerHTML = `
@@ -303,11 +282,11 @@
                 const isSold = s.status === 'SOLD';
                 const totalPrice = (s.quantity_ton * s.price_per_ton).toLocaleString();
                 const pricePerTon = parseFloat(s.price_per_ton).toLocaleString();
-                const datePost = new Date(s.created_at).toLocaleDateString('th-TH', { 
-                    day: 'numeric', 
-                    month: 'short', 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                const datePost = new Date(s.created_at).toLocaleDateString('th-TH', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
                 const fieldArea = s.field_area ? s.field_area : '-';
 
@@ -330,7 +309,7 @@
                             <i class="fa-solid fa-handshake"></i> ส่งคำขอซื้อ
                         </button>
                     </div>`;
-                let mapColor = '#f97316'; 
+                let mapColor = '#f97316';
                 let mapOpacity = 0.6;
 
                 if (isRequested) {
@@ -411,13 +390,35 @@
                 if (s.field_location) {
                     try {
                         const geoJson = JSON.parse(s.field_location);
-                        const layer = L.geoJSON(geoJson, { 
-                            style: {
-                                color: mapColor, 
-                                fillOpacity: mapOpacity, 
-                                weight: 2
-                            } 
-                        }).bindPopup(`
+
+                        // Validate coordinates to avoid NaN LatLng errors
+                        function hasValidCoords(geom) {
+                            if (!geom || !geom.coordinates) return false;
+                            const stack = [geom.coordinates];
+                            while (stack.length) {
+                                const item = stack.pop();
+                                if (Array.isArray(item)) {
+                                    if (item.length === 0) continue;
+                                    if (typeof item[0] === 'number') {
+                                        if (!item.every(n => typeof n === 'number' && isFinite(n))) return false;
+                                    } else {
+                                        for (const sub of item) stack.push(sub);
+                                    }
+                                }
+                            }
+                            return true;
+                        }
+
+                        if (!hasValidCoords(geoJson)) {
+                            console.warn('Skipping sale with invalid coordinates:', s.id);
+                        } else {
+                            const layer = L.geoJSON(geoJson, {
+                                style: {
+                                    color: mapColor,
+                                    fillOpacity: mapOpacity,
+                                    weight: 2
+                                }
+                            }).bindPopup(`
                             <div class="text-center min-w-[180px] p-2 font-sans">
                                 <b class="text-base text-gray-900 block mb-1">${s.farmer_name}</b>
                                 <span class="font-black text-lg block mb-1" style="color:${mapColor}">
@@ -438,16 +439,17 @@
                                 </div>
                             </div>
                         `);
-                        layer.saleId = s.id;
-                        markers.addLayer(layer);
+                            layer.saleId = s.id;
+                            markers.addLayer(layer);
+                        }
                     } catch (e) {
                         console.warn('Failed to parse field location:', e);
                     }
                 }
             });
 
-        } catch (e) { 
-            console.error("Load Data Error:", e); 
+        } catch (e) {
+            console.error("Load Data Error:", e);
             document.getElementById('saleList').innerHTML = `
                 <div class="flex flex-col items-center justify-center h-full text-red-400 mt-10">
                     <i class="fa-solid fa-exclamation-triangle text-4xl mb-2"></i>
@@ -462,7 +464,7 @@
     // ==========================================
     // 2. View Full Details (Modal)
     // ==========================================
-    window.viewFullDetails = function(saleId) {
+    window.viewFullDetails = function (saleId) {
         event.stopPropagation();
         const s = allSalesData.find(item => item.id === saleId);
         if (!s) return;
@@ -471,17 +473,17 @@
         const farmerLine = s.farmer_line || '-';
         const farmerAddress = s.farmer_address || 'ไม่ระบุที่อยู่';
         const farmerBio = s.farmer_bio || 'ไม่มีข้อมูลแนะนำตัว';
-        
+
         let mapsLink = '#';
         let mapsBtnClass = 'bg-gray-100 text-gray-400 cursor-not-allowed';
         let btnText = 'ไม่พบพิกัดแปลงนา';
-        
+
         if (s.field_lat && s.field_lng) {
             mapsLink = `https://www.google.com/maps/dir/?api=1&destination=${s.field_lat},${s.field_lng}`;
             mapsBtnClass = 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300 transform active:scale-95';
             btnText = 'นำทางไปแปลงนา (Google Maps)';
         }
-        
+
         Swal.fire({
             title: '',
             html: `
@@ -588,7 +590,7 @@
                     contentProfile.classList.remove('hidden');
                     contentField.classList.add('hidden');
                 };
-                
+
                 tabField.onclick = () => {
                     tabField.classList.add(...activeClass);
                     tabField.classList.remove(...inactiveClass);
@@ -604,7 +606,7 @@
     // ==========================================
     // 3. Confirm Buy Action
     // ==========================================
-    window.confirmBuy = async function(e, saleId) {
+    window.confirmBuy = async function (e, saleId) {
         if (e) e.stopPropagation();
         const s = allSalesData.find(item => item.id === saleId);
         if (!s) return;
@@ -671,33 +673,40 @@
             preConfirm: () => {
                 const price = document.getElementById('swal-price').value;
                 const contact = document.getElementById('swal-contact').value;
-                
                 if (!price || !contact) {
                     Swal.showValidationMessage('กรุณากรอกข้อมูลให้ครบถ้วน');
+                    return false;
                 }
+
+                const cleaned = contact.replace(/\D/g, '');
+                if (cleaned.length < 9 || cleaned.length > 10) {
+                    Swal.showValidationMessage('เบอร์ติดต่อไม่ถูกต้อง');
+                    return false;
+                }
+
                 return { price, contact };
             }
         });
 
         if (!isConfirmed) return;
 
-        Swal.fire({ 
-            title: 'กำลังส่งข้อมูล...', 
+        Swal.fire({
+            title: 'กำลังส่งข้อมูล...',
             text: 'กรุณารอสักครู่',
             allowOutsideClick: false,
-            didOpen: () => Swal.showLoading() 
+            didOpen: () => Swal.showLoading()
         });
 
         try {
             const res = await fetch(`/api/sales/${saleId}/request_buy/`, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json', 
-                    'X-CSRFToken': '{{ csrf_token }}' 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     contact: formValues.contact,
-                    negotiated_price: formValues.price 
+                    negotiated_price: formValues.price
                 })
             });
 
@@ -722,18 +731,31 @@
     // ==========================================
     // 4. Focus Map Function
     // ==========================================
-    window.focusMap = function(saleId) {
+    window.focusMap = function (saleId) {
         // Auto-switch to map on mobile
         if (window.innerWidth < 1024) {
             switchTab('map');
         }
-        
-        markers.eachLayer(function(layer) {
+
+        markers.eachLayer(function (layer) {
             if (layer.saleId === saleId) {
-                map.flyToBounds(layer.getBounds().pad(1.5), { duration: 1 });
-                setTimeout(() => {
-                    layer.openPopup();
-                }, 1000);
+                try {
+                    const bounds = layer.getBounds();
+                    // Validate bounds to avoid NaN LatLng errors
+                    if (bounds && bounds.isValid()) {
+                        map.flyToBounds(bounds.pad(1.5), { duration: 1 });
+                        setTimeout(() => {
+                            layer.openPopup();
+                        }, 1000);
+                    } else {
+                        console.warn('Invalid bounds for sale:', saleId);
+                        layer.openPopup();
+                    }
+                } catch (e) {
+                    console.warn('Error focusing on map:', e);
+                    // Fallback: just open popup without flying
+                    try { layer.openPopup(); } catch (e2) { }
+                }
             }
         });
     }
@@ -748,7 +770,7 @@
 
     // Load initial data
     loadData();
-    
+
     // Auto-refresh every 5 seconds
     setInterval(loadData, 5000); 
 </script>

@@ -74,3 +74,12 @@ class SaleNotificationSerializer(serializers.ModelSerializer):
         if obj.rice_field and obj.rice_field.boundary:
             return obj.rice_field.boundary.centroid.x
         return None
+
+    def validate_phone(self, value):
+        # Allow only digits and basic length check (Thai numbers typically 9-10 digits)
+        if not value:
+            raise serializers.ValidationError('กรุณากรอกเบอร์โทรศัพท์')
+        cleaned = ''.join(ch for ch in value if ch.isdigit())
+        if len(cleaned) < 9 or len(cleaned) > 10:
+            raise serializers.ValidationError('เบอร์โทรศัพท์ไม่ถูกต้อง')
+        return value
