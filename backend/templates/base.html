@@ -214,20 +214,17 @@
                     <div class="grid grid-cols-2 gap-3 mb-2">
                         <a href="/"
                             class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center text-white">
-                            <i class="fa-solid fa-chart-pie text-2xl mb-1"></i><span class="text-sm font-bold">{% trans
-                                "หน้าหลัก" %}</span>
+                            <i class="fa-solid fa-chart-pie text-2xl mb-1"></i><span class="text-sm font-bold">{% trans "หน้าหลัก" %}</span>
                         </a>
                         {% if request.user.role == 'GOVT' %}
                         <a href="{% url 'govt_stats' %}"
                             class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center text-white">
-                            <i class="fa-solid fa-chart-line text-2xl mb-1"></i><span class="text-sm font-bold">{% trans
-                                "สถิติ" %}</span>
+                            <i class="fa-solid fa-chart-line text-2xl mb-1"></i><span class="text-sm font-bold">{% trans "สถิติ" %}</span>
                         </a>
                         {% else %}
                         <a href="{% url 'history' %}"
                             class="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition text-center text-white">
-                            <i class="fa-solid fa-file-invoice text-2xl mb-1"></i><span class="text-sm font-bold">{%
-                                trans "ประวัติ" %}</span>
+                            <i class="fa-solid fa-file-invoice text-2xl mb-1"></i><span class="text-sm font-bold">{% trans "ประวัติ" %}</span>
                         </a>
                         {% endif %}
                     </div>

@@ -11,10 +11,9 @@
 
     <style>
         :root {
-            /* ใช้รหัสสีเดียวกับ Dashboard (Green-600) */
             --primary-color: #16a34a; 
-            --primary-hover: #15803d; /* Green-700 */
-            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); /* Green-50 to Green-100 */
+            --primary-hover: #15803d;
+            --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
         }
 
         body {
@@ -28,7 +27,6 @@
             padding: 15px;
         }
 
-        /* ลาย Pattern พื้นหลังจางๆ ให้ดูมีมิติเหมือนแผนที่ */
         body::before {
             content: "";
             position: absolute;
@@ -45,7 +43,7 @@
             max-width: 400px;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 16px; /* ความโค้งเท่ากับ Card ใน Dashboard */
+            border-radius: 16px;
             border: 1px solid rgba(255, 255, 255, 0.6);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
@@ -67,7 +65,7 @@
         .icon-circle {
             width: 80px;
             height: 80px;
-            background: #f0fdf4; /* Green-50 */
+            background: #f0fdf4;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -80,24 +78,24 @@
 
         .login-header h3 {
             font-weight: 700;
-            color: #1f2937; /* Gray-800 */
+            color: #1f2937;
             margin-bottom: 5px;
         }
 
         .login-body {
-            padding: 20px 30px 40px;
+            padding: 20px 30px 30px;
         }
 
         .form-label {
             font-weight: 600;
-            color: #4b5563; /* Gray-600 */
+            color: #4b5563;
             font-size: 0.9rem;
             margin-left: 4px;
         }
 
         .input-group {
             background: white;
-            border: 1px solid #e5e7eb; /* Gray-200 */
+            border: 1px solid #e5e7eb;
             border-radius: 12px;
             transition: all 0.2s ease;
             overflow: hidden;
@@ -105,7 +103,7 @@
 
         .input-group:focus-within {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15); /* Green Ring */
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
         }
 
         .input-group-text {
@@ -155,8 +153,40 @@
             color: white;
         }
 
-        .btn-login:active {
-            transform: translateY(0);
+        /* Demo Box Styles */
+        .demo-box {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+        
+        .demo-badge {
+            background-color: #e2e8f0;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .demo-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+        
+        .demo-row:hover {
+            background-color: #f1f5f9;
+            cursor: pointer;
         }
 
         .alert-error {
@@ -174,7 +204,7 @@
 
         .footer-brand {
             text-align: center;
-            margin-top: 25px;
+            margin-top: 20px;
             color: #9ca3af;
             font-size: 0.75rem;
         }
@@ -188,7 +218,7 @@
             <i class="fa-solid fa-leaf"></i>
         </div>
         <h3>Rice Chain Phayao</h3>
-        <p class="text-muted small mb-0">ระบบบคำนวณผลผลิตข้าวด้วยภาพถ่ายดาวเทียม Sentinel-2</p>
+        <p class="text-muted small mb-0">ระบบคำนวณผลผลิตข้าวด้วยภาพถ่ายดาวเทียม Sentinel-2</p>
     </div>
 
     <div class="login-body">
@@ -208,6 +238,7 @@
                     <input
                         type="text"
                         name="username"
+                        id="id_username"
                         class="form-control"
                         placeholder="Username"
                         required
@@ -244,6 +275,25 @@
             <input type="hidden" name="next" value="{{ next }}">
         </form>
 
+        <div class="demo-box">
+            <div class="mb-2 text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 1px;">
+                <i class="fa-solid fa-flask me-1"></i> Demo Accounts
+            </div>
+            
+            <div class="demo-row" onclick="fillLogin('farmer1', '123')">
+                <div><span class="demo-badge">FARMER</span> เกษตรกร</div>
+                <div class="font-monospace">farmer1 / 123</div>
+            </div>
+            <div class="demo-row" onclick="fillLogin('miller1', '123')">
+                <div><span class="demo-badge">MILLER</span> โรงสี</div>
+                <div class="font-monospace">miller1 / 123</div>
+            </div>
+            
+            <div class="mt-2 text-muted" style="font-size: 0.7rem;">
+                <i class="fa-regular fa-hand-pointer"></i> คลิกเพื่อเติมคำอัตโนมัติ / Click to autocomplete.
+            </div>
+        </div>
+
         <div class="footer-brand">
             © 2025 Provincial Agriculture Office Phayao
         </div>
@@ -262,6 +312,12 @@
             passwordInput.type = 'password';
             toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
         }
+    }
+
+    // ฟังก์ชันแถม: คลิกที่ Demo Box แล้วกรอก User/Pass ให้เลย
+    function fillLogin(user, pass) {
+        document.getElementById('id_username').value = user;
+        document.getElementById('id_password').value = pass;
     }
 </script>
 
