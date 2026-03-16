@@ -12,4 +12,5 @@ urlpatterns = [
     path('', lambda request: redirect('dashboard/', permanent=False)), 
 
     path('', include('agriculture.urls')),
+    path('api/', include('mobile_api.urls')),
 ]
