@@ -19,7 +19,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'users',
     'agriculture',
-    'mobile_api',
 ]
 
 MIDDLEWARE = [
